@@ -123,6 +123,16 @@
     margin-bottom: 24px; display: flex; flex-direction: column; align-items: center;
     gap: 6px; font-family: system-ui, sans-serif; font-size: 15px;
   }
+  .saving-indicator {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--stone-500); margin-top: 4px;
+  }
+  .spinner {
+    width: 14px; height: 14px; border: 2px solid var(--stone-200);
+    border-top-color: var(--stone-500); border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .results-title { font-size: 22px; font-weight: 700; margin-bottom: 18px; text-align: center; }
   .results-list { display: flex; flex-direction: column; gap: 14px; }
   .result-row { display: flex; align-items: center; gap: 10px; }
@@ -229,6 +239,9 @@
       <div id="thank-you" class="thank-you hidden">
         <span style="font-size:28px">🎉</span>
         <p id="thank-you-text"></p>
+        <div id="saving-indicator" class="saving-indicator hidden">
+          <div class="spinner"></div> A gravar...
+        </div>
       </div>
       <h2 class="results-title">Resultados</h2>
       <div id="results-list" class="results-list"></div>
@@ -335,9 +348,8 @@ async function loadData() {
 
 function updateVoterCount() {
   const count = Object.keys(voters).length;
-  $("voter-count").textContent = count;
-  // Update badge text for singular/plural
-  $("voter-count").parentElement.textContent = count + (count === 1 ? " voto registado" : " votos registados");
+  const badge = $("voter-count").parentElement;
+  badge.innerHTML = '<span id="voter-count">' + count + "</span> " + (count === 1 ? "voto registado" : "votos registados");
 }
 
 // ---- Render book cards ----
@@ -404,8 +416,17 @@ function updateCards() {
 // ---- Submit vote ----
 async function submitVote() {
   if (selected.length === 0 || !submittedName) return;
-  $("submit-btn").textContent = "A enviar...";
-  $("submit-btn").disabled = true;
+
+  // Snapshot state for rollback.
+  const prevVotes = { ...allVotes };
+  const prevVoters = { ...voters };
+
+  // Optimistic update: apply locally and show results immediately.
+  selected.forEach((id) => { allVotes[id] = (allVotes[id] || 0) + 1; });
+  voters[submittedName.toLowerCase()] = { name: submittedName, books: selected };
+  hasVoted = true;
+  showResults(true);
+  $("saving-indicator").classList.remove("hidden");
 
   try {
     const res = await fetch(API_URL, {
@@ -415,23 +436,35 @@ async function submitVote() {
     const data = await res.json();
 
     if (data.error) {
+      // Server rejected — roll back.
+      allVotes = prevVotes;
+      voters = prevVoters;
+      hasVoted = false;
+      $("saving-indicator").classList.add("hidden");
       alert(data.error);
-      $("submit-btn").textContent = "Votar ✓";
-      $("submit-btn").disabled = false;
+      $("results-section").classList.add("hidden");
+      $("vote-section").classList.remove("hidden");
+      $("name-section").classList.remove("hidden");
+      $("peek-btn").classList.remove("hidden");
+      renderBooks();
       return;
     }
 
-    // Update local state
-    selected.forEach((id) => { allVotes[id] = (allVotes[id] || 0) + 1; });
-    voters[submittedName.toLowerCase()] = { name: submittedName, books: selected };
-    hasVoted = true;
-
-    showResults(true);
+    // Confirmed — hide the saving indicator.
+    $("saving-indicator").classList.add("hidden");
   } catch (e) {
+    // Network error — roll back.
     console.error("Erro ao votar:", e);
+    allVotes = prevVotes;
+    voters = prevVoters;
+    hasVoted = false;
+    $("saving-indicator").classList.add("hidden");
     alert("Erro ao enviar o voto. Tenta outra vez.");
-    $("submit-btn").textContent = "Votar ✓";
-    $("submit-btn").disabled = false;
+    $("results-section").classList.add("hidden");
+    $("vote-section").classList.remove("hidden");
+    $("name-section").classList.remove("hidden");
+    $("peek-btn").classList.remove("hidden");
+    renderBooks();
   }
 }
 
