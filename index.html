@@ -138,22 +138,36 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .results-title { font-size: 22px; font-weight: 700; margin-bottom: 18px; text-align: center; }
-  .results-list { display: flex; flex-direction: column; gap: 14px; }
-  .result-row { display: flex; flex-direction: column; gap: 6px; }
-  .result-info { display: flex; align-items: center; gap: 6px; }
+  .results-list { display: flex; flex-direction: column; gap: 10px; }
+  .result-card {
+    display: flex; align-items: center; gap: 12px;
+    border: 2px solid var(--stone-200); border-radius: 12px;
+    padding: 12px 14px; background: var(--stone-50);
+    cursor: pointer; flex-wrap: wrap;
+  }
+  .result-card.leader { border-color: var(--amber-600); background: var(--amber-50); }
+  .result-card.tie { border-color: #0f766e; background: #f0fdfa; }
+  .result-rank {
+    font-size: 22px; flex-shrink: 0; width: 32px; text-align: center;
+    font-family: system-ui, sans-serif;
+  }
+  .result-rank.numeric { font-size: 15px; font-weight: 700; color: var(--stone-400); }
+  .result-body { flex: 1; min-width: 0; }
+  .result-book-row { display: flex; align-items: center; gap: 6px; }
   .result-emoji { font-size: 18px; flex-shrink: 0; }
   .result-book-title { font-size: 14px; font-weight: 700; color: var(--stone-800); }
-  .result-author { font-size: 12px; color: var(--stone-400); }
-  .result-bar-row { display: flex; align-items: center; gap: 10px; }
-  .bar-wrap { flex: 1; height: 16px; background: var(--stone-100); border-radius: 8px; overflow: hidden; }
-  .bar { height: 100%; border-radius: 8px; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
-  .bar.leader { background: linear-gradient(90deg, #b45309, #d97706); }
-  .bar.tie { background: linear-gradient(90deg, #0f766e, #2dd4bf); }
-  .bar.normal { background: linear-gradient(90deg, #64748b, #94a3b8); }
+  .result-author { font-size: 12px; color: var(--stone-400); display: block; margin-top: 2px; }
   .result-count {
-    font-size: 12px; color: var(--stone-500); font-family: system-ui, sans-serif;
-    font-weight: 600; min-width: 50px; text-align: right; flex-shrink: 0;
+    font-size: 13px; color: var(--stone-500); font-family: system-ui, sans-serif;
+    font-weight: 600; display: block; margin-top: 4px;
   }
+  .result-toggle {
+    flex-shrink: 0; font-size: 18px;
+  }
+  .result-details {
+    display: none; width: 100%; padding: 10px 0 4px 44px;
+  }
+  .result-card.expanded .result-details { display: block; }
 
   .voter-list { margin-top: 24px; text-align: center; }
   .voter-title {
@@ -490,37 +504,56 @@ function showResults(justVoted) {
     $("back-btn").classList.remove("hidden");
   }
 
-  const totalVotes = Object.values(allVotes).reduce((a, b) => a + b, 0);
-  const maxVoteCount = Math.max(1, ...Object.values(allVotes));
   const sorted = [...BOOKS].sort((a, b) => (allVotes[b.id] || 0) - (allVotes[a.id] || 0));
+  const topCount = allVotes[sorted[0].id] || 0;
+  const isTied = topCount > 0 && sorted.filter((b) => (allVotes[b.id] || 0) === topCount).length > 1;
+  const medals = ["🥇", "🥈", "🥉"];
 
   const list = $("results-list");
   list.innerHTML = "";
 
-  sorted.forEach((book, i) => {
+  let rank = 0;
+  let prevCount = -1;
+  sorted.forEach((book) => {
     const count = allVotes[book.id] || 0;
-    const pct = totalVotes > 0 ? (count / maxVoteCount) * 100 : 0;
-    const topCount = allVotes[sorted[0].id] || 0;
-    const isTied = topCount > 0 && sorted.filter((b) => (allVotes[b.id] || 0) === topCount).length > 1;
-    const barClass = count === topCount && count > 0 ? (isTied ? 'tie' : 'leader') : 'normal';
-    const row = document.createElement("div");
-    row.className = "result-row";
-    row.innerHTML = `
-      <div class="result-info">
-        <span class="result-emoji">${book.emoji}</span>
-        <div>
+    if (count !== prevCount) { rank++; prevCount = count; }
+
+    const isLeader = count === topCount && count > 0 && !isTied;
+    const isTie = count === topCount && count > 0 && isTied;
+    const cardClass = isLeader ? 'leader' : (isTie ? 'tie' : '');
+    const rankDisplay = rank <= 3 && count > 0
+      ? '<span class="result-rank">' + medals[rank - 1] + '</span>'
+      : '<span class="result-rank numeric">#' + rank + '</span>';
+
+    const card = document.createElement("div");
+    card.className = "result-card" + (cardClass ? " " + cardClass : "");
+    card.innerHTML = `
+      ${rankDisplay}
+      <div class="result-body">
+        <div class="result-book-row">
+          <span class="result-emoji">${book.emoji}</span>
           <span class="result-book-title">${book.title}</span>
-          <span class="result-author"> — ${book.author}</span>
         </div>
+        <span class="result-author">${book.author}</span>
+        <span class="result-count">${count} ${count === 1 ? 'voto' : 'votos'}</span>
       </div>
-      <div class="result-bar-row">
-        <div class="bar-wrap">
-          <div class="bar ${barClass}" style="width:${Math.max(pct, 2)}%"></div>
+      <span class="result-toggle">➕</span>
+      <div class="result-details">
+        <p class="sinopse">«${book.sinopse}»</p>
+        <p class="porque">💬 ${book.porque}</p>
+        <div class="links">
+          <a href="${book.wook}" target="_blank" rel="noopener noreferrer" class="shop-link">Wook ↗</a>
+          <span class="link-sep">·</span>
+          <a href="${book.bertrand}" target="_blank" rel="noopener noreferrer" class="shop-link">Bertrand ↗</a>
         </div>
-        <div class="result-count">${count} ${count === 1 ? 'voto' : 'votos'}</div>
       </div>
     `;
-    list.appendChild(row);
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".shop-link")) return;
+      card.classList.toggle("expanded");
+      card.querySelector(".result-toggle").textContent = card.classList.contains("expanded") ? "➖" : "➕";
+    });
+    list.appendChild(card);
   });
 
   // Voter chips
