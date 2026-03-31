@@ -2,7 +2,8 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <title>📚 Clube do Livro — Votação</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -45,7 +46,7 @@
   /* Name input */
   .name-section { text-align: center; padding: 40px 20px; }
   .name-label { display: block; font-size: 18px; margin-bottom: 16px; color: var(--stone-700); }
-  .name-row { display: flex; gap: 10px; max-width: 360px; margin: 0 auto; }
+  .name-row { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 0 auto; }
   .name-input {
     flex: 1; padding: 12px 16px; font-size: 16px; border: 2px solid var(--stone-300);
     border-radius: 10px; outline: none; font-family: inherit; background: var(--stone-50);
@@ -97,8 +98,9 @@
   }
   .links { display: flex; align-items: center; gap: 6px; }
   .shop-link {
-    font-size: 12px; color: var(--amber-700); text-decoration: none;
+    font-size: 13px; color: var(--amber-700); text-decoration: none;
     font-family: system-ui, sans-serif; font-weight: 600;
+    padding: 8px 4px;
   }
   .shop-link:hover { text-decoration: underline; }
   .link-sep { font-size: 12px; color: var(--stone-300); }
@@ -107,6 +109,8 @@
   .footer {
     display: flex; justify-content: space-between; align-items: center;
     margin-top: 24px; padding: 16px 20px; background: var(--stone-800); border-radius: 14px;
+    position: sticky; bottom: 0; z-index: 10;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
   .sel-info { color: var(--stone-300); font-size: 14px; font-family: system-ui, sans-serif; font-weight: 600; }
   .submit-btn {
@@ -135,14 +139,16 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .results-title { font-size: 22px; font-weight: 700; margin-bottom: 18px; text-align: center; }
   .results-list { display: flex; flex-direction: column; gap: 14px; }
-  .result-row { display: flex; align-items: center; gap: 10px; }
-  .result-info { display: flex; align-items: center; gap: 6px; min-width: 180px; flex-shrink: 0; }
+  .result-row { display: flex; flex-direction: column; gap: 6px; }
+  .result-info { display: flex; align-items: center; gap: 6px; }
   .result-emoji { font-size: 18px; flex-shrink: 0; }
-  .result-book-title { font-size: 13px; font-weight: 700; color: var(--stone-800); }
-  .result-author { font-size: 11px; color: var(--stone-400); }
+  .result-book-title { font-size: 14px; font-weight: 700; color: var(--stone-800); }
+  .result-author { font-size: 12px; color: var(--stone-400); }
+  .result-bar-row { display: flex; align-items: center; gap: 10px; }
   .bar-wrap { flex: 1; height: 16px; background: var(--stone-100); border-radius: 8px; overflow: hidden; }
   .bar { height: 100%; border-radius: 8px; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
   .bar.leader { background: linear-gradient(90deg, #b45309, #d97706); }
+  .bar.tie { background: linear-gradient(90deg, #0f766e, #2dd4bf); }
   .bar.normal { background: linear-gradient(90deg, #64748b, #94a3b8); }
   .result-count {
     font-size: 12px; color: var(--stone-500); font-family: system-ui, sans-serif;
@@ -164,7 +170,7 @@
 
   .actions-row { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }
   .refresh-btn, .reset-btn, .peek-btn {
-    padding: 8px 18px; font-size: 13px; border-radius: 10px; cursor: pointer;
+    padding: 12px 22px; font-size: 14px; border-radius: 10px; cursor: pointer;
     font-family: system-ui, sans-serif;
   }
   .refresh-btn { background: var(--stone-100); border: 1px solid var(--stone-300); color: var(--stone-700); }
@@ -494,7 +500,9 @@ function showResults(justVoted) {
   sorted.forEach((book, i) => {
     const count = allVotes[book.id] || 0;
     const pct = totalVotes > 0 ? (count / maxVoteCount) * 100 : 0;
-    const isLeader = i === 0 && count > 0;
+    const topCount = allVotes[sorted[0].id] || 0;
+    const isTied = topCount > 0 && sorted.filter((b) => (allVotes[b.id] || 0) === topCount).length > 1;
+    const barClass = count === topCount && count > 0 ? (isTied ? 'tie' : 'leader') : 'normal';
     const row = document.createElement("div");
     row.className = "result-row";
     row.innerHTML = `
@@ -505,10 +513,12 @@ function showResults(justVoted) {
           <span class="result-author"> — ${book.author}</span>
         </div>
       </div>
-      <div class="bar-wrap">
-        <div class="bar ${isLeader ? 'leader' : 'normal'}" style="width:${Math.max(pct, 2)}%"></div>
+      <div class="result-bar-row">
+        <div class="bar-wrap">
+          <div class="bar ${barClass}" style="width:${Math.max(pct, 2)}%"></div>
+        </div>
+        <div class="result-count">${count} ${count === 1 ? 'voto' : 'votos'}</div>
       </div>
-      <div class="result-count">${count} ${count === 1 ? 'voto' : 'votos'}</div>
     `;
     list.appendChild(row);
   });
