@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Clube do Livro — Votação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     CONFIGURAÇÃO: Cola o teu URL do Google Apps Script aqui
+     ============================================================ */
+
+  :root {
+    --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-600: #d97706;
+    --amber-700: #b45309; --amber-800: #92400e;
+    --stone-50: #fafaf9; --stone-100: #f5f5f4; --stone-200: #e7e5e4;
+    --stone-300: #d6d3d1; --stone-400: #a8a29e; --stone-500: #78716c;
+    --stone-600: #57534e; --stone-700: #44403c; --stone-800: #292524;
+    --stone-900: #1c1917;
+    --green-50: #ecfdf5; --slate-400: #94a3b8; --slate-500: #64748b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Crimson Text', Georgia, serif;
+    color: var(--stone-900);
+    min-height: 100vh;
+    background: #fff;
+  }
+
+  .page { max-width: 680px; margin: 0 auto; padding: 32px 20px 60px; }
+
+  /* Header */
+  header { text-align: center; margin-bottom: 32px; }
+  h1 { font-size: 30px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.5px; }
+  .subtitle { font-size: 15px; color: var(--stone-500); margin: 0 0 14px; font-style: italic; }
+  .badge {
+    display: inline-block; background: var(--amber-100); color: var(--amber-800);
+    font-size: 12px; font-weight: 600; padding: 4px 14px; border-radius: 20px;
+    font-family: system-ui, sans-serif;
+  }
+
+  /* Name input */
+  .name-section { text-align: center; padding: 40px 20px; }
+  .name-label { display: block; font-size: 18px; margin-bottom: 16px; color: var(--stone-700); }
+  .name-row { display: flex; gap: 10px; max-width: 360px; margin: 0 auto; }
+  .name-input {
+    flex: 1; padding: 12px 16px; font-size: 16px; border: 2px solid var(--stone-300);
+    border-radius: 10px; outline: none; font-family: inherit; background: var(--stone-50);
+  }
+  .name-input:focus { border-color: var(--amber-700); }
+  .name-btn {
+    padding: 12px 20px; font-size: 15px; font-weight: 600; background: var(--stone-800);
+    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    font-family: system-ui, sans-serif; white-space: nowrap;
+  }
+  .name-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* Instructions */
+  .instructions {
+    text-align: center; font-size: 14px; color: var(--stone-600);
+    margin-bottom: 22px; font-family: system-ui, sans-serif;
+  }
+
+  /* Cards */
+  .grid { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    border: 2px solid var(--stone-200); border-radius: 14px; padding: 16px 18px;
+    background: var(--stone-50); transition: all 0.2s; cursor: pointer; position: relative;
+  }
+  .card:hover { border-color: var(--stone-300); }
+  .card.selected { border-color: var(--amber-700); background: var(--amber-50); box-shadow: 0 0 0 1px var(--amber-700); }
+  .card.disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .title-row { display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; }
+  .emoji { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .book-title { font-size: 18px; font-weight: 700; color: var(--stone-800); line-height: 1.3; }
+  .author { font-size: 13px; color: var(--stone-500); font-family: system-ui, sans-serif; }
+
+  .check {
+    width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--stone-300);
+    display: flex; align-items: center; justify-content: center; background: #fff;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .card.selected .check { border-color: var(--amber-700); background: var(--amber-50); }
+  .check-mark { color: var(--amber-700); font-weight: 800; font-size: 14px; display: none; }
+  .card.selected .check-mark { display: block; }
+
+  .sinopse { margin: 0 0 8px; font-size: 14px; color: var(--stone-600); line-height: 1.55; font-style: italic; }
+  .porque {
+    margin: 0 0 10px; font-size: 13px; color: var(--amber-800); line-height: 1.4;
+    font-family: system-ui, sans-serif; background: var(--amber-100);
+    padding: 6px 10px; border-radius: 8px; font-weight: 500;
+  }
+  .links { display: flex; align-items: center; gap: 6px; }
+  .shop-link {
+    font-size: 12px; color: var(--amber-700); text-decoration: none;
+    font-family: system-ui, sans-serif; font-weight: 600;
+  }
+  .shop-link:hover { text-decoration: underline; }
+  .link-sep { font-size: 12px; color: var(--stone-300); }
+
+  /* Footer */
+  .footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 24px; padding: 16px 20px; background: var(--stone-800); border-radius: 14px;
+  }
+  .sel-info { color: var(--stone-300); font-size: 14px; font-family: system-ui, sans-serif; font-weight: 600; }
+  .submit-btn {
+    padding: 12px 32px; font-size: 16px; font-weight: 700; background: var(--amber-600);
+    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    font-family: system-ui, sans-serif; transition: opacity 0.2s;
+  }
+  .submit-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* Results */
+  .results-section { margin-top: 8px; }
+  .thank-you {
+    text-align: center; padding: 20px; background: var(--green-50); border-radius: 14px;
+    margin-bottom: 24px; display: flex; flex-direction: column; align-items: center;
+    gap: 6px; font-family: system-ui, sans-serif; font-size: 15px;
+  }
+  .results-title { font-size: 22px; font-weight: 700; margin-bottom: 18px; text-align: center; }
+  .results-list { display: flex; flex-direction: column; gap: 14px; }
+  .result-row { display: flex; align-items: center; gap: 10px; }
+  .result-info { display: flex; align-items: center; gap: 6px; min-width: 180px; flex-shrink: 0; }
+  .result-emoji { font-size: 18px; flex-shrink: 0; }
+  .result-book-title { font-size: 13px; font-weight: 700; color: var(--stone-800); }
+  .result-author { font-size: 11px; color: var(--stone-400); }
+  .bar-wrap { flex: 1; height: 16px; background: var(--stone-100); border-radius: 8px; overflow: hidden; }
+  .bar { height: 100%; border-radius: 8px; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+  .bar.leader { background: linear-gradient(90deg, #b45309, #d97706); }
+  .bar.normal { background: linear-gradient(90deg, #64748b, #94a3b8); }
+  .result-count {
+    font-size: 12px; color: var(--stone-500); font-family: system-ui, sans-serif;
+    font-weight: 600; min-width: 50px; text-align: right; flex-shrink: 0;
+  }
+
+  .voter-list { margin-top: 24px; text-align: center; }
+  .voter-title {
+    font-size: 12px; color: var(--stone-400); margin-bottom: 8px;
+    font-family: system-ui, sans-serif; text-transform: uppercase;
+    letter-spacing: 0.5px; font-weight: 600;
+  }
+  .voter-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .chip {
+    display: inline-block; padding: 4px 12px; background: var(--amber-100);
+    color: var(--amber-800); border-radius: 20px; font-size: 12px;
+    font-family: system-ui, sans-serif; font-weight: 500;
+  }
+
+  .actions-row { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }
+  .refresh-btn, .reset-btn, .peek-btn {
+    padding: 8px 18px; font-size: 13px; border-radius: 10px; cursor: pointer;
+    font-family: system-ui, sans-serif;
+  }
+  .refresh-btn { background: var(--stone-100); border: 1px solid var(--stone-300); color: var(--stone-700); }
+  .reset-btn { background: transparent; border: 1px solid var(--stone-200); color: var(--stone-400); }
+  .peek-btn {
+    display: block; margin: 18px auto 0; background: transparent;
+    border: 1px solid var(--stone-300); color: var(--stone-500);
+  }
+
+  /* Loading */
+  .loading-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 60vh; gap: 16px;
+  }
+  .spinner {
+    width: 30px; height: 30px; border: 3px solid var(--stone-200);
+    border-top: 3px solid var(--amber-700); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .loading-text { color: var(--stone-500); font-size: 14px; font-family: system-ui, sans-serif; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-banner {
+    text-align: center; padding: 20px; background: #fef2f2; border-radius: 14px;
+    margin-bottom: 24px; color: #991b1b; font-family: system-ui, sans-serif; font-size: 14px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- Loading -->
+  <div id="loading" class="loading-wrap">
+    <div class="spinner"></div>
+    <p class="loading-text">A carregar votação...</p>
+  </div>
+
+  <!-- Main content (hidden until loaded) -->
+  <div id="app" class="hidden">
+    <header>
+      <h1>📚 Clube do Livro</h1>
+      <p class="subtitle">Escolhe os próximos 2 livros para lermos juntos</p>
+      <div class="badge"><span id="voter-count">0</span> votos registados</div>
+    </header>
+
+    <!-- Error -->
+    <div id="error-banner" class="error-banner hidden"></div>
+
+    <!-- Step 1: Name -->
+    <div id="name-section" class="name-section">
+      <label class="name-label">Como te chamas?</label>
+      <div class="name-row">
+        <input id="name-input" class="name-input" placeholder="O teu nome..." />
+        <button id="name-btn" class="name-btn" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Vote -->
+    <div id="vote-section" class="hidden">
+      <p id="greeting" class="instructions"></p>
+      <div id="book-grid" class="grid"></div>
+      <div class="footer">
+        <div id="sel-info" class="sel-info">0/2 seleccionados</div>
+        <button id="submit-btn" class="submit-btn" disabled>Votar ✓</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Results -->
+    <div id="results-section" class="results-section hidden">
+      <div id="thank-you" class="thank-you hidden">
+        <span style="font-size:28px">🎉</span>
+        <p id="thank-you-text"></p>
+      </div>
+      <h2 class="results-title">Resultados</h2>
+      <div id="results-list" class="results-list"></div>
+      <div id="voter-list" class="voter-list hidden">
+        <p class="voter-title">Quem já votou:</p>
+        <div id="voter-chips" class="voter-chips"></div>
+      </div>
+      <div class="actions-row">
+        <button id="refresh-btn" class="refresh-btn">🔄 Actualizar</button>
+        <button id="reset-btn" class="reset-btn">Reiniciar votação</button>
+      </div>
+    </div>
+
+    <!-- Peek / Back buttons -->
+    <button id="peek-btn" class="peek-btn hidden">👀 Espreitar resultados</button>
+    <button id="back-btn" class="peek-btn hidden">← Voltar para votar</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURAÇÃO — Cola aqui o teu URL codificado em Base64
+// (ver instruções para como gerar)
+// ============================================================
+const _E = "aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6ZTVuR3BFQ0I2TENwRWFMaEcyejFSMmJSLTlyblR1Q2EtTDNLVG5ueGZ2RGRjR1dDWnRUZ1lPb3dlZUE2X25POC9leGVjCg==";
+const API_URL = atob(_E);
+// ============================================================
+
+const MAX_VOTES = 2;
+
+const BOOKS = [
+  {
+    id: "saramago", emoji: "💀",
+    title: "As Intermitências da Morte", author: "José Saramago", pages: 210,
+    sinopse: "No dia seguinte ninguém morreu. O autor desenvolve a hipótese em todas as suas consequências, numa ampla divagação sobre a vida, a morte, o amor, e o sentido da nossa existência.",
+    porque: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
+    wook: "https://www.wook.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
+    bertrand: "https://www.bertrand.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
+  },
+  {
+    id: "kang", emoji: "🌿",
+    title: "A Vegetariana", author: "Han Kang", pages: 180,
+    sinopse: "Yeong-hye decide deitar fora toda a carne e tornar-se vegetariana depois de um pesadelo. O seu ato de renúncia desencadeia reações extremadas da família. Erótico, violento, poético.",
+    porque: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
+    wook: "https://www.wook.pt/livro/a-vegetariana-han-kang/18547889",
+    bertrand: "https://www.bertrand.pt/livro/a-vegetariana-han-kang/18547889",
+  },
+  {
+    id: "camus", emoji: "☀️",
+    title: "O Estrangeiro", author: "Albert Camus", pages: 120,
+    sinopse: "Meursault recebe um telegrama: a mãe morreu. De regresso a casa após o funeral, enceta amizade com um vizinho de práticas duvidosas, reencontra uma antiga colega de trabalho com quem se envolve, vai à praia — até que ocorre um homicídio. Romance estranho, desconcertante sob uma aparente singeleza estilística, em O Estrangeiro joga-se o destino de um homem perante o absurdo e questiona-se o sentido da existência.",
+    porque: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
+    wook: "https://www.wook.pt/livro/o-estrangeiro-albert-camus/15328334",
+    bertrand: "https://www.bertrand.pt/livro/o-estrangeiro-albert-camus/15328334",
+  },
+  {
+    id: "vhm", emoji: "⚙️",
+    title: "A Máquina de Fazer Espanhóis", author: "Valter Hugo Mãe", pages: 260,
+    sinopse: "Surpreendente retrato da vida dos velhos, este livro fala dos fantasmas da portugalidade e da candura que existe mesmo nos momentos mais tristes. Delicadíssimo, corajoso e inesquecível.",
+    porque: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
+    wook: "https://www.wook.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
+    bertrand: "https://www.bertrand.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
+  },
+  {
+    id: "ncs", emoji: "⛵",
+    title: "Como Um Marinheiro Eu Partirei", author: "Nuno Costa Santos", pages: 160,
+    sinopse: "Uma narrativa profundamente humana que revisita a vida do cantor belga Jacques Brel e a sua passagem crepuscular pelos Açores. Romance, biografia, reportagem e reflexão sobre os nossos medos mais secretos.",
+    porque: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
+    wook: "https://www.wook.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
+    bertrand: "https://www.bertrand.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
+  },
+  {
+    id: "amado", emoji: "🏖️",
+    title: "Capitães da Areia", author: "Jorge Amado", pages: 272,
+    sinopse: "Jorge Amado descreve, em páginas de grande beleza e dramatismo, a vida dos meninos abandonados nas ruas de São Salvador da Bahia. Publicado em 1937, teve a primeira edição queimada em praça pública.",
+    porque: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
+    wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
+    bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
+  },
+];
+
+// State
+let allVotes = {};
+let voters = {};
+let selected = [];
+let submittedName = "";
+let hasVoted = false;
+
+// DOM
+const $ = (id) => document.getElementById(id);
+
+// ---- Load data ----
+async function loadData() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    allVotes = data.votes || {};
+    voters = data.voters || {};
+  } catch (e) {
+    console.error("Erro ao carregar:", e);
+  }
+  updateVoterCount();
+}
+
+function updateVoterCount() {
+  const count = Object.keys(voters).length;
+  $("voter-count").textContent = count;
+  // Update badge text for singular/plural
+  $("voter-count").parentElement.textContent = count + (count === 1 ? " voto registado" : " votos registados");
+}
+
+// ---- Render book cards ----
+function renderBooks() {
+  const grid = $("book-grid");
+  grid.innerHTML = "";
+
+  BOOKS.forEach((book) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.id = book.id;
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="title-row">
+          <span class="emoji">${book.emoji}</span>
+          <div>
+            <span class="book-title">${book.title}</span>
+            <span class="author"> — ${book.author} · ${book.pages} pág.</span>
+          </div>
+        </div>
+        <div class="check"><span class="check-mark">✓</span></div>
+      </div>
+      <p class="sinopse">«${book.sinopse}»</p>
+      <p class="porque">💬 ${book.porque}</p>
+      <div class="links">
+        <a href="${book.wook}" target="_blank" rel="noopener noreferrer" class="shop-link">Wook ↗</a>
+        <span class="link-sep">·</span>
+        <a href="${book.bertrand}" target="_blank" rel="noopener noreferrer" class="shop-link">Bertrand ↗</a>
+      </div>
+    `;
+
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".shop-link")) return;
+      toggleBook(book.id);
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function toggleBook(id) {
+  if (hasVoted) return;
+  const idx = selected.indexOf(id);
+  if (idx > -1) {
+    selected.splice(idx, 1);
+  } else if (selected.length < MAX_VOTES) {
+    selected.push(id);
+  }
+  updateCards();
+}
+
+function updateCards() {
+  document.querySelectorAll(".card").forEach((card) => {
+    const id = card.dataset.id;
+    const isSel = selected.includes(id);
+    const isDis = !isSel && selected.length >= MAX_VOTES;
+    card.classList.toggle("selected", isSel);
+    card.classList.toggle("disabled", isDis);
+  });
+  $("sel-info").textContent = selected.length + "/" + MAX_VOTES + " seleccionados";
+  $("submit-btn").disabled = selected.length === 0;
+}
+
+// ---- Submit vote ----
+async function submitVote() {
+  if (selected.length === 0 || !submittedName) return;
+  $("submit-btn").textContent = "A enviar...";
+  $("submit-btn").disabled = true;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ nome: submittedName, livros: selected }),
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      $("submit-btn").textContent = "Votar ✓";
+      $("submit-btn").disabled = false;
+      return;
+    }
+
+    // Update local state
+    selected.forEach((id) => { allVotes[id] = (allVotes[id] || 0) + 1; });
+    voters[submittedName.toLowerCase()] = { name: submittedName, books: selected };
+    hasVoted = true;
+
+    showResults(true);
+  } catch (e) {
+    console.error("Erro ao votar:", e);
+    alert("Erro ao enviar o voto. Tenta outra vez.");
+    $("submit-btn").textContent = "Votar ✓";
+    $("submit-btn").disabled = false;
+  }
+}
+
+// ---- Render results ----
+function showResults(justVoted) {
+  $("vote-section").classList.add("hidden");
+  $("name-section").classList.add("hidden");
+  $("results-section").classList.remove("hidden");
+  $("peek-btn").classList.add("hidden");
+
+  if (justVoted) {
+    $("thank-you").classList.remove("hidden");
+    $("thank-you-text").innerHTML = "Obrigado, <strong>" + submittedName + "</strong>! O teu voto foi registado.";
+    $("back-btn").classList.add("hidden");
+  } else {
+    $("thank-you").classList.add("hidden");
+    $("back-btn").classList.remove("hidden");
+  }
+
+  const totalVotes = Object.values(allVotes).reduce((a, b) => a + b, 0);
+  const maxVoteCount = Math.max(1, ...Object.values(allVotes));
+  const sorted = [...BOOKS].sort((a, b) => (allVotes[b.id] || 0) - (allVotes[a.id] || 0));
+
+  const list = $("results-list");
+  list.innerHTML = "";
+
+  sorted.forEach((book, i) => {
+    const count = allVotes[book.id] || 0;
+    const pct = totalVotes > 0 ? (count / maxVoteCount) * 100 : 0;
+    const isLeader = i === 0 && count > 0;
+    const row = document.createElement("div");
+    row.className = "result-row";
+    row.innerHTML = `
+      <div class="result-info">
+        <span class="result-emoji">${book.emoji}</span>
+        <div>
+          <span class="result-book-title">${book.title}</span>
+          <span class="result-author"> — ${book.author}</span>
+        </div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar ${isLeader ? 'leader' : 'normal'}" style="width:${Math.max(pct, 2)}%"></div>
+      </div>
+      <div class="result-count">${count} ${count === 1 ? 'voto' : 'votos'}</div>
+    `;
+    list.appendChild(row);
+  });
+
+  // Voter chips
+  const voterKeys = Object.keys(voters);
+  if (voterKeys.length > 0) {
+    $("voter-list").classList.remove("hidden");
+    $("voter-chips").innerHTML = voterKeys
+      .map((k) => '<span class="chip">' + voters[k].name + '</span>')
+      .join("");
+  }
+
+  updateVoterCount();
+}
+
+// ---- Reset ----
+async function resetPoll() {
+  if (!confirm("Tens a certeza? Isto apaga TODOS os votos.\n\n(Terás de apagar as linhas na Google Sheet manualmente também.)")) return;
+  // Note: we can't delete from the sheet via GET/POST easily,
+  // so we just reset local state and tell the user
+  alert("Para completar o reset, abre a tua Google Sheet e apaga as linhas de votos (mantém o cabeçalho).");
+  allVotes = {};
+  voters = {};
+  hasVoted = false;
+  selected = [];
+  submittedName = "";
+  $("results-section").classList.add("hidden");
+  $("name-section").classList.remove("hidden");
+  $("name-input").value = "";
+  updateVoterCount();
+}
+
+// ---- Init ----
+async function init() {
+  // Check config
+  if (_E === "COLA_AQUI_O_URL_EM_BASE64") {
+    $("loading").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    $("name-section").classList.add("hidden");
+    $("error-banner").classList.remove("hidden");
+    $("error-banner").textContent = "⚠️ Falta configurar o URL do Google Apps Script. Abre o ficheiro index.html e substitui COLA_AQUI_O_URL_EM_BASE64 pelo teu URL codificado (ver instruções).";
+    return;
+  }
+
+  await loadData();
+  renderBooks();
+
+  $("loading").classList.add("hidden");
+  $("app").classList.remove("hidden");
+
+  // Show peek button if there are votes
+  if (Object.keys(voters).length > 0) {
+    $("peek-btn").classList.remove("hidden");
+  }
+
+  // Name input
+  $("name-input").addEventListener("input", () => {
+    $("name-btn").disabled = !$("name-input").value.trim();
+  });
+
+  $("name-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") $("name-btn").click();
+  });
+
+  $("name-btn").addEventListener("click", () => {
+    const name = $("name-input").value.trim();
+    if (!name) return;
+    if (voters[name.toLowerCase()]) {
+      alert("Já existe um voto com este nome!");
+      return;
+    }
+    submittedName = name;
+    $("name-section").classList.add("hidden");
+    $("vote-section").classList.remove("hidden");
+    $("peek-btn").classList.add("hidden");
+    $("greeting").innerHTML = 'Olá <strong>' + name + '</strong>! Selecciona até <strong>' + MAX_VOTES + ' livros</strong>.';
+  });
+
+  $("submit-btn").addEventListener("click", submitVote);
+  $("refresh-btn").addEventListener("click", async () => {
+    await loadData();
+    showResults(hasVoted);
+  });
+  $("reset-btn").addEventListener("click", resetPoll);
+
+  $("peek-btn").addEventListener("click", () => {
+    showResults(false);
+  });
+  $("back-btn").addEventListener("click", () => {
+    $("results-section").classList.add("hidden");
+    $("back-btn").classList.add("hidden");
+    if (submittedName) {
+      $("vote-section").classList.remove("hidden");
+    } else {
+      $("name-section").classList.remove("hidden");
+      if (Object.keys(voters).length > 0) $("peek-btn").classList.remove("hidden");
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
