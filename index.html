@@ -290,58 +290,90 @@ const _E = "aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6ZTVuR3BFQ0I2
 const API_URL = atob(_E);
 // ============================================================
 
-const MAX_VOTES = 2;
+/**
+ * @typedef {{
+ *   id:             string,
+ *   emoji:          string,
+ *   title:          string,
+ *   author:         string,
+ *   pages:          number,
+ *   sinopse:        string,
+ *   porque:         string,
+ *   wook?:          string,
+ *   bertrand?:      string,
+ *   letrasLavadas?: string,
+ * }} Book
+ *
+ * @typedef {{
+ *   number:    number,
+ *   startedAt: string,
+ *   maxVotes:  number,
+ *   books:     Book[],
+ * } | null} ActiveVote
+ *
+ * Invariants for ACTIVE_VOTE (when non-null):
+ *  - `number` is exactly ARCHIVE[0].number + 1 (or 1 when ARCHIVE is empty).
+ *  - `books` is non-empty; each `id` is unique.
+ *  - `maxVotes` is between 1 and books.length.
+ *  - `startedAt` is an ISO date (YYYY-MM-DD).
+ */
 
-const BOOKS = [
-  {
-    id: "saramago", emoji: "💀",
-    title: "As Intermitências da Morte", author: "José Saramago", pages: 210,
-    sinopse: "No dia seguinte ninguém morreu. O autor desenvolve a hipótese em todas as suas consequências, numa ampla divagação sobre a vida, a morte, o amor, e o sentido da nossa existência.",
-    porque: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
-    wook: "https://www.wook.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
-    bertrand: "https://www.bertrand.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
-  },
-  {
-    id: "kang", emoji: "🌿",
-    title: "A Vegetariana", author: "Han Kang", pages: 180,
-    sinopse: "Yeong-hye decide deitar fora toda a carne e tornar-se vegetariana depois de um pesadelo. O seu ato de renúncia desencadeia reações extremadas da família. Erótico, violento, poético.",
-    porque: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
-    wook: "https://www.wook.pt/livro/a-vegetariana-han-kang/18547889",
-    bertrand: "https://www.bertrand.pt/livro/a-vegetariana-han-kang/18547889",
-  },
-  {
-    id: "camus", emoji: "☀️",
-    title: "O Estrangeiro", author: "Albert Camus", pages: 120,
-    sinopse: "Meursault recebe um telegrama: a mãe morreu. De regresso a casa após o funeral, enceta amizade com um vizinho de práticas duvidosas, reencontra uma antiga colega de trabalho com quem se envolve, vai à praia — até que ocorre um homicídio. Romance estranho, desconcertante sob uma aparente singeleza estilística, em O Estrangeiro joga-se o destino de um homem perante o absurdo e questiona-se o sentido da existência.",
-    porque: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
-    wook: "https://www.wook.pt/livro/o-estrangeiro-albert-camus/15328334",
-    bertrand: "https://www.bertrand.pt/livro/o-estrangeiro-albert-camus/15328334",
-  },
-  {
-    id: "vhm", emoji: "⚙️",
-    title: "A Máquina de Fazer Espanhóis", author: "Valter Hugo Mãe", pages: 260,
-    sinopse: "Surpreendente retrato da vida dos velhos, este livro fala dos fantasmas da portugalidade e da candura que existe mesmo nos momentos mais tristes. Delicadíssimo, corajoso e inesquecível.",
-    porque: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
-    wook: "https://www.wook.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
-    bertrand: "https://www.bertrand.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
-  },
-  {
-    id: "ncs", emoji: "⛵",
-    title: "Como Um Marinheiro Eu Partirei", author: "Nuno Costa Santos", pages: 160,
-    sinopse: "Uma narrativa profundamente humana que revisita a vida do cantor belga Jacques Brel e a sua passagem crepuscular pelos Açores. Romance, biografia, reportagem e reflexão sobre os nossos medos mais secretos.",
-    porque: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
-    wook: "https://www.wook.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
-    bertrand: "https://www.bertrand.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
-  },
-  {
-    id: "amado", emoji: "🏖️",
-    title: "Capitães da Areia", author: "Jorge Amado", pages: 272,
-    sinopse: "Jorge Amado descreve, em páginas de grande beleza e dramatismo, a vida dos meninos abandonados nas ruas de São Salvador da Bahia. Publicado em 1937, teve a primeira edição queimada em praça pública.",
-    porque: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
-    wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
-    bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
-  },
-];
+/** @type {ActiveVote} */
+const ACTIVE_VOTE = {
+  number: 1,
+  startedAt: "2026-05-14",
+  maxVotes: 2,
+  books: [
+    {
+      id: "saramago", emoji: "💀",
+      title: "As Intermitências da Morte", author: "José Saramago", pages: 210,
+      sinopse: "No dia seguinte ninguém morreu. O autor desenvolve a hipótese em todas as suas consequências, numa ampla divagação sobre a vida, a morte, o amor, e o sentido da nossa existência.",
+      porque: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
+      wook: "https://www.wook.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
+      bertrand: "https://www.bertrand.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
+    },
+    {
+      id: "kang", emoji: "🌿",
+      title: "A Vegetariana", author: "Han Kang", pages: 180,
+      sinopse: "Yeong-hye decide deitar fora toda a carne e tornar-se vegetariana depois de um pesadelo. O seu ato de renúncia desencadeia reações extremadas da família. Erótico, violento, poético.",
+      porque: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
+      wook: "https://www.wook.pt/livro/a-vegetariana-han-kang/18547889",
+      bertrand: "https://www.bertrand.pt/livro/a-vegetariana-han-kang/18547889",
+    },
+    {
+      id: "camus", emoji: "☀️",
+      title: "O Estrangeiro", author: "Albert Camus", pages: 120,
+      sinopse: "Meursault recebe um telegrama: a mãe morreu. De regresso a casa após o funeral, enceta amizade com um vizinho de práticas duvidosas, reencontra uma antiga colega de trabalho com quem se envolve, vai à praia — até que ocorre um homicídio. Romance estranho, desconcertante sob uma aparente singeleza estilística, em O Estrangeiro joga-se o destino de um homem perante o absurdo e questiona-se o sentido da existência.",
+      porque: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
+      wook: "https://www.wook.pt/livro/o-estrangeiro-albert-camus/15328334",
+      bertrand: "https://www.bertrand.pt/livro/o-estrangeiro-albert-camus/15328334",
+    },
+    {
+      id: "vhm", emoji: "⚙️",
+      title: "A Máquina de Fazer Espanhóis", author: "Valter Hugo Mãe", pages: 260,
+      sinopse: "Surpreendente retrato da vida dos velhos, este livro fala dos fantasmas da portugalidade e da candura que existe mesmo nos momentos mais tristes. Delicadíssimo, corajoso e inesquecível.",
+      porque: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
+      wook: "https://www.wook.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
+      bertrand: "https://www.bertrand.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
+    },
+    {
+      id: "ncs", emoji: "⛵",
+      title: "Como Um Marinheiro Eu Partirei", author: "Nuno Costa Santos", pages: 160,
+      sinopse: "Uma narrativa profundamente humana que revisita a vida do cantor belga Jacques Brel e a sua passagem crepuscular pelos Açores. Romance, biografia, reportagem e reflexão sobre os nossos medos mais secretos.",
+      porque: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
+      wook: "https://www.wook.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
+      bertrand: "https://www.bertrand.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
+    },
+    {
+      id: "amado", emoji: "🏖️",
+      title: "Capitães da Areia", author: "Jorge Amado", pages: 272,
+      sinopse: "Jorge Amado descreve, em páginas de grande beleza e dramatismo, a vida dos meninos abandonados nas ruas de São Salvador da Bahia. Publicado em 1937, teve a primeira edição queimada em praça pública.",
+      porque: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
+      wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
+      bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
+    },
+  ],
+};
 
 // State
 let allVotes = {};
@@ -373,11 +405,11 @@ function updateVoterCount() {
 }
 
 // ---- Render book cards ----
-function renderBooks() {
+function renderCandidateBooks() {
   const grid = $("book-grid");
   grid.innerHTML = "";
 
-  BOOKS.forEach((book) => {
+  ACTIVE_VOTE.books.forEach((book) => {
     const card = document.createElement("div");
     card.className = "card";
     card.dataset.id = book.id;
@@ -415,21 +447,21 @@ function toggleBook(id) {
   const idx = selected.indexOf(id);
   if (idx > -1) {
     selected.splice(idx, 1);
-  } else if (selected.length < MAX_VOTES) {
+  } else if (selected.length < ACTIVE_VOTE.maxVotes) {
     selected.push(id);
   }
-  updateCards();
+  updateSelectionUI();
 }
 
-function updateCards() {
+function updateSelectionUI() {
   document.querySelectorAll(".card").forEach((card) => {
     const id = card.dataset.id;
     const isSel = selected.includes(id);
-    const isDis = !isSel && selected.length >= MAX_VOTES;
+    const isDis = !isSel && selected.length >= ACTIVE_VOTE.maxVotes;
     card.classList.toggle("selected", isSel);
     card.classList.toggle("disabled", isDis);
   });
-  $("sel-info").textContent = selected.length + "/" + MAX_VOTES + " seleccionados";
+  $("sel-info").textContent = selected.length + "/" + ACTIVE_VOTE.maxVotes + " seleccionados";
   $("submit-btn").disabled = selected.length === 0;
 }
 
@@ -466,7 +498,7 @@ async function submitVote() {
       $("vote-section").classList.remove("hidden");
       $("name-section").classList.remove("hidden");
       $("peek-btn").classList.remove("hidden");
-      renderBooks();
+      renderCandidateBooks();
       return;
     }
 
@@ -484,7 +516,7 @@ async function submitVote() {
     $("vote-section").classList.remove("hidden");
     $("name-section").classList.remove("hidden");
     $("peek-btn").classList.remove("hidden");
-    renderBooks();
+    renderCandidateBooks();
   }
 }
 
@@ -504,7 +536,7 @@ function showResults(justVoted) {
     $("back-btn").classList.remove("hidden");
   }
 
-  const sorted = [...BOOKS].sort((a, b) => (allVotes[b.id] || 0) - (allVotes[a.id] || 0));
+  const sorted = [...ACTIVE_VOTE.books].sort((a, b) => (allVotes[b.id] || 0) - (allVotes[a.id] || 0));
   const topCount = allVotes[sorted[0].id] || 0;
   const isTied = topCount > 0 && sorted.filter((b) => (allVotes[b.id] || 0) === topCount).length > 1;
   const medals = ["🥇", "🥈", "🥉"];
@@ -598,7 +630,7 @@ async function init() {
   }
 
   await loadData();
-  renderBooks();
+  renderCandidateBooks();
 
   $("loading").classList.add("hidden");
   $("app").classList.remove("hidden");
@@ -628,7 +660,7 @@ async function init() {
     $("name-section").classList.add("hidden");
     $("vote-section").classList.remove("hidden");
     $("peek-btn").classList.add("hidden");
-    $("greeting").innerHTML = 'Olá <strong>' + name + '</strong>! Selecciona até <strong>' + MAX_VOTES + ' livros</strong>.';
+    $("greeting").innerHTML = 'Olá <strong>' + name + '</strong>! Selecciona até <strong>' + ACTIVE_VOTE.maxVotes + ' livros</strong>.';
   });
 
   $("submit-btn").addEventListener("click", submitVote);
