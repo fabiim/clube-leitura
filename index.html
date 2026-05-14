@@ -264,11 +264,7 @@
         </div>
       </div>
       <h2 class="results-title">Resultados</h2>
-      <div id="results-list" class="results-list"></div>
-      <div id="voter-list" class="voter-list hidden">
-        <p class="voter-title">Quem já votou:</p>
-        <div id="voter-chips" class="voter-chips"></div>
-      </div>
+      <div id="results-content"></div>
       <div class="actions-row">
         <button id="refresh-btn" class="refresh-btn">🔄 Actualizar</button>
         <button id="reset-btn" class="reset-btn">Reiniciar votação</button>
@@ -426,11 +422,7 @@ function renderCandidateBooks() {
       </div>
       <p class="sinopse">«${book.sinopse}»</p>
       <p class="porque">💬 ${book.porque}</p>
-      <div class="links">
-        <a href="${book.wook}" target="_blank" rel="noopener noreferrer" class="shop-link">Wook ↗</a>
-        <span class="link-sep">·</span>
-        <a href="${book.bertrand}" target="_blank" rel="noopener noreferrer" class="shop-link">Bertrand ↗</a>
-      </div>
+      <div class="links">${renderShopLinks(book)}</div>
     `;
 
     card.addEventListener("click", (e) => {
@@ -440,6 +432,14 @@ function renderCandidateBooks() {
 
     grid.appendChild(card);
   });
+}
+
+function renderShopLinks(book) {
+  return `
+        <a href="${book.wook}" target="_blank" rel="noopener noreferrer" class="shop-link">Wook ↗</a>
+        <span class="link-sep">·</span>
+        <a href="${book.bertrand}" target="_blank" rel="noopener noreferrer" class="shop-link">Bertrand ↗</a>
+      `;
 }
 
 function toggleBook(id) {
@@ -477,7 +477,7 @@ async function submitVote() {
   selected.forEach((id) => { allVotes[id] = (allVotes[id] || 0) + 1; });
   voters[submittedName.toLowerCase()] = { name: submittedName, books: selected };
   hasVoted = true;
-  showResults(true);
+  showLiveResults(true);
   $("saving-indicator").classList.remove("hidden");
 
   try {
@@ -520,34 +520,23 @@ async function submitVote() {
   }
 }
 
-// ---- Render results ----
-function showResults(justVoted) {
-  $("vote-section").classList.add("hidden");
-  $("name-section").classList.add("hidden");
-  $("results-section").classList.remove("hidden");
-  $("peek-btn").classList.add("hidden");
+// Pure renderer: takes all data as arguments and paints into `container`.
+// Tolerates `votes` keys or `voters` selections that aren't in `books`.
+function renderResultsInto(container, books, votes, voters) {
+  container.innerHTML = "";
 
-  if (justVoted) {
-    $("thank-you").classList.remove("hidden");
-    $("thank-you-text").innerHTML = "Obrigado, <strong>" + submittedName + "</strong>! O teu voto foi registado.";
-    $("back-btn").classList.add("hidden");
-  } else {
-    $("thank-you").classList.add("hidden");
-    $("back-btn").classList.remove("hidden");
-  }
-
-  const sorted = [...ACTIVE_VOTE.books].sort((a, b) => (allVotes[b.id] || 0) - (allVotes[a.id] || 0));
-  const topCount = allVotes[sorted[0].id] || 0;
-  const isTied = topCount > 0 && sorted.filter((b) => (allVotes[b.id] || 0) === topCount).length > 1;
+  const sorted = [...books].sort((a, b) => (votes[b.id] || 0) - (votes[a.id] || 0));
+  const topCount = sorted.length > 0 ? (votes[sorted[0].id] || 0) : 0;
+  const isTied = topCount > 0 && sorted.filter((b) => (votes[b.id] || 0) === topCount).length > 1;
   const medals = ["🥇", "🥈", "🥉"];
 
-  const list = $("results-list");
-  list.innerHTML = "";
+  const list = document.createElement("div");
+  list.className = "results-list";
 
   let rank = 0;
   let prevCount = -1;
   sorted.forEach((book) => {
-    const count = allVotes[book.id] || 0;
+    const count = votes[book.id] || 0;
     if (count !== prevCount) { rank++; prevCount = count; }
 
     const isLeader = count === topCount && count > 0 && !isTied;
@@ -573,11 +562,7 @@ function showResults(justVoted) {
       <div class="result-details">
         <p class="sinopse">«${book.sinopse}»</p>
         <p class="porque">💬 ${book.porque}</p>
-        <div class="links">
-          <a href="${book.wook}" target="_blank" rel="noopener noreferrer" class="shop-link">Wook ↗</a>
-          <span class="link-sep">·</span>
-          <a href="${book.bertrand}" target="_blank" rel="noopener noreferrer" class="shop-link">Bertrand ↗</a>
-        </div>
+        <div class="links">${renderShopLinks(book)}</div>
       </div>
     `;
     card.addEventListener("click", (e) => {
@@ -587,16 +572,38 @@ function showResults(justVoted) {
     });
     list.appendChild(card);
   });
+  container.appendChild(list);
 
-  // Voter chips
   const voterKeys = Object.keys(voters);
   if (voterKeys.length > 0) {
-    $("voter-list").classList.remove("hidden");
-    $("voter-chips").innerHTML = voterKeys
-      .map((k) => '<span class="chip">' + voters[k].name + '</span>')
-      .join("");
+    const voterList = document.createElement("div");
+    voterList.className = "voter-list";
+    voterList.innerHTML = `
+      <p class="voter-title">Quem já votou:</p>
+      <div class="voter-chips">
+        ${voterKeys.map((k) => '<span class="chip">' + voters[k].name + '</span>').join("")}
+      </div>
+    `;
+    container.appendChild(voterList);
+  }
+}
+
+function showLiveResults(justVoted) {
+  $("vote-section").classList.add("hidden");
+  $("name-section").classList.add("hidden");
+  $("results-section").classList.remove("hidden");
+  $("peek-btn").classList.add("hidden");
+
+  if (justVoted) {
+    $("thank-you").classList.remove("hidden");
+    $("thank-you-text").innerHTML = "Obrigado, <strong>" + submittedName + "</strong>! O teu voto foi registado.";
+    $("back-btn").classList.add("hidden");
+  } else {
+    $("thank-you").classList.add("hidden");
+    $("back-btn").classList.remove("hidden");
   }
 
+  renderResultsInto($("results-content"), ACTIVE_VOTE.books, allVotes, voters);
   updateVoterCount();
 }
 
@@ -666,12 +673,12 @@ async function init() {
   $("submit-btn").addEventListener("click", submitVote);
   $("refresh-btn").addEventListener("click", async () => {
     await loadData();
-    showResults(hasVoted);
+    showLiveResults(hasVoted);
   });
   $("reset-btn").addEventListener("click", resetPoll);
 
   $("peek-btn").addEventListener("click", () => {
-    showResults(false);
+    showLiveResults(false);
   });
   $("back-btn").addEventListener("click", () => {
     $("results-section").classList.add("hidden");
