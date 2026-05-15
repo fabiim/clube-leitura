@@ -634,6 +634,7 @@ function getBook(id) {
  * @typedef {{
  *   number:    number,
  *   startedAt: string,
+ *   minVotes:  number,
  *   maxVotes:  number,
  *   bookIds:   string[],
  * } | null} ActiveVote
@@ -642,6 +643,7 @@ function getBook(id) {
  *  - `number` is exactly ARCHIVE[0].number + 1 (or 1 when ARCHIVE is empty).
  *  - `bookIds` is non-empty; each id resolves in BOOKS; ids are unique.
  *  - `maxVotes` is between 1 and bookIds.length.
+ *  - `minVotes` is between 1 and `maxVotes`.
  *  - `startedAt` is an ISO date (YYYY-MM-DD).
  */
 
@@ -649,6 +651,7 @@ function getBook(id) {
 const ACTIVE_VOTE = {
   number: 2,
   startedAt: "2026-05-15",
+  minVotes: 2,
   maxVotes: 2,
   bookIds: ["ncs-ceu", "voltaire", "ernaux", "rhys", "stoner"],
 };
@@ -837,7 +840,7 @@ function updateSelectionUI() {
     card.classList.toggle("disabled", isDis);
   });
   $("sel-info").textContent = selected.length + "/" + ACTIVE_VOTE.maxVotes + " seleccionados";
-  $("submit-btn").disabled = selected.length === 0;
+  $("submit-btn").disabled = selected.length < ACTIVE_VOTE.minVotes;
 }
 
 // ---- Submit vote ----
@@ -1337,7 +1340,11 @@ async function init() {
     $("name-section").classList.add("hidden");
     $("vote-section").classList.remove("hidden");
     $("peek-btn").classList.add("hidden");
-    $("greeting").innerHTML = 'Olá <strong>' + name + '</strong>! Selecciona até <strong>' + ACTIVE_VOTE.maxVotes + ' livros</strong>.';
+    const { minVotes, maxVotes } = ACTIVE_VOTE;
+    const pick = minVotes === maxVotes
+      ? `<strong>${maxVotes} livros</strong>`
+      : `entre <strong>${minVotes} e ${maxVotes} livros</strong>`;
+    $("greeting").innerHTML = `Olá <strong>${name}</strong>! Selecciona ${pick}.`;
   });
 
   $("submit-btn").addEventListener("click", submitVote);
