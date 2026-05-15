@@ -84,6 +84,7 @@
   .card:hover { border-color: var(--stone-300); }
   .card.selected { border-color: var(--amber-700); background: var(--amber-50); box-shadow: 0 0 0 1px var(--amber-700); }
   .card.disabled { opacity: 0.4; cursor: not-allowed; }
+  #inicio-current:not(:empty) { margin-bottom: 28px; }
 
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
   .title-row { display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; }
@@ -312,39 +313,35 @@
   }
   .inicio-pill-arrow { flex-shrink: 0; font-size: 16px; }
 
-  /* Início — callout slot (no-vote: prominent expandable card) */
-  .inicio-card {
-    border: 2px solid var(--amber-700); border-radius: 14px;
-    background: var(--amber-50); margin-bottom: 28px;
-    overflow: hidden;
+  /* Início — current-book strip (collapsed-by-default, expandable). */
+  .current-strip {
+    border: 2px solid var(--stone-200); border-radius: 14px;
+    background: var(--stone-50); overflow: hidden;
+    transition: border-color 0.2s;
   }
-  .inicio-card-header {
-    display: flex; align-items: center; gap: 12px;
+  .current-strip:hover { border-color: var(--stone-300); }
+  .current-strip-row {
+    display: flex; align-items: center; gap: 14px;
     padding: 14px 18px; cursor: pointer;
+  }
+  .current-strip-emoji { font-size: 30px; flex-shrink: 0; line-height: 1; }
+  .current-strip-title {
+    flex: 1; min-width: 0;
+    font-size: 17px; font-weight: 700; color: var(--stone-800);
+    line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .current-strip-toggle {
+    flex-shrink: 0; font-size: 18px; color: var(--stone-400);
     font-family: system-ui, sans-serif;
   }
-  .inicio-card-title {
-    flex: 1; font-size: 15px; font-weight: 700; color: var(--amber-800);
-    letter-spacing: -0.2px;
+  .current-strip-body {
+    display: none; padding: 0 18px 16px;
   }
-  .inicio-card-toggle { flex-shrink: 0; font-size: 18px; }
-  .inicio-card-body {
-    display: none; padding: 14px 18px 16px;
-    border-top: 1px solid var(--amber-100);
-  }
-  .inicio-card.expanded .inicio-card-body { display: block; }
-  .inicio-card-book {
-    display: flex; align-items: flex-start; gap: 10px;
-    margin-bottom: 10px;
-  }
-  .inicio-card-book .emoji { font-size: 24px; flex-shrink: 0; margin-top: 1px; }
-  .inicio-card-book-meta { min-width: 0; }
-  .inicio-card-book .book-title {
-    font-size: 18px; font-weight: 700; color: var(--stone-800); line-height: 1.3;
-  }
-  .inicio-card-book .author {
-    display: block; font-size: 13px; color: var(--stone-500);
-    font-family: system-ui, sans-serif; margin-top: 2px;
+  .current-strip.expanded .current-strip-body { display: block; }
+  .current-strip-meta {
+    font-size: 13px; color: var(--stone-500);
+    font-family: system-ui, sans-serif; margin-bottom: 10px;
   }
 
   /* Início — agenda list */
@@ -433,6 +430,7 @@
     <!-- View: Início -->
     <section id="view-inicio" data-view="inicio" class="hidden">
       <div id="inicio-callout"></div>
+      <div id="inicio-current"></div>
       <h2 class="section-heading">Sessões</h2>
       <div id="agenda-list"></div>
       <p id="agenda-empty" class="muted hidden">Ainda não há sessões.</p>
@@ -1117,62 +1115,71 @@ function formatAgendaDate(dateStr) {
 
 function renderInicio() {
   renderCalloutSlot();
+  renderCurrentBook();
   renderAgenda();
 }
 
-// Three states: active-vote pill, no-vote expandable card, or hidden.
+// Slim pill at the very top of Início — only shown while a vote is active.
+// The current book sits in its own slot below; the two callouts coexist.
 function renderCalloutSlot() {
   const slot = $("inicio-callout");
   slot.innerHTML = "";
+  if (!ACTIVE_VOTE) return;
 
-  if (ACTIVE_VOTE) {
-    const a = document.createElement('a');
-    a.href = '#votacao';
-    a.className = 'inicio-pill';
-    a.innerHTML = `
-      <span class="inicio-pill-msg">📩 Votação #${ACTIVE_VOTE.number} aberta — escolhe o próximo livro</span>
-      <span class="inicio-pill-arrow">→</span>
-    `;
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      navigateTo('votacao');
-    });
-    slot.appendChild(a);
-    return;
-  }
+  const a = document.createElement('a');
+  a.href = '#votacao';
+  a.className = 'inicio-pill';
+  a.innerHTML = `
+    <span class="inicio-pill-msg">📩 Votação #${ACTIVE_VOTE.number} aberta — escolhe o próximo livro</span>
+    <span class="inicio-pill-arrow">→</span>
+  `;
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    navigateTo('votacao');
+  });
+  slot.appendChild(a);
+}
 
-  if (ARCHIVE.length > 0) {
-    const entry = ARCHIVE[0];
-    const winner = getBook(entry.winnerId);
-    if (!winner) return;
+// Permanent fixture between the vote pill and Sessões: a "Estamos a ler"
+// heading plus a collapsed strip (emoji + title + toggle) that expands to
+// reveal author, sinopse, porque and shop links. Source of truth is
+// ARCHIVE[0].winnerId — the book the club is currently reading, regardless
+// of whether a new vote is open. The whole block stays empty until the
+// first vote closes (no heading either, to avoid a label over emptiness).
+function renderCurrentBook() {
+  const slot = $("inicio-current");
+  slot.innerHTML = "";
+  if (ARCHIVE.length === 0) return;
 
-    const links = renderShopLinks(winner);
-    const card = document.createElement('div');
-    card.className = 'inicio-card';
-    card.innerHTML = `
-      <div class="inicio-card-header">
-        <span class="inicio-card-title">📖 Próximo livro a encomendar</span>
-        <span class="inicio-card-toggle">➕</span>
-      </div>
-      <div class="inicio-card-body">
-        <div class="inicio-card-book">
-          <span class="emoji">${winner.emoji}</span>
-          <div class="inicio-card-book-meta">
-            <span class="book-title">${winner.title}</span>
-            <span class="author">${winner.author} · ${winner.pages} pág.</span>
-          </div>
-        </div>
-        <p class="sinopse">«${winner.sinopse}»</p>
-        ${links ? `<div class="links">${links}</div>` : ''}
-      </div>
-    `;
-    card.querySelector('.inicio-card-header').addEventListener('click', () => {
-      const isExp = card.classList.toggle('expanded');
-      card.querySelector('.inicio-card-toggle').textContent = isExp ? '➖' : '➕';
-    });
-    slot.appendChild(card);
-  }
-  // Both empty — leave slot blank.
+  const winner = getBook(ARCHIVE[0].winnerId);
+  if (!winner) return;
+
+  const heading = document.createElement('h2');
+  heading.className = 'section-heading';
+  heading.textContent = '📖 Estamos a ler';
+  slot.appendChild(heading);
+
+  const strip = document.createElement('div');
+  strip.className = 'current-strip';
+  strip.innerHTML = `
+    <div class="current-strip-row">
+      <span class="current-strip-emoji">${winner.emoji}</span>
+      <span class="current-strip-title">${winner.title}</span>
+      <span class="current-strip-toggle">➕</span>
+    </div>
+    <div class="current-strip-body">
+      <p class="current-strip-meta">${winner.author} · ${winner.pages} pág.</p>
+      <p class="sinopse">«${winner.sinopse}»</p>
+      <p class="porque"><img src="assets/claude.png" class="porque-icon" alt=""> ${winner.porque}</p>
+      <div class="links">${renderShopLinks(winner)}</div>
+    </div>
+  `;
+  // Whole row is the click target — toggles expanded state and swaps the icon.
+  strip.querySelector('.current-strip-row').addEventListener('click', () => {
+    const isExp = strip.classList.toggle('expanded');
+    strip.querySelector('.current-strip-toggle').textContent = isExp ? '➖' : '➕';
+  });
+  slot.appendChild(strip);
 }
 
 function renderAgenda() {
