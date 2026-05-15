@@ -719,7 +719,23 @@ const ARCHIVE = [
  */
 
 /** @type {AgendaEntry[]} */
-const AGENDA = [];
+const AGENDA = [
+  {
+    date: "2026-06-04",
+    time: "20:30",
+    location: "Casa do Fábio",
+    bookId: "saramago",
+  },
+  {
+    date: "2026-05-13",
+    time: "20:30",
+    location: "Casa do Fábio",
+    bookId: "saramago",
+    upToPage: 95,
+    findings: "Boa reunião. Todos gostaram do livro, embora haja consenso de que por vezes se estica um bocado. Houve discussões interessantes: as diferentes formas de interpretação dos livros — devemos ou não considerar a história e a vida do autor no acto de interpretação? Discutiu-se também simbologia comunista, capitalismo, a definição de morte (corpo e memória), e muito mais. Os vinhos foram bons: Cartuxa, Bocage e Vinhas do Torrão. Houve consenso absoluto de que a pá e a enxada não são referências comunistas ☭ 😂🍷.",
+    participants: ["Fábio Botelho", "Filipa Costa", "Miguel Mota", "Mariana Teixeira"],
+  },
+];
 
 // State
 let allVotes = {};
