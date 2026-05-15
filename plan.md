@@ -292,6 +292,7 @@ Each step leaves the site usable. Smoke-test in a browser after every step.
   - Update `renderVotacao` to dispatch on state. Update `updateVoterCount` to hide when null.
   - Smoke: with current `ACTIVE_VOTE`, behaviour unchanged. Set `ACTIVE_VOTE = null` with a fake archive entry → chosen-book card on Votação, Início callout switches to "próximo livro". Set `ARCHIVE = []` too → placeholder on Votação, callout hides. Revert.
   - **Note**: this step may briefly disrupt a live vote during validation. Do on a branch and merge during a quiet window, or accept short outage.
+  - **Partial (interim guard landed, 8558f6f)**: `init()` now wraps `renderCandidateBooks()` in `if (ACTIVE_VOTE)` so the page survives a null-vote window (between a close and the next open). Votação tab is still half-broken in that state — badge shows stale loadData fetch, name-section is clickable but submitting crashes on `ACTIVE_VOTE.maxVotes`. The full chosen-book card / no-vote placeholder is still pending.
 
 - [ ] **Step 7 — Letras Lavadas.**
   - Make `wook`, `bertrand`, `letrasLavadas` all optional in `Book` type.
@@ -332,10 +333,20 @@ Trigger phrase: `open vote with books X, Y, Z, maxVotes N` (or similar).
 
 ## Pending items at start of implementation
 
-- **Letras Lavadas URLs** — to be web-searched and proposed at step 7. Books to look up: Saramago (As Intermitências da Morte), Han Kang (A Vegetariana), Camus (O Estrangeiro), Valter Hugo Mãe (A Máquina de Fazer Espanhóis), Nuno Costa Santos (Como Um Marinheiro Eu Partirei), Jorge Amado (Capitães da Areia).
-- **First archive entry** — `ARCHIVE` starts empty; no migration of prior votes.
-- **First agenda entries** — `AGENDA` starts empty; user will add entries as they happen.
+- **Letras Lavadas URLs** — still pending. Books to look up now: original 6 (Saramago, Han Kang, Camus, Valter Hugo Mãe, Nuno Costa Santos, Jorge Amado) plus vote-#2's 4 (Nuno Costa Santos *Céu Nublado*, Voltaire, Annie Ernaux, Jean Rhys). The new books arrived with `letrasLavadas` URLs but the field was dropped on the way in — step 7 must wire `renderShopLinks` to emit the third link first, then add the URLs back.
+- ~~**First archive entry**~~ — done, 2425ce8. `ARCHIVE[0]` holds vote #1 (winner saramago, 3 votes; ncs 2, vhm 2, kang/camus/amado 1; 5 voters fetched live).
+- ~~**First agenda entries**~~ — done, cf5115f. AGENDA now has the 13 May saramago meeting (past, p.95, findings + 4 participants) and the 4 June continuation (future, no upToPage).
+
+## Out-of-plan changes since step 5
+
+These landed alongside the workflow execution, not as part of any planned step:
+
+- **Agenda layout polish** (7254a1c) — `padding-left: 24px` stripped from `.agenda-author / .agenda-loc / .agenda-findings / .agenda-participants`. Below-the-date content now aligns to the card's left padding instead of indenting under the title column, which was visually awkward once findings paragraphs appeared.
+- **Year suffix on agenda dates** (7254a1c) — `formatAgendaDate` appends ` YYYY` when the entry's year differs from today's. Same-year stays compact ("13 mai"); cross-year shows the year inline ("22 mai 2025"). Couples the function to "today" via `todayISO()` — accepted because all callers do that comparison anyway.
+- **Claude logo on .porque** (4200aef) — `💬` replaced with `<img src="assets/claude.png" class="porque-icon">` on both `.porque` renderers (live ballot + results). Background-stripped PNG sourced from `claude.ai/images/claude_app_icon.png`. Marks the "porque" copy as Claude's voice rather than the user's.
 
 ## Status
 
-**Steps 1–5 complete.** Step 6 (chosen-book + no-vote branches in Votação) is next. Note: with the BOOKS refactor done in Step 5, Step 6's `renderChosenBook(entry)` simply does `getBook(entry.winnerId)` and paints the result — no per-entry metadata copy needed.
+**First close-vote + open-vote workflow executed.** Vote #1 archived (2425ce8), vote #2 open with 4 fresh candidates; ACTIVE_VOTE/ARCHIVE invariants documented in the close-vote section all held. First two agenda entries landed (cf5115f). Step 6 still pending — only the defensive guard is in place (8558f6f); the chosen-book card and no-vote placeholder haven't been built. Step 7 (Letras Lavadas third link) and step 8 (`CLAUDE.md`) untouched.
+
+**Reminder for the user**: the Google Sheet still has vote #1's 5 rows. Clear them before vote #2 takes any ballots, otherwise the new tally and the duplicate-name check both poison.
