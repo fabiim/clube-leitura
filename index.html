@@ -106,6 +106,9 @@
     font-family: system-ui, sans-serif; background: var(--amber-100);
     padding: 6px 10px; border-radius: 8px; font-weight: 500;
   }
+  .porque-icon {
+    width: 16px; height: 16px; vertical-align: -3px;
+  }
   .links { display: flex; align-items: center; gap: 6px; }
   .shop-link {
     font-size: 13px; color: var(--amber-700); text-decoration: none;
@@ -787,7 +790,7 @@ function renderCandidateBooks() {
         <div class="check"><span class="check-mark">✓</span></div>
       </div>
       <p class="sinopse">«${book.sinopse}»</p>
-      <p class="porque">💬 ${book.porque}</p>
+      <p class="porque"><img src="assets/claude.png" class="porque-icon" alt=""> ${book.porque}</p>
       <div class="links">${renderShopLinks(book)}</div>
     `;
 
@@ -927,7 +930,7 @@ function renderResultsInto(container, books, votes, voters) {
       <span class="result-toggle">➕</span>
       <div class="result-details">
         <p class="sinopse">«${book.sinopse}»</p>
-        <p class="porque">💬 ${book.porque}</p>
+        <p class="porque"><img src="assets/claude.png" class="porque-icon" alt=""> ${book.porque}</p>
         <div class="links">${renderShopLinks(book)}</div>
       </div>
     `;
