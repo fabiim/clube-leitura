@@ -580,6 +580,38 @@ const BOOKS = {
     wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
     bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
   },
+  "ncs-ceu": {
+    emoji: "☁️",
+    title: "Céu Nublado com Boas Abertas", author: "Nuno Costa Santos", pages: 256,
+    sinopse: "Regresso de um neto aos Açores em busca dos diários do avô, internado nos anos 40 no sanatório do Caramulo. Pelo caminho cruza-se com um navegador francês em apuros, uma stripper ruiva, um casal chinês a tentar integrar-se no arquipélago e um fã de Kafka que descobriu que o escritor sonhou viver nos Açores. Histórias do passado e do presente que se enovelam.",
+    porque: "Açorianidade dupla — passado e presente — com humor melancólico. O território é o nosso.",
+    wook: "https://www.wook.pt/livro/ceu-nublado-com-boas-abertas-nuno-costa-santos/16954064",
+    bertrand: "https://www.bertrand.pt/livro/ceu-nublado-com-boas-abertas-nuno-costa-santos/16954064",
+  },
+  voltaire: {
+    emoji: "🌍",
+    title: "Cândido, ou o Otimismo", author: "Voltaire", pages: 120,
+    sinopse: "Cândido, educado pelo mestre Pangloss a crer que «tudo está pelo melhor no melhor dos mundos possíveis», é expulso do castelo e atira-se ao mundo. Atravessa três continentes a coleccionar guerras, naufrágios, autos-de-fé e o terramoto de Lisboa. Sátira filosófica curtíssima, escrita em três dias, banida e queimada à publicação.",
+    porque: "Curto, mordaz, divertidíssimo. E com Lisboa pós-terramoto no centro da acção.",
+    wook: "https://www.wook.pt/livro/candido-ou-o-otimismo-voltaire/17900982",
+    bertrand: "https://www.bertrand.pt/livro/candido-ou-o-otimismo-voltaire/17900982",
+  },
+  ernaux: {
+    emoji: "🕰️",
+    title: "Os Anos", author: "Annie Ernaux", pages: 200,
+    sinopse: "Sessenta anos da vida de uma mulher escritos sempre na terceira pessoa — nunca «eu», sempre «ela». A criança da Normandia ocupada pelos nazis. A adolescente dos anos 50 que descobre Sartre, o desejo e a guerra da Argélia nos jornais. A jovem que aborta clandestinamente antes da Loi Veil e vive Maio de 68 nas ruas. A professora divorciada nos anos Mitterrand e da SIDA. A mulher de meia-idade que vê cair o Muro pela televisão. A sexagenária pós-11 de Setembro que reconhece a mãe no próprio rosto. Entre as épocas: refrões, slogans, ementas de Natal, produtos desaparecidos das prateleiras. Tudo o que constrói uma década antes de se desfazer. Abre com a promessa: «Tudo se apagará num segundo.»",
+    porque: "Uma vida de mulher contada como se fosse a vida de toda uma geração. Memória, corpo, classe, desejo — décadas que se desfazem nas tuas mãos enquanto lês.",
+    wook: "https://www.wook.pt/livro/os-anos-annie-ernaux/23706033",
+    bertrand: "https://www.bertrand.pt/livro/os-anos-annie-ernaux/23706033",
+  },
+  rhys: {
+    emoji: "🌊",
+    title: "Vasto Mar de Sargaços", author: "Jean Rhys", pages: 180,
+    sinopse: "Antoinette Cosway, herdeira crioula nascida na Jamaica colonial, casa com um jovem inglês que se deixa fascinar pela sua sensualidade — mas depressa começam a circular rumores que o envenenam contra ela. Apanhada entre as exigências do marido e a sua precária sensação de pertença, é levada à loucura. A pré-história da «louca do sótão» de Jane Eyre, contada do lado dela.",
+    porque: "Curto, gótico-caribenho, pós-colonial. Resgata uma personagem de Charlotte Brontë e devolve-lhe a voz.",
+    wook: "https://www.wook.pt/livro/vasto-mar-de-sargacos-jean-rhys/18944750",
+    bertrand: "https://www.bertrand.pt/livro/vasto-mar-de-sargacos-jean-rhys/18944750",
+  },
 };
 
 // Resolve a bookId to a Book with `id` injected, or null if unknown.
@@ -606,10 +638,10 @@ function getBook(id) {
 
 /** @type {ActiveVote} */
 const ACTIVE_VOTE = {
-  number: 1,
-  startedAt: "2026-05-14",
+  number: 2,
+  startedAt: "2026-05-15",
   maxVotes: 2,
-  bookIds: ["saramago", "kang", "camus", "vhm", "ncs", "amado"],
+  bookIds: ["ncs-ceu", "voltaire", "ernaux", "rhys"],
 };
 
 /**
@@ -645,7 +677,24 @@ const ACTIVE_VOTE = {
  */
 
 /** @type {ArchiveEntry[]} */
-const ARCHIVE = [];
+const ARCHIVE = [
+  {
+    number: 1,
+    startedAt: "2026-05-14",
+    closedAt: "2026-05-15",
+    winnerId: "saramago",
+    maxVotes: 2,
+    bookIds: ["saramago", "kang", "camus", "vhm", "ncs", "amado"],
+    votes: { saramago: 3, ncs: 2, vhm: 2, kang: 1, camus: 1, amado: 1 },
+    voters: {
+      "antónia":     { name: "Antónia",     books: ["kang", "saramago"] },
+      "filipa":      { name: "Filipa",      books: ["ncs", "saramago"] },
+      "miguel mota": { name: "Miguel Mota", books: ["ncs", "vhm"] },
+      "melissa":     { name: "Melissa",     books: ["vhm", "saramago"] },
+      "filipa m":    { name: "Filipa M",    books: ["camus", "amado"] },
+    },
+  },
+];
 
 /**
  * Meeting log, ordered any way — `renderAgenda` sorts newest-first by date.
