@@ -48,3 +48,13 @@ The two fields render side-by-side on the ballot card, the "Estamos a ler" expan
 ## Other guidance
 
 - Close-vote / open-vote workflows are still pending — see plan.md step 8.
+
+## Deploy
+
+Hosting: GitHub Pages, environment `github-pages`, source `main` branch. The GitHub-managed `pages-build-deployment` workflow runs automatically on push. Public URL: https://fabiim.github.io/clube-leitura/. No local build step.
+
+To deploy: `git push origin main`.
+
+**Jekyll is disabled** via an empty `.nojekyll` at repo root. By default, GitHub Pages runs Jekyll on the source branch as a legacy default (Pages started as a Jekyll-only service); Jekyll's Liquid parser doesn't respect fenced code blocks and chokes on `{{ ... }}` patterns — e.g. the JSDoc typedefs in `plan.md` — failing the build. `.nojekyll` skips Jekyll entirely so Pages serves raw files, which is all this single-`index.html` site needs.
+
+The Node.js 20 deprecation warning on the build log is harmless: GitHub owns the `pages-build-deployment` workflow and will update its `actions/checkout` ahead of the June 2026 cutoff.

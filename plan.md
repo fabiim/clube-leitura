@@ -15,7 +15,6 @@ Vote lifecycle is operated **manually via Claude** editing the source (no admin 
 **In scope**
 - All three views and the nav router.
 - Refactor of the live-vote data shape and the results renderer.
-- Letras Lavadas as an optional third shop link.
 - `CLAUDE.md` documenting the close-vote and open-vote workflows.
 
 **Out of scope**
@@ -38,7 +37,6 @@ Vote lifecycle is operated **manually via Claude** editing the source (no admin 
 | Closed-vote snapshot | **(revised, step 5)** Only the *vote* is frozen: `number`, `startedAt`, `closedAt`, `maxVotes`, `bookIds` (ballot composition), `votes`, `voters`, `winnerId`, optional `winnerNote`. Book metadata resolves live from `BOOKS` at render time — a typo fix or URL update appears in every historical view. The vote tally and voter records are immutable. |
 | Winner storage | Book id (canonical) plus optional free-text `winnerNote` for tie-resolution context. |
 | Live results UI | Refactor the current `showResults()` into a pure `renderResultsInto(container, books, votes, voters)` reused by Arquivo. |
-| Letras Lavadas | New optional `letrasLavadas` URL field. All three shop URLs (`wook`, `bertrand`, `letrasLavadas`) become optional. URLs to be web-searched during step 7. |
 | Votação when no active vote | Show the most recent archive entry's winner as a single "chosen book" card. Falls back to a minimal "sem votação activa" placeholder only if `ARCHIVE` is also empty. |
 | Close-vote data fetch | Claude curls the live Apps Script URL (base64-decoded from source) when closing. |
 | Sheet reset | Manual — same as today's reset button copy. No backend change. |
@@ -74,10 +72,9 @@ All four constants live at the top of the `<script>` block in `index.html`, just
  *   author:         string,
  *   pages:          number,
  *   sinopse:        string,
- *   porque:         string,
+ *   claude:         string,
  *   wook?:          string,
  *   bertrand?:      string,
- *   letrasLavadas?: string,
  * }} Book
  */
 
@@ -257,7 +254,7 @@ Each step leaves the site usable. Smoke-test in a browser after every step.
 
 - [x] **Step 2 — Extract `renderResultsInto()` + `renderShopLinks()`.**
   - Lift ranking + chips paint into `renderResultsInto(container, books, votes, voters)`.
-  - Lift shop-links HTML into `renderShopLinks(book)` (still Wook + Bertrand only here).
+  - Lift shop-links HTML into `renderShopLinks(book)` (Wook + Bertrand).
   - `showResults` → `showLiveResults`, delegates to `renderResultsInto`.
   - Smoke: results render identically.
 
@@ -294,13 +291,6 @@ Each step leaves the site usable. Smoke-test in a browser after every step.
   - **Note**: this step may briefly disrupt a live vote during validation. Do on a branch and merge during a quiet window, or accept short outage.
   - **Partial (interim guard landed, 8558f6f)**: `init()` now wraps `renderCandidateBooks()` in `if (ACTIVE_VOTE)` so the page survives a null-vote window (between a close and the next open). Votação tab is still half-broken in that state — badge shows stale loadData fetch, name-section is clickable but submitting crashes on `ACTIVE_VOTE.maxVotes`. The full chosen-book card / no-vote placeholder is still pending.
 
-- [ ] **Step 7 — Letras Lavadas.**
-  - Make `wook`, `bertrand`, `letrasLavadas` all optional in `Book` type.
-  - Update `renderShopLinks` to emit only present links separated by `·`, return `null` when none.
-  - WebSearch `letraslavadas.pt` for the 6 current books. Propose URLs (or "not stocked") for review.
-  - Wire confirmed URLs into the 6 entries.
-  - Smoke: cards show 2 or 3 links cleanly, no orphan separators.
-
 - [ ] **Step 8 — `CLAUDE.md` at repo root.**
   - `## Data model` — pointers to `ACTIVE_VOTE`, `ARCHIVE`, `AGENDA` in `index.html`, with the invariants from this plan.
   - `## Close-vote workflow` — full procedure from behaviour group 6: curl the base64-decoded API URL, validate winner (auto-detect or user-specified, abort on tie without override), build snapshot in the documented field order, prepend to `ARCHIVE`, set `ACTIVE_VOTE = null`, remind user to clear the sheet.
@@ -333,8 +323,6 @@ Trigger phrase: `open vote with books X, Y, Z, maxVotes N` (or similar).
 
 ## Pending items at start of implementation
 
-- **Letras Lavadas URLs** — still pending. Books to look up now: original 6 (Saramago, Han Kang, Camus, Valter Hugo Mãe, Nuno Costa Santos, Jorge Amado) plus vote-#2's 5 (Nuno Costa Santos *Céu Nublado*, Voltaire, Annie Ernaux, Jean Rhys, Cormac McCarthy). The new books arrived with `letrasLavadas` URLs but the field was dropped on the way in — step 7 must wire `renderShopLinks` to emit the third link first, then add the URLs back.
-- **McCarthy shop URLs** — the `wook` and `bertrand` URLs for `mccarthy` both end in `/194209`, well short of the 7-8 digit IDs every other entry in `BOOKS` uses. Placeholders carried verbatim from the originating prompt; need replacement before vote #2 results render with usable shop links for that candidate.
 - ~~**First archive entry**~~ — done, 2425ce8. `ARCHIVE[0]` holds vote #1 (winner saramago, 3 votes; ncs 2, vhm 2, kang/camus/amado 1; 5 voters fetched live).
 - ~~**First agenda entries**~~ — done, cf5115f. AGENDA now has the 13 May saramago meeting (past, p.95, findings + 4 participants) and the 4 June continuation (future, no upToPage).
 
@@ -344,9 +332,8 @@ These landed alongside the workflow execution, not as part of any planned step:
 
 - **Agenda layout polish** (7254a1c) — `padding-left: 24px` stripped from `.agenda-author / .agenda-loc / .agenda-findings / .agenda-participants`. Below-the-date content now aligns to the card's left padding instead of indenting under the title column, which was visually awkward once findings paragraphs appeared.
 - **Year suffix on agenda dates** (7254a1c) — `formatAgendaDate` appends ` YYYY` when the entry's year differs from today's. Same-year stays compact ("13 mai"); cross-year shows the year inline ("22 mai 2025"). Couples the function to "today" via `todayISO()` — accepted because all callers do that comparison anyway.
-- **Claude logo on .porque** (4200aef) — `💬` replaced with `<img src="assets/claude.png" class="porque-icon">` on both `.porque` renderers (live ballot + results). Background-stripped PNG sourced from `claude.ai/images/claude_app_icon.png`. Marks the "porque" copy as Claude's voice rather than the user's.
-- **A Estrada added to vote #2 mid-vote** (019f284) — vote #2's ballot grew from 4 to 5 candidates after the open. New `mccarthy` entry in `BOOKS` (🛣️ emoji; the originally proposed 🔥 was overridden), appended to `ACTIVE_VOTE.bookIds`. Caveat captured in the commit body: any voter who already submitted in Firebase did so over the smaller four-candidate ballot — their record stands but couldn't have included McCarthy. Alternatives (reset vote #2 or open vote #3) were rejected as too disruptive for a single late candidate.
-- **"Estamos a ler" fixture on Início** (cd54b50) — supersedes step 5's `.inicio-card` design. Step 5 made the no-vote callout slot a hard XOR (active-vote pill XOR collapsed winner card), which meant the current book disappeared from Início entirely while a vote ran. Replaced with a permanent fixture: new `<div id="inicio-current">` slot below `#inicio-callout` and above the Sessões heading, rendered by a new `renderCurrentBook()`. Emits a "📖 Estamos a ler" `.section-heading` plus a `.current-strip` (compact emoji + title + ➕ row, expands inline to author/pages/sinopse/porque/shop links). `renderCalloutSlot()` simplified to the pill-only path; the two callouts now coexist. Old `.inicio-card*` CSS deleted. Source of truth stays `ARCHIVE[0].winnerId`; the whole block hides when `ARCHIVE` is empty so there's no orphan heading over emptiness. Title at 17px Crimson Text with a 30px emoji — corrects the visual imbalance an earlier full-card attempt had.
+- **Claude logo on .claude** (4200aef; the field/class were called `porque` until f405890) — `💬` replaced with `<img src="assets/claude.png" class="claude-icon">` on both `.claude` renderers (live ballot + results). Background-stripped PNG sourced from `claude.ai/images/claude_app_icon.png`. Marks the editorial-pitch copy as Claude's voice rather than the user's.
+- **"Estamos a ler" fixture on Início** (cd54b50) — supersedes step 5's `.inicio-card` design. Step 5 made the no-vote callout slot a hard XOR (active-vote pill XOR collapsed winner card), which meant the current book disappeared from Início entirely while a vote ran. Replaced with a permanent fixture: new `<div id="inicio-current">` slot below `#inicio-callout` and above the Sessões heading, rendered by a new `renderCurrentBook()`. Emits a "📖 Estamos a ler" `.section-heading` plus a `.current-strip` (compact emoji + title + ➕ row, expands inline to author/pages/sinopse/claude/shop links). `renderCalloutSlot()` simplified to the pill-only path; the two callouts now coexist. Old `.inicio-card*` CSS deleted. Source of truth stays `ARCHIVE[0].winnerId`; the whole block hides when `ARCHIVE` is empty so there's no orphan heading over emptiness. Title at 17px Crimson Text with a 30px emoji — corrects the visual imbalance an earlier full-card attempt had.
 
 ## Potential future enhancements (not in current plan)
 
@@ -356,6 +343,4 @@ These landed alongside the workflow execution, not as part of any planned step:
 
 ## Status
 
-**First close-vote + open-vote workflow executed.** Vote #1 archived (2425ce8), vote #2 open with what was originally 4 fresh candidates and is now 5 after a mid-vote addition (019f284); ACTIVE_VOTE/ARCHIVE invariants documented in the close-vote section all held. First two agenda entries landed (cf5115f). Início now carries a permanent "📖 Estamos a ler" fixture above Sessões (cd54b50). Step 6 still pending — only the defensive guard is in place (8558f6f); the Votação chosen-book card and no-vote placeholder haven't been built. Step 7 (Letras Lavadas third link) and step 8 (`CLAUDE.md`) untouched.
-
-**Reminder for the user**: the Google Sheet still has vote #1's 5 rows. Clear them before vote #2 takes any ballots, otherwise the new tally and the duplicate-name check both poison.
+**First close-vote + open-vote workflow executed.** Vote #1 archived (2425ce8), vote #2 open with 5 fresh candidates; ACTIVE_VOTE/ARCHIVE invariants documented in the close-vote section all held. First two agenda entries landed (cf5115f). Início now carries a permanent "📖 Estamos a ler" fixture above Sessões (cd54b50). Google Sheet cleared before vote #2 ballots arrived. Step 6 still pending — only the defensive guard is in place (8558f6f); the Votação chosen-book card and no-vote placeholder haven't been built. Step 8 (`CLAUDE.md`) untouched.
