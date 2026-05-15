@@ -292,6 +292,109 @@
     font-family: system-ui, sans-serif;
   }
 
+  /* Início — callout slot (active-vote pill) */
+  .inicio-pill {
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--amber-700); border-radius: 999px;
+    padding: 10px 18px; margin-bottom: 24px;
+    color: var(--amber-800); font-size: 14px;
+    font-family: system-ui, sans-serif; font-weight: 600;
+    background: var(--amber-50); text-decoration: none;
+    transition: background 0.15s;
+  }
+  .inicio-pill:hover { background: var(--amber-100); }
+  .inicio-pill-msg {
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .inicio-pill-arrow { flex-shrink: 0; font-size: 16px; }
+
+  /* Início — callout slot (no-vote: prominent expandable card) */
+  .inicio-card {
+    border: 2px solid var(--amber-700); border-radius: 14px;
+    background: var(--amber-50); margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .inicio-card-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; cursor: pointer;
+    font-family: system-ui, sans-serif;
+  }
+  .inicio-card-title {
+    flex: 1; font-size: 15px; font-weight: 700; color: var(--amber-800);
+    letter-spacing: -0.2px;
+  }
+  .inicio-card-toggle { flex-shrink: 0; font-size: 18px; }
+  .inicio-card-body {
+    display: none; padding: 14px 18px 16px;
+    border-top: 1px solid var(--amber-100);
+  }
+  .inicio-card.expanded .inicio-card-body { display: block; }
+  .inicio-card-book {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .inicio-card-book .emoji { font-size: 24px; flex-shrink: 0; margin-top: 1px; }
+  .inicio-card-book-meta { min-width: 0; }
+  .inicio-card-book .book-title {
+    font-size: 18px; font-weight: 700; color: var(--stone-800); line-height: 1.3;
+  }
+  .inicio-card-book .author {
+    display: block; font-size: 13px; color: var(--stone-500);
+    font-family: system-ui, sans-serif; margin-top: 2px;
+  }
+
+  /* Início — agenda list */
+  #agenda-list { display: flex; flex-direction: column; gap: 10px; }
+  .agenda-row {
+    border: 2px solid var(--stone-200); border-radius: 12px;
+    padding: 12px 16px; background: var(--stone-50);
+    display: flex; flex-direction: column; gap: 4px;
+    transition: border-color 0.15s;
+  }
+  .agenda-row.next { border-color: var(--amber-700); background: var(--amber-50); }
+  .agenda-line-main {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+  }
+  .agenda-pin { font-size: 16px; flex-shrink: 0; line-height: 1; }
+  .agenda-date {
+    font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600;
+    color: var(--stone-500); flex-shrink: 0;
+  }
+  .agenda-dot { color: var(--stone-300); font-size: 13px; }
+  .agenda-book-emoji { font-size: 17px; }
+  .agenda-book-title { font-size: 16px; font-weight: 700; color: var(--stone-800); }
+  .agenda-range {
+    font-size: 13px; color: var(--stone-500); font-style: italic;
+    font-family: system-ui, sans-serif; margin-left: 2px;
+  }
+  .agenda-author {
+    font-family: system-ui, sans-serif; font-size: 13px; color: var(--stone-500);
+    padding-left: 24px; font-style: italic;
+  }
+  .agenda-loc {
+    font-family: system-ui, sans-serif; font-size: 13px; color: var(--stone-500);
+    padding-left: 24px;
+  }
+  .agenda-row.past .agenda-book-title {
+    text-decoration: line-through; color: var(--stone-500);
+  }
+  .agenda-row.past .agenda-book-emoji { opacity: 0.55; }
+  .agenda-findings {
+    font-size: 14px; color: var(--stone-700); line-height: 1.55;
+    margin-top: 8px; padding-left: 24px;
+  }
+  .agenda-participants {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-top: 8px; padding-left: 24px;
+  }
+  .agenda-participants .chip-small {
+    display: inline-block; padding: 2px 9px;
+    background: var(--stone-100); color: var(--stone-500);
+    border-radius: 12px; font-size: 11px;
+    font-family: system-ui, sans-serif;
+  }
+
   /* Mobile: stack banner contents (title + tabs row don't fit on a phone) */
   @media (max-width: 480px) {
     .banner { flex-direction: column; align-items: stretch; gap: 6px; }
@@ -327,7 +430,10 @@
 
     <!-- View: Início -->
     <section id="view-inicio" data-view="inicio" class="hidden">
-      <p class="placeholder">Em breve.</p>
+      <div id="inicio-callout"></div>
+      <h2 class="section-heading">Sessões</h2>
+      <div id="agenda-list"></div>
+      <p id="agenda-empty" class="muted hidden">Ainda não há sessões.</p>
     </section>
 
     <!-- View: Votação -->
@@ -397,8 +503,22 @@ const API_URL = atob(_E);
 // ============================================================
 
 /**
+ * Canonical book registry. Single source of truth for all book metadata.
+ *
+ * Everything else — ACTIVE_VOTE.bookIds, ARCHIVE[].bookIds, ARCHIVE[].winnerId,
+ * AGENDA[].bookId — references entries here by their object key.
+ *
+ * Invariants:
+ *  - Every id referenced anywhere in ACTIVE_VOTE, ARCHIVE, or AGENDA must
+ *    have a matching key in BOOKS.
+ *  - Once a key is referenced by an ARCHIVE or AGENDA entry, do NOT delete
+ *    or rename it — there is no per-entry snapshot fallback for metadata,
+ *    so the historical reference would silently break.
+ *  - Edits to a book's title/author/sinopse/links propagate everywhere
+ *    (live ballot AND historical archive/agenda views). Only vote tallies
+ *    and voter records are frozen inside ARCHIVE entries.
+ *
  * @typedef {{
- *   id:             string,
  *   emoji:          string,
  *   title:          string,
  *   author:         string,
@@ -409,18 +529,79 @@ const API_URL = atob(_E);
  *   bertrand?:      string,
  *   letrasLavadas?: string,
  * }} Book
- *
+ */
+
+/** @type {Record<string, Book>} */
+const BOOKS = {
+  saramago: {
+    emoji: "💀",
+    title: "As Intermitências da Morte", author: "José Saramago", pages: 210,
+    sinopse: "No dia seguinte ninguém morreu. O autor desenvolve a hipótese em todas as suas consequências, numa ampla divagação sobre a vida, a morte, o amor, e o sentido da nossa existência.",
+    porque: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
+    wook: "https://www.wook.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
+    bertrand: "https://www.bertrand.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
+  },
+  kang: {
+    emoji: "🌿",
+    title: "A Vegetariana", author: "Han Kang", pages: 180,
+    sinopse: "Yeong-hye decide deitar fora toda a carne e tornar-se vegetariana depois de um pesadelo. O seu ato de renúncia desencadeia reações extremadas da família. Erótico, violento, poético.",
+    porque: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
+    wook: "https://www.wook.pt/livro/a-vegetariana-han-kang/18547889",
+    bertrand: "https://www.bertrand.pt/livro/a-vegetariana-han-kang/18547889",
+  },
+  camus: {
+    emoji: "☀️",
+    title: "O Estrangeiro", author: "Albert Camus", pages: 120,
+    sinopse: "Meursault recebe um telegrama: a mãe morreu. De regresso a casa após o funeral, enceta amizade com um vizinho de práticas duvidosas, reencontra uma antiga colega de trabalho com quem se envolve, vai à praia — até que ocorre um homicídio. Romance estranho, desconcertante sob uma aparente singeleza estilística, em O Estrangeiro joga-se o destino de um homem perante o absurdo e questiona-se o sentido da existência.",
+    porque: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
+    wook: "https://www.wook.pt/livro/o-estrangeiro-albert-camus/15328334",
+    bertrand: "https://www.bertrand.pt/livro/o-estrangeiro-albert-camus/15328334",
+  },
+  vhm: {
+    emoji: "⚙️",
+    title: "A Máquina de Fazer Espanhóis", author: "Valter Hugo Mãe", pages: 260,
+    sinopse: "Surpreendente retrato da vida dos velhos, este livro fala dos fantasmas da portugalidade e da candura que existe mesmo nos momentos mais tristes. Delicadíssimo, corajoso e inesquecível.",
+    porque: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
+    wook: "https://www.wook.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
+    bertrand: "https://www.bertrand.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
+  },
+  ncs: {
+    emoji: "⛵",
+    title: "Como Um Marinheiro Eu Partirei", author: "Nuno Costa Santos", pages: 160,
+    sinopse: "Uma narrativa profundamente humana que revisita a vida do cantor belga Jacques Brel e a sua passagem crepuscular pelos Açores. Romance, biografia, reportagem e reflexão sobre os nossos medos mais secretos.",
+    porque: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
+    wook: "https://www.wook.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
+    bertrand: "https://www.bertrand.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
+  },
+  amado: {
+    emoji: "🏖️",
+    title: "Capitães da Areia", author: "Jorge Amado", pages: 272,
+    sinopse: "Jorge Amado descreve, em páginas de grande beleza e dramatismo, a vida dos meninos abandonados nas ruas de São Salvador da Bahia. Publicado em 1937, teve a primeira edição queimada em praça pública.",
+    porque: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
+    wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
+    bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
+  },
+};
+
+// Resolve a bookId to a Book with `id` injected, or null if unknown.
+// All renderers consume the returned object; callers should filter nulls.
+function getBook(id) {
+  const b = BOOKS[id];
+  return b ? { id, ...b } : null;
+}
+
+/**
  * @typedef {{
  *   number:    number,
  *   startedAt: string,
  *   maxVotes:  number,
- *   books:     Book[],
+ *   bookIds:   string[],
  * } | null} ActiveVote
  *
  * Invariants for ACTIVE_VOTE (when non-null):
  *  - `number` is exactly ARCHIVE[0].number + 1 (or 1 when ARCHIVE is empty).
- *  - `books` is non-empty; each `id` is unique.
- *  - `maxVotes` is between 1 and books.length.
+ *  - `bookIds` is non-empty; each id resolves in BOOKS; ids are unique.
+ *  - `maxVotes` is between 1 and bookIds.length.
  *  - `startedAt` is an ISO date (YYYY-MM-DD).
  */
 
@@ -429,67 +610,23 @@ const ACTIVE_VOTE = {
   number: 1,
   startedAt: "2026-05-14",
   maxVotes: 2,
-  books: [
-    {
-      id: "saramago", emoji: "💀",
-      title: "As Intermitências da Morte", author: "José Saramago", pages: 210,
-      sinopse: "No dia seguinte ninguém morreu. O autor desenvolve a hipótese em todas as suas consequências, numa ampla divagação sobre a vida, a morte, o amor, e o sentido da nossa existência.",
-      porque: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
-      wook: "https://www.wook.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
-      bertrand: "https://www.bertrand.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
-    },
-    {
-      id: "kang", emoji: "🌿",
-      title: "A Vegetariana", author: "Han Kang", pages: 180,
-      sinopse: "Yeong-hye decide deitar fora toda a carne e tornar-se vegetariana depois de um pesadelo. O seu ato de renúncia desencadeia reações extremadas da família. Erótico, violento, poético.",
-      porque: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
-      wook: "https://www.wook.pt/livro/a-vegetariana-han-kang/18547889",
-      bertrand: "https://www.bertrand.pt/livro/a-vegetariana-han-kang/18547889",
-    },
-    {
-      id: "camus", emoji: "☀️",
-      title: "O Estrangeiro", author: "Albert Camus", pages: 120,
-      sinopse: "Meursault recebe um telegrama: a mãe morreu. De regresso a casa após o funeral, enceta amizade com um vizinho de práticas duvidosas, reencontra uma antiga colega de trabalho com quem se envolve, vai à praia — até que ocorre um homicídio. Romance estranho, desconcertante sob uma aparente singeleza estilística, em O Estrangeiro joga-se o destino de um homem perante o absurdo e questiona-se o sentido da existência.",
-      porque: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
-      wook: "https://www.wook.pt/livro/o-estrangeiro-albert-camus/15328334",
-      bertrand: "https://www.bertrand.pt/livro/o-estrangeiro-albert-camus/15328334",
-    },
-    {
-      id: "vhm", emoji: "⚙️",
-      title: "A Máquina de Fazer Espanhóis", author: "Valter Hugo Mãe", pages: 260,
-      sinopse: "Surpreendente retrato da vida dos velhos, este livro fala dos fantasmas da portugalidade e da candura que existe mesmo nos momentos mais tristes. Delicadíssimo, corajoso e inesquecível.",
-      porque: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
-      wook: "https://www.wook.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
-      bertrand: "https://www.bertrand.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
-    },
-    {
-      id: "ncs", emoji: "⛵",
-      title: "Como Um Marinheiro Eu Partirei", author: "Nuno Costa Santos", pages: 160,
-      sinopse: "Uma narrativa profundamente humana que revisita a vida do cantor belga Jacques Brel e a sua passagem crepuscular pelos Açores. Romance, biografia, reportagem e reflexão sobre os nossos medos mais secretos.",
-      porque: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
-      wook: "https://www.wook.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
-      bertrand: "https://www.bertrand.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
-    },
-    {
-      id: "amado", emoji: "🏖️",
-      title: "Capitães da Areia", author: "Jorge Amado", pages: 272,
-      sinopse: "Jorge Amado descreve, em páginas de grande beleza e dramatismo, a vida dos meninos abandonados nas ruas de São Salvador da Bahia. Publicado em 1937, teve a primeira edição queimada em praça pública.",
-      porque: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
-      wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
-      bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
-    },
-  ],
+  bookIds: ["saramago", "kang", "camus", "vhm", "ncs", "amado"],
 };
 
 /**
  * Closed-vote snapshots, ordered newest-first.
  *
+ * Only the *vote* is snapshotted (votes, voters, ballot composition via
+ * bookIds). Book metadata is resolved live from BOOKS at render time —
+ * edit a title in BOOKS and every archive entry reflects it.
+ *
  * Invariants (per entry):
  *  - `closedAt >= startedAt`.
- *  - `winnerId` appears in `books[*].id`.
+ *  - `winnerId` ∈ `bookIds`.
  *  - `winnerNote` is omitted unless explicitly set.
- *  - `votes` keys are a subset of `books[*].id`.
- *  - `voters[nameKey].books` are a subset of `books[*].id`.
+ *  - `votes` keys are a subset of `bookIds`.
+ *  - `voters[nameKey].books` are a subset of `bookIds`.
+ *  - Every id in `bookIds` resolves in BOOKS.
  *
  * Invariants (across array):
  *  - ARCHIVE[0].number > ARCHIVE[1].number > … > ARCHIVE[N-1].number.
@@ -502,7 +639,7 @@ const ACTIVE_VOTE = {
  *   winnerId:    string,
  *   winnerNote?: string,
  *   maxVotes:    number,
- *   books:       Book[],
+ *   bookIds:     string[],
  *   votes:       Record<string, number>,
  *   voters:      Record<string, { name: string, books: string[] }>,
  * }} ArchiveEntry
@@ -510,6 +647,31 @@ const ACTIVE_VOTE = {
 
 /** @type {ArchiveEntry[]} */
 const ARCHIVE = [];
+
+/**
+ * Meeting log, ordered any way — `renderAgenda` sorts newest-first by date.
+ *
+ * Per-entry rules:
+ *  - `date` is ISO (YYYY-MM-DD).
+ *  - `time` and `location` are free-text strings.
+ *  - `bookId` references a key in BOOKS.
+ *  - `upToPage` is the planned reading target for this session.
+ *  - `findings` and `participants` are valid only for entries
+ *    whose `date` is strictly before today.
+ *
+ * @typedef {{
+ *   date:          string,
+ *   time:          string,
+ *   location:      string,
+ *   bookId:        string,
+ *   upToPage?:     number,
+ *   findings?:     string,
+ *   participants?: string[],
+ * }} AgendaEntry
+ */
+
+/** @type {AgendaEntry[]} */
+const AGENDA = [];
 
 // State
 let allVotes = {};
@@ -545,7 +707,7 @@ function renderCandidateBooks() {
   const grid = $("book-grid");
   grid.innerHTML = "";
 
-  ACTIVE_VOTE.books.forEach((book) => {
+  ACTIVE_VOTE.bookIds.map(getBook).filter(Boolean).forEach((book) => {
     const card = document.createElement("div");
     card.className = "card";
     card.dataset.id = book.id;
@@ -743,7 +905,8 @@ function showLiveResults(justVoted) {
     $("back-btn").classList.remove("hidden");
   }
 
-  renderResultsInto($("results-content"), ACTIVE_VOTE.books, allVotes, voters);
+  const books = ACTIVE_VOTE.bookIds.map(getBook).filter(Boolean);
+  renderResultsInto($("results-content"), books, allVotes, voters);
   updateVoterCount();
 }
 
@@ -790,7 +953,7 @@ function renderArchiveRow(entry) {
   const startsExpanded = expandedEntries.has(entry.number);
   if (startsExpanded) row.classList.add("expanded");
 
-  const winner = entry.books.find((b) => b.id === entry.winnerId);
+  const winner = getBook(entry.winnerId);
   const winnerLabel = winner
     ? `<span class="archive-emoji">${winner.emoji}</span><span class="archive-title-author">${winner.title} — ${winner.author}</span>`
     : `<span class="archive-title-author">Vencedor desconhecido</span>`;
@@ -840,7 +1003,8 @@ function paintArchiveDetails(container, entry) {
 
   const results = document.createElement("div");
   container.appendChild(results);
-  renderResultsInto(results, entry.books, entry.votes, entry.voters);
+  const books = entry.bookIds.map(getBook).filter(Boolean);
+  renderResultsInto(results, books, entry.votes, entry.voters);
 }
 
 // `DD/MM – DD/MM` (same year) or `DD/MM/YY – DD/MM/YY` (cross-year). Inputs are ISO.
@@ -849,6 +1013,165 @@ function formatDateRange(startedAt, closedAt) {
   const [cy, cm, cd] = closedAt.split("-");
   if (sy === cy) return `${sd}/${sm} – ${cd}/${cm}`;
   return `${sd}/${sm}/${sy.slice(2)} – ${cd}/${cm}/${cy.slice(2)}`;
+}
+
+// ---- Início ----
+const PT_MONTHS_SHORT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+// Local-time today as YYYY-MM-DD. Avoids the UTC-vs-local off-by-one at midnight.
+function todayISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Same-day counts as future (per plan).
+function isFutureDate(dateStr) {
+  return dateStr >= todayISO();
+}
+
+// "2026-05-22" → "22 mai"
+function formatAgendaDate(dateStr) {
+  const [, m, d] = dateStr.split('-');
+  const month = PT_MONTHS_SHORT[parseInt(m, 10) - 1] || m;
+  return `${parseInt(d, 10)} ${month}`;
+}
+
+function renderInicio() {
+  renderCalloutSlot();
+  renderAgenda();
+}
+
+// Three states: active-vote pill, no-vote expandable card, or hidden.
+function renderCalloutSlot() {
+  const slot = $("inicio-callout");
+  slot.innerHTML = "";
+
+  if (ACTIVE_VOTE) {
+    const a = document.createElement('a');
+    a.href = '#votacao';
+    a.className = 'inicio-pill';
+    a.innerHTML = `
+      <span class="inicio-pill-msg">📩 Votação #${ACTIVE_VOTE.number} aberta — escolhe o próximo livro</span>
+      <span class="inicio-pill-arrow">→</span>
+    `;
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo('votacao');
+    });
+    slot.appendChild(a);
+    return;
+  }
+
+  if (ARCHIVE.length > 0) {
+    const entry = ARCHIVE[0];
+    const winner = getBook(entry.winnerId);
+    if (!winner) return;
+
+    const links = renderShopLinks(winner);
+    const card = document.createElement('div');
+    card.className = 'inicio-card';
+    card.innerHTML = `
+      <div class="inicio-card-header">
+        <span class="inicio-card-title">📖 Próximo livro a encomendar</span>
+        <span class="inicio-card-toggle">➕</span>
+      </div>
+      <div class="inicio-card-body">
+        <div class="inicio-card-book">
+          <span class="emoji">${winner.emoji}</span>
+          <div class="inicio-card-book-meta">
+            <span class="book-title">${winner.title}</span>
+            <span class="author">${winner.author} · ${winner.pages} pág.</span>
+          </div>
+        </div>
+        <p class="sinopse">«${winner.sinopse}»</p>
+        ${links ? `<div class="links">${links}</div>` : ''}
+      </div>
+    `;
+    card.querySelector('.inicio-card-header').addEventListener('click', () => {
+      const isExp = card.classList.toggle('expanded');
+      card.querySelector('.inicio-card-toggle').textContent = isExp ? '➖' : '➕';
+    });
+    slot.appendChild(card);
+  }
+  // Both empty — leave slot blank.
+}
+
+function renderAgenda() {
+  const list = $("agenda-list");
+  const empty = $("agenda-empty");
+  list.innerHTML = "";
+
+  if (AGENDA.length === 0) {
+    empty.classList.remove("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+
+  // Newest-first; future and past interleave by date, no separator.
+  const sorted = [...AGENDA].sort((a, b) => b.date.localeCompare(a.date));
+
+  // Find the chronologically nearest future entry (smallest date ≥ today).
+  // Since `sorted` is desc and future entries cluster at the top,
+  // the *last* one whose date ≥ today is the soonest.
+  const today = todayISO();
+  let nextDate = null;
+  sorted.forEach((e) => { if (e.date >= today) nextDate = e.date; });
+
+  sorted.forEach((entry) => {
+    const isPast = entry.date < today;
+    const isNext = entry.date === nextDate;
+    list.appendChild(renderAgendaRow(entry, isPast, isNext));
+  });
+}
+
+function renderAgendaRow(entry, isPast, isNext) {
+  const row = document.createElement('div');
+  row.className = 'agenda-row' + (isPast ? ' past' : ' future') + (isNext ? ' next' : '');
+
+  const book = getBook(entry.bookId);
+  const pin = isNext ? '<span class="agenda-pin">📌</span>' : '';
+  const range = entry.upToPage
+    ? `<span class="agenda-range">(até pág. ${entry.upToPage})</span>`
+    : '';
+
+  const bookEmoji = book ? book.emoji : '❓';
+  const bookTitle = book ? book.title : `[${entry.bookId}]`;
+  const bookAuthor = book ? book.author : '';
+
+  row.innerHTML = `
+    <div class="agenda-line-main">
+      ${pin}
+      <span class="agenda-date">${formatAgendaDate(entry.date)}</span>
+      <span class="agenda-dot">·</span>
+      <span class="agenda-book-emoji">${bookEmoji}</span>
+      <span class="agenda-book-title">${bookTitle}</span>
+      ${range}
+    </div>
+    ${bookAuthor ? `<div class="agenda-author">${bookAuthor}</div>` : ''}
+    <div class="agenda-loc">${entry.location} · ${entry.time}</div>
+  `;
+
+  if (isPast) {
+    if (entry.findings) {
+      const f = document.createElement('p');
+      f.className = 'agenda-findings';
+      f.textContent = entry.findings;
+      row.appendChild(f);
+    }
+    if (entry.participants && entry.participants.length > 0) {
+      const p = document.createElement('div');
+      p.className = 'agenda-participants';
+      p.innerHTML = entry.participants
+        .map((n) => `<span class="chip-small">${n}</span>`)
+        .join('');
+      row.appendChild(p);
+    }
+  }
+
+  return row;
 }
 
 // ---- Router ----
@@ -901,6 +1224,7 @@ async function init() {
   await loadData();
   renderCandidateBooks();
   renderArquivo();
+  renderInicio();
 
   $("loading").classList.add("hidden");
   $("app").classList.remove("hidden");
