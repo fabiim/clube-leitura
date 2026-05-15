@@ -33,10 +33,20 @@
 
   .page { max-width: 680px; margin: 0 auto; padding: 32px 20px 60px; }
 
-  /* Header */
-  header { text-align: center; margin-bottom: 32px; }
-  h1 { font-size: 30px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.5px; }
-  .subtitle { font-size: 15px; color: var(--stone-500); margin: 0 0 14px; font-style: italic; }
+  /* Banner: title left, tabs right */
+  .banner {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 1px solid var(--stone-200);
+    margin-bottom: 28px; gap: 16px;
+  }
+  .brand {
+    font-size: 22px; font-weight: 700; margin: 0;
+    padding-bottom: 12px; letter-spacing: -0.3px;
+  }
+
+  /* Votação intro (subtitle + voter badge, sits above name input) */
+  .vote-intro { text-align: center; margin-bottom: 24px; }
+  .subtitle { font-size: 15px; color: var(--stone-500); margin: 0 0 12px; font-style: italic; }
   .badge {
     display: inline-block; background: var(--amber-100); color: var(--amber-800);
     font-size: 12px; font-weight: 600; padding: 4px 14px; border-radius: 20px;
@@ -212,6 +222,28 @@
     margin-bottom: 24px; color: #991b1b; font-family: system-ui, sans-serif; font-size: 14px;
   }
 
+  /* Tabs (sit on the right of the banner) */
+  .tabs { display: flex; gap: 22px; margin-bottom: -1px; }
+  .tab {
+    font-family: system-ui, sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--stone-500); text-decoration: none;
+    padding: 10px 4px; margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s;
+  }
+  .tab:hover { color: var(--stone-700); }
+  .tab.active { color: var(--stone-900); border-bottom-color: var(--amber-700); }
+
+  /* Stub view placeholder */
+  .placeholder { text-align: center; color: var(--stone-400); padding: 60px 20px; font-style: italic; }
+
+  /* Mobile: stack banner contents (title + tabs row don't fit on a phone) */
+  @media (max-width: 480px) {
+    .banner { flex-direction: column; align-items: stretch; gap: 6px; }
+    .brand { text-align: center; font-size: 20px; padding-bottom: 0; }
+    .tabs { justify-content: center; gap: 18px; }
+  }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -226,54 +258,75 @@
 
   <!-- Main content (hidden until loaded) -->
   <div id="app" class="hidden">
-    <header>
-      <h1>📚 Clube do Livro</h1>
-      <p class="subtitle">Escolhe os próximos 2 livros para lermos juntos</p>
-      <div class="badge"><span id="voter-count">0</span> votos registados</div>
+    <header class="banner">
+      <h1 class="brand">📚 Clube do Livro</h1>
+      <nav class="tabs">
+        <a href="#inicio"  class="tab" data-tab="inicio">Início</a>
+        <a href="#votacao" class="tab" data-tab="votacao">Votação</a>
+        <a href="#arquivo" class="tab" data-tab="arquivo">Arquivo</a>
+      </nav>
     </header>
 
     <!-- Error -->
     <div id="error-banner" class="error-banner hidden"></div>
 
-    <!-- Step 1: Name -->
-    <div id="name-section" class="name-section">
-      <label class="name-label">Como te chamas?</label>
-      <div class="name-row">
-        <input id="name-input" class="name-input" placeholder="O teu nome..." />
-        <button id="name-btn" class="name-btn" disabled>Continuar →</button>
-      </div>
-    </div>
+    <!-- View: Início -->
+    <section id="view-inicio" data-view="inicio" class="hidden">
+      <p class="placeholder">Em breve.</p>
+    </section>
 
-    <!-- Step 2: Vote -->
-    <div id="vote-section" class="hidden">
-      <p id="greeting" class="instructions"></p>
-      <div id="book-grid" class="grid"></div>
-      <div class="footer">
-        <div id="sel-info" class="sel-info">0/2 seleccionados</div>
-        <button id="submit-btn" class="submit-btn" disabled>Votar ✓</button>
+    <!-- View: Votação -->
+    <section id="view-votacao" data-view="votacao" class="hidden">
+      <div class="vote-intro">
+        <p class="subtitle">Escolhe o próximo livro para lermos juntos</p>
+        <div class="badge"><span id="voter-count">0</span> votos registados</div>
       </div>
-    </div>
 
-    <!-- Step 3: Results -->
-    <div id="results-section" class="results-section hidden">
-      <div id="thank-you" class="thank-you hidden">
-        <span style="font-size:28px">🎉</span>
-        <p id="thank-you-text"></p>
-        <div id="saving-indicator" class="saving-indicator hidden">
-          <div class="spinner"></div> A gravar...
+      <!-- Step 1: Name -->
+      <div id="name-section" class="name-section">
+        <label class="name-label">Como te chamas?</label>
+        <div class="name-row">
+          <input id="name-input" class="name-input" placeholder="O teu nome..." />
+          <button id="name-btn" class="name-btn" disabled>Continuar →</button>
         </div>
       </div>
-      <h2 class="results-title">Resultados</h2>
-      <div id="results-content"></div>
-      <div class="actions-row">
-        <button id="refresh-btn" class="refresh-btn">🔄 Actualizar</button>
-        <button id="reset-btn" class="reset-btn">Reiniciar votação</button>
-      </div>
-    </div>
 
-    <!-- Peek / Back buttons -->
-    <button id="peek-btn" class="peek-btn hidden">👀 Espreitar resultados</button>
-    <button id="back-btn" class="peek-btn hidden">← Voltar para votar</button>
+      <!-- Step 2: Vote -->
+      <div id="vote-section" class="hidden">
+        <p id="greeting" class="instructions"></p>
+        <div id="book-grid" class="grid"></div>
+        <div class="footer">
+          <div id="sel-info" class="sel-info">0/2 seleccionados</div>
+          <button id="submit-btn" class="submit-btn" disabled>Votar ✓</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Results -->
+      <div id="results-section" class="results-section hidden">
+        <div id="thank-you" class="thank-you hidden">
+          <span style="font-size:28px">🎉</span>
+          <p id="thank-you-text"></p>
+          <div id="saving-indicator" class="saving-indicator hidden">
+            <div class="spinner"></div> A gravar...
+          </div>
+        </div>
+        <h2 class="results-title">Resultados</h2>
+        <div id="results-content"></div>
+        <div class="actions-row">
+          <button id="refresh-btn" class="refresh-btn">🔄 Actualizar</button>
+          <button id="reset-btn" class="reset-btn">Reiniciar votação</button>
+        </div>
+      </div>
+
+      <!-- Peek / Back buttons -->
+      <button id="peek-btn" class="peek-btn hidden">👀 Espreitar resultados</button>
+      <button id="back-btn" class="peek-btn hidden">← Voltar para votar</button>
+    </section>
+
+    <!-- View: Arquivo -->
+    <section id="view-arquivo" data-view="arquivo" class="hidden">
+      <p class="placeholder">Em breve.</p>
+    </section>
   </div>
 </div>
 
@@ -624,6 +677,41 @@ async function resetPoll() {
   updateVoterCount();
 }
 
+// ---- Router ----
+const TABS = ['inicio', 'votacao', 'arquivo'];
+
+function currentTab() {
+  const h = window.location.hash.replace(/^#/, '');
+  return TABS.includes(h) ? h : 'inicio';
+}
+
+function navigateTo(tab) {
+  if (!TABS.includes(tab)) tab = 'inicio';
+  if (currentTab() === tab) return;
+  window.location.hash = '#' + tab;
+}
+
+function applyRoute() {
+  const tab = currentTab();
+  document.querySelectorAll('section[data-view]').forEach((s) => {
+    s.classList.toggle('hidden', s.dataset.view !== tab);
+  });
+  document.querySelectorAll('.tab').forEach((a) => {
+    a.classList.toggle('active', a.dataset.tab === tab);
+  });
+}
+
+function initRouter() {
+  document.querySelectorAll('.tab').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo(a.dataset.tab);
+    });
+  });
+  window.addEventListener('hashchange', applyRoute);
+  applyRoute();
+}
+
 // ---- Init ----
 async function init() {
   // Check config
@@ -690,6 +778,8 @@ async function init() {
       if (Object.keys(voters).length > 0) $("peek-btn").classList.remove("hidden");
     }
   });
+
+  initRouter();
 }
 
 init();
