@@ -1222,7 +1222,7 @@ async function init() {
   }
 
   await loadData();
-  renderCandidateBooks();
+  if (ACTIVE_VOTE) renderCandidateBooks();
   renderArquivo();
   renderInicio();
 
