@@ -237,6 +237,61 @@
   /* Stub view placeholder */
   .placeholder { text-align: center; color: var(--stone-400); padding: 60px 20px; font-style: italic; }
 
+  /* Arquivo */
+  .section-heading {
+    font-size: 18px; font-weight: 700; color: var(--stone-800);
+    margin: 0 0 16px; letter-spacing: -0.2px;
+  }
+  .muted { text-align: center; color: var(--stone-400); padding: 40px 20px; font-style: italic; }
+  #archive-list { display: flex; flex-direction: column; gap: 8px; }
+  .archive-row {
+    border: 2px solid var(--stone-200); border-radius: 12px;
+    background: var(--stone-50);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .archive-row:hover { border-color: var(--stone-300); }
+  .archive-row.expanded { border-color: var(--amber-700); }
+  .archive-row.expanded:hover { border-color: var(--amber-700); }
+  .archive-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; cursor: pointer;
+  }
+  .archive-winner {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .archive-emoji { font-size: 20px; flex-shrink: 0; }
+  .archive-title-author {
+    font-size: 15px; color: var(--stone-800); font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1; min-width: 0;
+  }
+  .archive-toggle {
+    font-size: 18px; flex-shrink: 0;
+    font-family: system-ui, sans-serif;
+  }
+  .archive-details {
+    display: none;
+    padding: 0 14px 16px;
+    border-top: 1px solid var(--stone-200);
+  }
+  .archive-row.expanded .archive-details { display: block; }
+  .archive-meta {
+    font-family: system-ui, sans-serif; font-size: 12px;
+    color: var(--stone-500); margin: 12px 0 10px;
+    font-weight: 500;
+  }
+  .archive-note {
+    font-size: 13px; color: var(--amber-800);
+    font-style: italic;
+    margin: 0 0 14px;
+    padding: 8px 12px;
+    background: var(--amber-50);
+    border-radius: 8px;
+    font-family: system-ui, sans-serif;
+  }
+
   /* Mobile: stack banner contents (title + tabs row don't fit on a phone) */
   @media (max-width: 480px) {
     .banner { flex-direction: column; align-items: stretch; gap: 6px; }
@@ -325,7 +380,9 @@
 
     <!-- View: Arquivo -->
     <section id="view-arquivo" data-view="arquivo" class="hidden">
-      <p class="placeholder">Em breve.</p>
+      <h2 class="section-heading">Arquivo de votações</h2>
+      <div id="archive-list"></div>
+      <p id="archive-empty" class="muted hidden">Ainda não há votações fechadas.</p>
     </section>
   </div>
 </div>
@@ -423,6 +480,36 @@ const ACTIVE_VOTE = {
     },
   ],
 };
+
+/**
+ * Closed-vote snapshots, ordered newest-first.
+ *
+ * Invariants (per entry):
+ *  - `closedAt >= startedAt`.
+ *  - `winnerId` appears in `books[*].id`.
+ *  - `winnerNote` is omitted unless explicitly set.
+ *  - `votes` keys are a subset of `books[*].id`.
+ *  - `voters[nameKey].books` are a subset of `books[*].id`.
+ *
+ * Invariants (across array):
+ *  - ARCHIVE[0].number > ARCHIVE[1].number > … > ARCHIVE[N-1].number.
+ *  - Numbers are dense (no gaps).
+ *
+ * @typedef {{
+ *   number:      number,
+ *   startedAt:   string,
+ *   closedAt:    string,
+ *   winnerId:    string,
+ *   winnerNote?: string,
+ *   maxVotes:    number,
+ *   books:       Book[],
+ *   votes:       Record<string, number>,
+ *   voters:      Record<string, { name: string, books: string[] }>,
+ * }} ArchiveEntry
+ */
+
+/** @type {ArchiveEntry[]} */
+const ARCHIVE = [];
 
 // State
 let allVotes = {};
@@ -677,6 +764,93 @@ async function resetPoll() {
   updateVoterCount();
 }
 
+// ---- Arquivo ----
+const expandedEntries = new Set();
+
+function renderArquivo() {
+  const list = $("archive-list");
+  const empty = $("archive-empty");
+  list.innerHTML = "";
+
+  if (ARCHIVE.length === 0) {
+    empty.classList.remove("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+
+  ARCHIVE.forEach((entry) => {
+    list.appendChild(renderArchiveRow(entry));
+  });
+}
+
+function renderArchiveRow(entry) {
+  const row = document.createElement("div");
+  row.className = "archive-row";
+  row.dataset.number = entry.number;
+  const startsExpanded = expandedEntries.has(entry.number);
+  if (startsExpanded) row.classList.add("expanded");
+
+  const winner = entry.books.find((b) => b.id === entry.winnerId);
+  const winnerLabel = winner
+    ? `<span class="archive-emoji">${winner.emoji}</span><span class="archive-title-author">${winner.title} — ${winner.author}</span>`
+    : `<span class="archive-title-author">Vencedor desconhecido</span>`;
+
+  row.innerHTML = `
+    <div class="archive-header">
+      <div class="archive-winner">${winnerLabel}</div>
+      <span class="archive-toggle">${startsExpanded ? "➖" : "➕"}</span>
+    </div>
+    <div class="archive-details"></div>
+  `;
+
+  row.querySelector(".archive-header").addEventListener("click", () => {
+    const isExp = row.classList.toggle("expanded");
+    row.querySelector(".archive-toggle").textContent = isExp ? "➖" : "➕";
+    if (isExp) {
+      expandedEntries.add(entry.number);
+      paintArchiveDetails(row.querySelector(".archive-details"), entry);
+    } else {
+      expandedEntries.delete(entry.number);
+    }
+  });
+
+  // Repaint details if this row started expanded (e.g., after a re-render).
+  if (startsExpanded) {
+    paintArchiveDetails(row.querySelector(".archive-details"), entry);
+  }
+
+  return row;
+}
+
+function paintArchiveDetails(container, entry) {
+  container.innerHTML = "";
+
+  const votesLabel = entry.maxVotes === 1 ? "voto" : "votos";
+  const meta = document.createElement("p");
+  meta.className = "archive-meta";
+  meta.textContent = `#${entry.number} · ${formatDateRange(entry.startedAt, entry.closedAt)} · ${entry.maxVotes} ${votesLabel} por pessoa`;
+  container.appendChild(meta);
+
+  if (entry.winnerNote) {
+    const note = document.createElement("p");
+    note.className = "archive-note";
+    note.textContent = entry.winnerNote;
+    container.appendChild(note);
+  }
+
+  const results = document.createElement("div");
+  container.appendChild(results);
+  renderResultsInto(results, entry.books, entry.votes, entry.voters);
+}
+
+// `DD/MM – DD/MM` (same year) or `DD/MM/YY – DD/MM/YY` (cross-year). Inputs are ISO.
+function formatDateRange(startedAt, closedAt) {
+  const [sy, sm, sd] = startedAt.split("-");
+  const [cy, cm, cd] = closedAt.split("-");
+  if (sy === cy) return `${sd}/${sm} – ${cd}/${cm}`;
+  return `${sd}/${sm}/${sy.slice(2)} – ${cd}/${cm}/${cy.slice(2)}`;
+}
+
 // ---- Router ----
 const TABS = ['inicio', 'votacao', 'arquivo'];
 
@@ -726,6 +900,7 @@ async function init() {
 
   await loadData();
   renderCandidateBooks();
+  renderArquivo();
 
   $("loading").classList.add("hidden");
   $("app").classList.remove("hidden");
