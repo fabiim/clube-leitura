@@ -102,12 +102,12 @@
   .card.selected .check-mark { display: block; }
 
   .sinopse { margin: 0 0 8px; font-size: 14px; color: var(--stone-600); line-height: 1.55; font-style: italic; }
-  .porque {
+  .claude {
     margin: 0 0 10px; font-size: 13px; color: var(--amber-800); line-height: 1.4;
     font-family: system-ui, sans-serif; background: var(--amber-100);
     padding: 6px 10px; border-radius: 8px; font-weight: 500;
   }
-  .porque-icon {
+  .claude-icon {
     width: 16px; height: 16px; vertical-align: -3px;
   }
   .links { display: flex; align-items: center; gap: 6px; }
@@ -524,7 +524,7 @@ const API_URL = atob(_E);
  *   author:         string,
  *   pages:          number,
  *   sinopse:        string,
- *   porque:         string,
+ *   claude:         string,
  *   wook?:          string,
  *   bertrand?:      string,
  *   letrasLavadas?: string,
@@ -537,7 +537,7 @@ const BOOKS = {
     emoji: "💀",
     title: "As Intermitências da Morte", author: "José Saramago", pages: 210,
     sinopse: "No dia seguinte ninguém morreu. O autor desenvolve a hipótese em todas as suas consequências, numa ampla divagação sobre a vida, a morte, o amor, e o sentido da nossa existência.",
-    porque: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
+    claude: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
     wook: "https://www.wook.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
     bertrand: "https://www.bertrand.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
   },
@@ -545,7 +545,7 @@ const BOOKS = {
     emoji: "🌿",
     title: "A Vegetariana", author: "Han Kang", pages: 180,
     sinopse: "Yeong-hye decide deitar fora toda a carne e tornar-se vegetariana depois de um pesadelo. O seu ato de renúncia desencadeia reações extremadas da família. Erótico, violento, poético.",
-    porque: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
+    claude: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
     wook: "https://www.wook.pt/livro/a-vegetariana-han-kang/18547889",
     bertrand: "https://www.bertrand.pt/livro/a-vegetariana-han-kang/18547889",
   },
@@ -553,7 +553,7 @@ const BOOKS = {
     emoji: "☀️",
     title: "O Estrangeiro", author: "Albert Camus", pages: 120,
     sinopse: "Meursault recebe um telegrama: a mãe morreu. De regresso a casa após o funeral, enceta amizade com um vizinho de práticas duvidosas, reencontra uma antiga colega de trabalho com quem se envolve, vai à praia — até que ocorre um homicídio. Romance estranho, desconcertante sob uma aparente singeleza estilística, em O Estrangeiro joga-se o destino de um homem perante o absurdo e questiona-se o sentido da existência.",
-    porque: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
+    claude: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
     wook: "https://www.wook.pt/livro/o-estrangeiro-albert-camus/15328334",
     bertrand: "https://www.bertrand.pt/livro/o-estrangeiro-albert-camus/15328334",
   },
@@ -561,7 +561,7 @@ const BOOKS = {
     emoji: "⚙️",
     title: "A Máquina de Fazer Espanhóis", author: "Valter Hugo Mãe", pages: 260,
     sinopse: "Surpreendente retrato da vida dos velhos, este livro fala dos fantasmas da portugalidade e da candura que existe mesmo nos momentos mais tristes. Delicadíssimo, corajoso e inesquecível.",
-    porque: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
+    claude: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
     wook: "https://www.wook.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
     bertrand: "https://www.bertrand.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
   },
@@ -569,7 +569,7 @@ const BOOKS = {
     emoji: "⛵",
     title: "Como Um Marinheiro Eu Partirei", author: "Nuno Costa Santos", pages: 160,
     sinopse: "Uma narrativa profundamente humana que revisita a vida do cantor belga Jacques Brel e a sua passagem crepuscular pelos Açores. Romance, biografia, reportagem e reflexão sobre os nossos medos mais secretos.",
-    porque: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
+    claude: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
     wook: "https://www.wook.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
     bertrand: "https://www.bertrand.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
   },
@@ -577,7 +577,7 @@ const BOOKS = {
     emoji: "🏖️",
     title: "Capitães da Areia", author: "Jorge Amado", pages: 272,
     sinopse: "Jorge Amado descreve, em páginas de grande beleza e dramatismo, a vida dos meninos abandonados nas ruas de São Salvador da Bahia. Publicado em 1937, teve a primeira edição queimada em praça pública.",
-    porque: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
+    claude: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
     wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
     bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
   },
@@ -585,7 +585,7 @@ const BOOKS = {
     emoji: "☁️",
     title: "Céu Nublado com Boas Abertas", author: "Nuno Costa Santos", pages: 256,
     sinopse: "Regresso de um neto aos Açores em busca dos diários do avô, internado nos anos 40 no sanatório do Caramulo. Pelo caminho cruza-se com um navegador francês em apuros, uma stripper ruiva, um casal chinês a tentar integrar-se no arquipélago e um fã de Kafka que descobriu que o escritor sonhou viver nos Açores. Histórias do passado e do presente que se enovelam.",
-    porque: "Açorianidade dupla — passado e presente — com humor melancólico. O território é o nosso.",
+    claude: "Açorianidade dupla — passado e presente — com humor melancólico. O território é o nosso.",
     wook: "https://www.wook.pt/livro/ceu-nublado-com-boas-abertas-nuno-costa-santos/16954064",
     bertrand: "https://www.bertrand.pt/livro/ceu-nublado-com-boas-abertas-nuno-costa-santos/16954064",
   },
@@ -593,33 +593,33 @@ const BOOKS = {
     emoji: "🌍",
     title: "Cândido, ou o Otimismo", author: "Voltaire", pages: 120,
     sinopse: "Cândido, educado pelo mestre Pangloss a crer que «tudo está pelo melhor no melhor dos mundos possíveis», é expulso do castelo e atira-se ao mundo. Atravessa três continentes a coleccionar guerras, naufrágios, autos-de-fé e o terramoto de Lisboa. Sátira filosófica curtíssima, escrita em três dias, banida e queimada à publicação.",
-    porque: "Curto, mordaz, divertidíssimo. E com Lisboa pós-terramoto no centro da acção.",
+    claude: "Curto, mordaz, divertidíssimo. E com Lisboa pós-terramoto no centro da acção.",
     wook: "https://www.wook.pt/livro/candido-ou-o-otimismo-voltaire/17900982",
     bertrand: "https://www.bertrand.pt/livro/candido-ou-o-otimismo-voltaire/17900982",
   },
   ernaux: {
     emoji: "🕰️",
     title: "Os Anos", author: "Annie Ernaux", pages: 200,
-    sinopse: "Sessenta anos da vida de uma mulher escritos sempre na terceira pessoa — nunca «eu», sempre «ela». A criança da Normandia ocupada pelos nazis. A adolescente dos anos 50 que descobre Sartre, o desejo e a guerra da Argélia nos jornais. A jovem que aborta clandestinamente antes da Loi Veil e vive Maio de 68 nas ruas. A professora divorciada nos anos Mitterrand e da SIDA. A mulher de meia-idade que vê cair o Muro pela televisão. A sexagenária pós-11 de Setembro que reconhece a mãe no próprio rosto. Entre as épocas: refrões, slogans, ementas de Natal, produtos desaparecidos das prateleiras. Tudo o que constrói uma década antes de se desfazer. Abre com a promessa: «Tudo se apagará num segundo.»",
-    porque: "Uma vida de mulher contada como se fosse a vida de toda uma geração. Memória, corpo, classe, desejo — décadas que se desfazem nas tuas mãos enquanto lês.",
+    sinopse: "Sessenta anos da vida de uma mulher — e do século que a faz. Da criança na Normandia ocupada à sexagenária pós-11-Setembro, passando por Sartre, Maio 68, a Loi Veil, Mitterrand e a queda do Muro. Autobiografia coletiva de uma geração inteira.",
+    claude: "Nobel 2022. Escreveu uma autobiografia inteira sem nunca dizer «eu».",
     wook: "https://www.wook.pt/livro/os-anos-annie-ernaux/23706033",
     bertrand: "https://www.bertrand.pt/livro/os-anos-annie-ernaux/23706033",
   },
   rhys: {
     emoji: "🌊",
     title: "Vasto Mar de Sargaços", author: "Jean Rhys", pages: 180,
-    sinopse: "Antoinette Cosway, herdeira crioula nascida na Jamaica colonial, casa com um jovem inglês que se deixa fascinar pela sua sensualidade — mas depressa começam a circular rumores que o envenenam contra ela. Apanhada entre as exigências do marido e a sua precária sensação de pertença, é levada à loucura. A pré-história da «louca do sótão» de Jane Eyre, contada do lado dela.",
-    porque: "Curto, gótico-caribenho, pós-colonial. Resgata uma personagem de Charlotte Brontë e devolve-lhe a voz.",
+    sinopse: "Nascida na opressiva sociedade colonialista da Jamaica dos anos 30, Antoinette Cosway conhece um jovem inglês que é atraído pela sua beleza e sensualidade. Após o casamento, começam a circular boatos que instalam a desconfiança entre o casal. Apanhada entre as exigências do marido e o seu sentido de pertença, Antoinette é levada à loucura.",
+    claude: "Curto, gótico-caribenho, pós-colonial. Resgata uma personagem de Charlotte Brontë e devolve-lhe a voz.",
     wook: "https://www.wook.pt/livro/vasto-mar-de-sargacos-jean-rhys/18944750",
     bertrand: "https://www.bertrand.pt/livro/vasto-mar-de-sargacos-jean-rhys/18944750",
   },
-  mccarthy: {
-    emoji: "🛣️",
-    title: "A Estrada", author: "Cormac McCarthy", pages: 192,
-    sinopse: "Um pai e um filho atravessam a pé uma América devastada por uma catástrofe inominada, empurrando um carrinho de supermercado com os bens que lhes restam. Sob um céu de cinzas e fugindo de bandos canibais, caminham para sul — e para uma esperança que talvez já não exista. Uma meditação despida sobre o amor, a sobrevivência e o que se transmite de pai para filho no fim do mundo.",
-    porque: "Curto, impossível de pousar. Pulitzer 2007. Pai e filho no fim do mundo — devastador no melhor sentido.",
-    wook: "https://www.wook.pt/livro/a-estrada-cormac-mccarthy/194209",
-    bertrand: "https://www.bertrand.pt/livro/a-estrada-cormac-mccarthy/194209",
+  stoner: {
+    emoji: "✒️",
+    title: "Stoner", author: "John Williams", pages: 263,
+    sinopse: "William Stoner, filho de pequenos agricultores pobres do Missouri, é enviado para a universidade em 1910 para estudar agronomia e voltar para a terra. Numa aula sobre um soneto de Shakespeare, qualquer coisa muda. Troca a agronomia pela literatura inglesa e nunca mais sai do campus. Casa-se por engano com uma mulher que não o quer, fracassa enquanto pai, sustenta uma única paixão clandestina, perde uma guerra surda de corredor a um colega rancoroso, e continua a ensinar. Uma vida que se conta numa linha e que Williams escreve com a precisão de quem sabe que essa linha é tudo.",
+    claude: "«O melhor romance que ninguém leu» — Bryan Appleyard. Vida apagada, prosa devastadora.",
+    wook: "https://www.wook.pt/livro/stoner-john-williams/15934330",
+    bertrand: "https://www.bertrand.pt/livro/stoner-john-williams/15934330",
   },
 };
 
@@ -650,7 +650,7 @@ const ACTIVE_VOTE = {
   number: 2,
   startedAt: "2026-05-15",
   maxVotes: 2,
-  bookIds: ["ncs-ceu", "voltaire", "ernaux", "rhys", "mccarthy"],
+  bookIds: ["ncs-ceu", "voltaire", "ernaux", "rhys", "stoner"],
 };
 
 /**
@@ -796,7 +796,7 @@ function renderCandidateBooks() {
         <div class="check"><span class="check-mark">✓</span></div>
       </div>
       <p class="sinopse">«${book.sinopse}»</p>
-      <p class="porque"><img src="assets/claude.png" class="porque-icon" alt=""> ${book.porque}</p>
+      <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${book.claude}</p>
       <div class="links">${renderShopLinks(book)}</div>
     `;
 
@@ -936,7 +936,7 @@ function renderResultsInto(container, books, votes, voters) {
       <span class="result-toggle">➕</span>
       <div class="result-details">
         <p class="sinopse">«${book.sinopse}»</p>
-        <p class="porque"><img src="assets/claude.png" class="porque-icon" alt=""> ${book.porque}</p>
+        <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${book.claude}</p>
         <div class="links">${renderShopLinks(book)}</div>
       </div>
     `;
@@ -1142,7 +1142,7 @@ function renderCalloutSlot() {
 
 // Permanent fixture between the vote pill and Sessões: a "Estamos a ler"
 // heading plus a collapsed strip (emoji + title + toggle) that expands to
-// reveal author, sinopse, porque and shop links. Source of truth is
+// reveal author, sinopse, claude and shop links. Source of truth is
 // ARCHIVE[0].winnerId — the book the club is currently reading, regardless
 // of whether a new vote is open. The whole block stays empty until the
 // first vote closes (no heading either, to avoid a label over emptiness).
@@ -1170,7 +1170,7 @@ function renderCurrentBook() {
     <div class="current-strip-body">
       <p class="current-strip-meta">${winner.author} · ${winner.pages} pág.</p>
       <p class="sinopse">«${winner.sinopse}»</p>
-      <p class="porque"><img src="assets/claude.png" class="porque-icon" alt=""> ${winner.porque}</p>
+      <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${winner.claude}</p>
       <div class="links">${renderShopLinks(winner)}</div>
     </div>
   `;
