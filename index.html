@@ -84,7 +84,6 @@
   .card:hover { border-color: var(--stone-300); }
   .card.selected { border-color: var(--amber-700); background: var(--amber-50); box-shadow: 0 0 0 1px var(--amber-700); }
   .card.disabled { opacity: 0.4; cursor: not-allowed; }
-  #inicio-current:not(:empty) { margin-bottom: 28px; }
 
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
   .title-row { display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; }
@@ -247,6 +246,8 @@
     margin: 0 0 16px; letter-spacing: -0.2px;
   }
   .muted { text-align: center; color: var(--stone-400); padding: 40px 20px; font-style: italic; }
+  .muted a { color: var(--amber-700); text-decoration: none; font-weight: 600; }
+  .muted a:hover { text-decoration: underline; }
   #archive-list { display: flex; flex-direction: column; gap: 8px; }
   .archive-row {
     border: 2px solid var(--stone-200); border-radius: 12px;
@@ -313,48 +314,30 @@
   }
   .inicio-pill-arrow { flex-shrink: 0; font-size: 16px; }
 
-  /* Início — current-book strip (collapsed-by-default, expandable). */
-  .current-strip {
-    border: 2px solid var(--stone-200); border-radius: 14px;
-    background: var(--stone-50); overflow: hidden;
-    transition: border-color 0.2s;
-  }
-  .current-strip:hover { border-color: var(--stone-300); }
-  .current-strip-row {
-    display: flex; align-items: center; gap: 14px;
-    padding: 14px 18px; cursor: pointer;
-  }
-  .current-strip-emoji { font-size: 30px; flex-shrink: 0; line-height: 1; }
-  .current-strip-title {
-    flex: 1; min-width: 0;
-    font-size: 17px; font-weight: 700; color: var(--stone-800);
-    line-height: 1.3;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .current-strip-toggle {
-    flex-shrink: 0; font-size: 18px; color: var(--stone-400);
-    font-family: system-ui, sans-serif;
-  }
-  .current-strip-body {
-    display: none; padding: 0 18px 16px;
-  }
-  .current-strip.expanded .current-strip-body { display: block; }
-  .current-strip-meta {
-    font-size: 13px; color: var(--stone-500);
-    font-family: system-ui, sans-serif; margin-bottom: 10px;
-  }
-
-  /* Início — agenda list */
-  #agenda-list { display: flex; flex-direction: column; gap: 10px; }
+  /* Início — agenda lists (future + past sub-sections). */
+  #agenda-future-list,
+  #agenda-past-list { display: flex; flex-direction: column; gap: 10px; }
+  /* Breathing room between the two sub-sections, but only when the future
+     list is actually rendered — otherwise the past heading sits at the top
+     of the section and shouldn't carry stray top margin. */
+  #agenda-future-list:not(.hidden) + .section-heading { margin-top: 28px; }
   .agenda-row {
     border: 2px solid var(--stone-200); border-radius: 12px;
     padding: 12px 16px; background: var(--stone-50);
     display: flex; flex-direction: column; gap: 4px;
     transition: border-color 0.15s;
+    position: relative;
   }
+  .agenda-row.clickable { cursor: pointer; }
   .agenda-row.next { border-color: var(--amber-700); background: var(--amber-50); }
+  .agenda-toggle {
+    position: absolute; top: 12px; right: 14px;
+    font-size: 18px; color: var(--stone-400);
+    font-family: system-ui, sans-serif; line-height: 1;
+  }
   .agenda-line-main {
     display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+    padding-right: 26px;
   }
   .agenda-pin { font-size: 16px; flex-shrink: 0; line-height: 1; }
   .agenda-date {
@@ -364,7 +347,8 @@
   .agenda-dot { color: var(--stone-300); font-size: 13px; }
   .agenda-book-emoji { font-size: 17px; }
   .agenda-book-title { font-size: 16px; font-weight: 700; color: var(--stone-800); }
-  .agenda-range {
+  .agenda-range,
+  .agenda-countdown {
     font-size: 13px; color: var(--stone-500); font-style: italic;
     font-family: system-ui, sans-serif; margin-left: 2px;
   }
@@ -393,6 +377,17 @@
     border-radius: 12px; font-size: 11px;
     font-family: system-ui, sans-serif;
   }
+  /* Book card hidden until the row's clicked. Border divider mirrors the
+     archive-row pattern so the meeting metadata reads as visually distinct
+     from the embedded book details. */
+  .agenda-book-card {
+    display: none;
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--stone-200);
+  }
+  .agenda-row.expanded .agenda-book-card { display: block; }
+  .agenda-book-card .sinopse { margin-bottom: 8px; }
+  .agenda-book-card .claude { margin-bottom: 10px; }
 
   /* Mobile: stack banner contents (title + tabs row don't fit on a phone) */
   @media (max-width: 480px) {
@@ -430,15 +425,21 @@
     <!-- View: Início -->
     <section id="view-inicio" data-view="inicio" class="hidden">
       <div id="inicio-callout"></div>
-      <div id="inicio-current"></div>
-      <h2 class="section-heading">Sessões</h2>
-      <div id="agenda-list"></div>
+      <h2 id="agenda-future-heading" class="section-heading">Próximas sessões</h2>
+      <div id="agenda-future-list"></div>
+      <h2 id="agenda-past-heading" class="section-heading">Sessões anteriores</h2>
+      <div id="agenda-past-list"></div>
       <p id="agenda-empty" class="muted hidden">Ainda não há sessões.</p>
     </section>
 
     <!-- View: Votação -->
     <section id="view-votacao" data-view="votacao" class="hidden">
-      <div class="vote-intro">
+      <!-- Shown when ACTIVE_VOTE is null; the active-vote UI below is hidden in init(). -->
+      <p id="vote-closed-msg" class="muted hidden">
+        Não há votação activa. Vê o último resultado em <a href="#arquivo">Arquivo</a>.
+      </p>
+
+      <div id="vote-intro" class="vote-intro">
         <p class="subtitle">Escolhe o próximo livro para lermos juntos</p>
         <div class="badge"><span id="voter-count">0</span> votos registados</div>
       </div>
@@ -648,13 +649,7 @@ function getBook(id) {
  */
 
 /** @type {ActiveVote} */
-const ACTIVE_VOTE = {
-  number: 2,
-  startedAt: "2026-05-15",
-  minVotes: 2,
-  maxVotes: 2,
-  bookIds: ["ncs-ceu", "voltaire", "ernaux", "rhys", "stoner"],
-};
+const ACTIVE_VOTE = null;
 
 /**
  * Closed-vote snapshots, ordered newest-first.
@@ -691,6 +686,26 @@ const ACTIVE_VOTE = {
 /** @type {ArchiveEntry[]} */
 const ARCHIVE = [
   {
+    number: 2,
+    startedAt: "2026-05-15",
+    closedAt: "2026-05-18",
+    winnerId: "ncs-ceu",
+    winnerNote: "Empate a 5 votos com Vasto Mar de Sargaços. Vamos ler ambos: Céu Nublado primeiro, Vasto Mar de Sargaços a seguir.",
+    maxVotes: 2,
+    bookIds: ["ncs-ceu", "voltaire", "ernaux", "rhys", "stoner"],
+    votes: { "ncs-ceu": 5, rhys: 5, ernaux: 3, stoner: 3 },
+    voters: {
+      "miguel mota":      { name: "Miguel Mota",      books: ["ncs-ceu", "rhys"] },
+      "mariana":          { name: "Mariana",          books: ["ncs-ceu", "rhys"] },
+      "fábio":            { name: "Fábio",            books: ["ernaux", "rhys"] },
+      "filipa m":         { name: "Filipa M",         books: ["ncs-ceu", "ernaux"] },
+      "filipa":           { name: "Filipa",           books: ["stoner", "ernaux"] },
+      "carolina":         { name: "Carolina",         books: ["ncs-ceu", "rhys"] },
+      "mariana oliveira": { name: "Mariana Oliveira", books: ["ncs-ceu", "stoner"] },
+      "andre":            { name: "Andre",            books: ["rhys", "stoner"] },
+    },
+  },
+  {
     number: 1,
     startedAt: "2026-05-14",
     closedAt: "2026-05-15",
@@ -713,7 +728,10 @@ const ARCHIVE = [
  *
  * Per-entry rules:
  *  - `date` is ISO (YYYY-MM-DD).
- *  - `time` and `location` are free-text strings.
+ *  - `time` and `location` are free-text strings; `time` is optional and
+ *    omitted when the slot hasn't been fixed yet (the renderer drops the
+ *    separator). `location` carries the placeholder "A definir" rather than
+ *    being omitted, because a row with no location at all reads as broken.
  *  - `bookId` references a key in BOOKS.
  *  - `upToPage` is the planned reading target for this session.
  *  - `findings` and `participants` are valid only for entries
@@ -721,7 +739,7 @@ const ARCHIVE = [
  *
  * @typedef {{
  *   date:          string,
- *   time:          string,
+ *   time?:         string,
  *   location:      string,
  *   bookId:        string,
  *   upToPage?:     number,
@@ -733,7 +751,17 @@ const ARCHIVE = [
 /** @type {AgendaEntry[]} */
 const AGENDA = [
   {
-    date: "2026-06-04",
+    date: "2026-08-05",
+    location: "A definir",
+    bookId: "rhys",
+  },
+  {
+    date: "2026-07-01",
+    location: "A definir",
+    bookId: "ncs-ceu",
+  },
+  {
+    date: "2026-06-03",
     time: "20:30",
     location: "Casa do Fábio",
     bookId: "saramago",
@@ -1092,7 +1120,7 @@ function formatDateRange(startedAt, closedAt) {
 }
 
 // ---- Início ----
-const PT_MONTHS_SHORT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const PT_MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 // Local-time today as YYYY-MM-DD. Avoids the UTC-vs-local off-by-one at midnight.
 function todayISO() {
@@ -1108,7 +1136,7 @@ function isFutureDate(dateStr) {
   return dateStr >= todayISO();
 }
 
-// "2026-05-22" → "22 mai" (current year) or "22 mai 2025" (other years).
+// "2026-05-22" → "22 Mai" (current year) or "22 Mai 2025" (other years).
 function formatAgendaDate(dateStr) {
   const [y, m, d] = dateStr.split('-');
   const month = PT_MONTHS_SHORT[parseInt(m, 10) - 1] || m;
@@ -1116,14 +1144,34 @@ function formatAgendaDate(dateStr) {
   return `${parseInt(d, 10)} ${month}${yearSuffix}`;
 }
 
+// Relative-time label for a future meeting: "hoje" / "amanhã" / "em N dias".
+// Returns null for dates already past — caller is expected to suppress the
+// label entirely there (we don't show "há N dias" for past meetings).
+//
+// Day delta is computed in *local* time (the user's clock), not UTC: parsing
+// `dateStr` as a Date directly would land at UTC midnight and drift the count
+// by one across timezones near midnight. We rebuild both ends as local-midnight
+// Dates and divide by ms-per-day.
+function countdownLabel(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1, d);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.round((target - today) / 86400000);
+  if (days < 0) return null;
+  if (days === 0) return 'hoje';
+  if (days === 1) return 'amanhã';
+  return `${days}d`;
+}
+
 function renderInicio() {
   renderCalloutSlot();
-  renderCurrentBook();
   renderAgenda();
 }
 
 // Slim pill at the very top of Início — only shown while a vote is active.
-// The current book sits in its own slot below; the two callouts coexist.
+// Sits above the Sessões list; otherwise the section opens straight onto
+// the agenda.
 function renderCalloutSlot() {
   const slot = $("inicio-callout");
   slot.innerHTML = "";
@@ -1143,76 +1191,58 @@ function renderCalloutSlot() {
   slot.appendChild(a);
 }
 
-// Permanent fixture between the vote pill and Sessões: a "Estamos a ler"
-// heading plus a collapsed strip (emoji + title + toggle) that expands to
-// reveal author, sinopse, claude and shop links. Source of truth is
-// ARCHIVE[0].winnerId — the book the club is currently reading, regardless
-// of whether a new vote is open. The whole block stays empty until the
-// first vote closes (no heading either, to avoid a label over emptiness).
-function renderCurrentBook() {
-  const slot = $("inicio-current");
-  slot.innerHTML = "";
-  if (ARCHIVE.length === 0) return;
-
-  const winner = getBook(ARCHIVE[0].winnerId);
-  if (!winner) return;
-
-  const heading = document.createElement('h2');
-  heading.className = 'section-heading';
-  heading.textContent = '📖 Estamos a ler';
-  slot.appendChild(heading);
-
-  const strip = document.createElement('div');
-  strip.className = 'current-strip';
-  strip.innerHTML = `
-    <div class="current-strip-row">
-      <span class="current-strip-emoji">${winner.emoji}</span>
-      <span class="current-strip-title">${winner.title}</span>
-      <span class="current-strip-toggle">➕</span>
-    </div>
-    <div class="current-strip-body">
-      <p class="current-strip-meta">${winner.author} · ${winner.pages} pág.</p>
-      <p class="sinopse">«${winner.sinopse}»</p>
-      <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${winner.claude}</p>
-      <div class="links">${renderShopLinks(winner)}</div>
-    </div>
-  `;
-  // Whole row is the click target — toggles expanded state and swaps the icon.
-  strip.querySelector('.current-strip-row').addEventListener('click', () => {
-    const isExp = strip.classList.toggle('expanded');
-    strip.querySelector('.current-strip-toggle').textContent = isExp ? '➖' : '➕';
-  });
-  slot.appendChild(strip);
-}
-
 function renderAgenda() {
-  const list = $("agenda-list");
+  const futureHeading = $("agenda-future-heading");
+  const futureList = $("agenda-future-list");
+  const pastHeading = $("agenda-past-heading");
+  const pastList = $("agenda-past-list");
   const empty = $("agenda-empty");
-  list.innerHTML = "";
+
+  futureList.innerHTML = "";
+  pastList.innerHTML = "";
 
   if (AGENDA.length === 0) {
+    futureHeading.classList.add("hidden");
+    futureList.classList.add("hidden");
+    pastHeading.classList.add("hidden");
+    pastList.classList.add("hidden");
     empty.classList.remove("hidden");
     return;
   }
   empty.classList.add("hidden");
 
-  // Newest-first; future and past interleave by date, no separator.
-  const sorted = [...AGENDA].sort((a, b) => b.date.localeCompare(a.date));
-
-  // Find the chronologically nearest future entry (smallest date ≥ today).
-  // Since `sorted` is desc and future entries cluster at the top,
-  // the *last* one whose date ≥ today is the soonest.
   const today = todayISO();
-  let nextDate = null;
-  sorted.forEach((e) => { if (e.date >= today) nextDate = e.date; });
+  // Future: ascending (soonest first) so the next meeting lands at the top.
+  // Past: descending (most recent first) so the section reads present → past.
+  const future = AGENDA
+    .filter((e) => e.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const past = AGENDA
+    .filter((e) => e.date < today)
+    .sort((a, b) => b.date.localeCompare(a.date));
 
-  sorted.forEach((entry) => {
-    const isPast = entry.date < today;
-    const isNext = entry.date === nextDate;
-    list.appendChild(renderAgendaRow(entry, isPast, isNext));
+  // Toggle each sub-section's heading + list together. The CSS adjacency rule
+  // for the past heading's top margin keys off `#agenda-future-list:not(.hidden)`
+  // so spacing stays correct in either edge case (no future, no past).
+  futureHeading.classList.toggle("hidden", future.length === 0);
+  futureList.classList.toggle("hidden", future.length === 0);
+  pastHeading.classList.toggle("hidden", past.length === 0);
+  pastList.classList.toggle("hidden", past.length === 0);
+
+  const nextDate = future.length > 0 ? future[0].date : null;
+  future.forEach((entry) => {
+    futureList.appendChild(renderAgendaRow(entry, false, entry.date === nextDate));
+  });
+  past.forEach((entry) => {
+    pastList.appendChild(renderAgendaRow(entry, true, false));
   });
 }
 
+// Each row is its own meeting card. The header (date · book · location · pin)
+// plus, for past meetings, the findings text and participant chips are always
+// visible. The book's metadata (pages, sinopse, Claude pitch, shop links) sits
+// behind a ➕ toggle so the list stays scannable. The pinned "next" row opens
+// expanded by default — it's the one the user is most likely planning around.
 function renderAgendaRow(entry, isPast, isNext) {
   const row = document.createElement('div');
   row.className = 'agenda-row' + (isPast ? ' past' : ' future') + (isNext ? ' next' : '');
@@ -1225,19 +1255,28 @@ function renderAgendaRow(entry, isPast, isNext) {
 
   const bookEmoji = book ? book.emoji : '❓';
   const bookTitle = book ? book.title : `[${entry.bookId}]`;
-  const bookAuthor = book ? book.author : '';
+  const bookByline = book ? `${book.author} · ${book.pages} pág.` : '';
+
+  // Pinned "next" row auto-expands so the most-imminent book surfaces without
+  // a click; everything else opens on demand.
+  const startsExpanded = !!book && isNext;
+  if (startsExpanded) row.classList.add('expanded');
+
+  const countdown = isPast ? null : countdownLabel(entry.date);
 
   row.innerHTML = `
     <div class="agenda-line-main">
       ${pin}
       <span class="agenda-date">${formatAgendaDate(entry.date)}</span>
+      ${countdown ? `<span class="agenda-countdown">(${countdown})</span>` : ''}
       <span class="agenda-dot">·</span>
       <span class="agenda-book-emoji">${bookEmoji}</span>
       <span class="agenda-book-title">${bookTitle}</span>
       ${range}
     </div>
-    ${bookAuthor ? `<div class="agenda-author">${bookAuthor}</div>` : ''}
-    <div class="agenda-loc">${entry.location} · ${entry.time}</div>
+    ${bookByline ? `<div class="agenda-author">${bookByline}</div>` : ''}
+    <div class="agenda-loc">${entry.location}${entry.time ? ` · ${entry.time}` : ''}</div>
+    ${book ? `<span class="agenda-toggle">${startsExpanded ? '➖' : '➕'}</span>` : ''}
   `;
 
   if (isPast) {
@@ -1255,6 +1294,27 @@ function renderAgendaRow(entry, isPast, isNext) {
         .join('');
       row.appendChild(p);
     }
+  }
+
+  if (book) {
+    const card = document.createElement('div');
+    card.className = 'agenda-book-card';
+    card.innerHTML = `
+      <p class="sinopse">«${book.sinopse}»</p>
+      <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${book.claude}</p>
+      <div class="links">${renderShopLinks(book)}</div>
+    `;
+    row.appendChild(card);
+
+    // Whole row toggles expansion; shop-link clicks pass through so the user
+    // can follow Wook/Bertrand without collapsing the card under them.
+    row.classList.add('clickable');
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.shop-link')) return;
+      const isExp = row.classList.toggle('expanded');
+      const toggle = row.querySelector('.agenda-toggle');
+      if (toggle) toggle.textContent = isExp ? '➖' : '➕';
+    });
   }
 
   return row;
@@ -1307,16 +1367,27 @@ async function init() {
     return;
   }
 
-  await loadData();
-  if (ACTIVE_VOTE) renderCandidateBooks();
+  // Active vote: hit the API for live tallies and render the ballot.
+  // Closed vote: skip the API entirely (nothing to display from it) and put
+  // the Votação tab into its inert state so visitors who land there see a
+  // pointer to the Arquivo instead of a stale name prompt.
+  if (ACTIVE_VOTE) {
+    await loadData();
+    renderCandidateBooks();
+  } else {
+    $("vote-closed-msg").classList.remove("hidden");
+    $("vote-intro").classList.add("hidden");
+    $("name-section").classList.add("hidden");
+  }
   renderArquivo();
   renderInicio();
 
   $("loading").classList.add("hidden");
   $("app").classList.remove("hidden");
 
-  // Show peek button if there are votes
-  if (Object.keys(voters).length > 0) {
+  // Peek only makes sense against a live ballot — gate by ACTIVE_VOTE so the
+  // button doesn't surface (and can't crash showLiveResults) when closed.
+  if (ACTIVE_VOTE && Object.keys(voters).length > 0) {
     $("peek-btn").classList.remove("hidden");
   }
 
