@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"http.server 8765\")",
+      "Bash(curl -sSL -o assets/claude.png \"https://claude.ai/images/claude_app_icon.png\")",
+      "Skill(commit-nicely)",
+      "Bash(cp index.html /tmp/clube-final.html)",
+      "Bash(git checkout *)",
+      "Bash(cp /tmp/index-full.html /home/fabio/dev/projects/clube-leitura/index.html)",
+      "Bash(git -C /home/fabio/dev/projects/clube-leitura diff --stat index.html)",
+      "WebSearch",
+      "WebFetch(domain:www.wook.pt)",
+      "WebFetch(domain:www.bertrand.pt)",
+      "Bash(curl *)",
+      "Bash(python3 -c ' *)",
+      "WebFetch(domain:sydneyreviewofbooks.com)",
+      "WebFetch(domain:lithub.com)",
+      "Bash(xdg-open *)",
+      "Bash(node --check /tmp/check.js)"
+    ]
+  }
+}
