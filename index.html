@@ -709,7 +709,11 @@ const ACTIVE_VOTE = {
   readingDate: "2026-09-02",
   minVotes: 2,
   maxVotes: 2,
-  bookIds: ["bukowski", "kazantzakis", "ripley", "sola", "morel"],
+  // Ballot display order, randomised once when the vote opened and then frozen:
+  // the ballot renders `bookIds` verbatim, so the cards stay put across visits
+  // and no candidate gets a shifting first-slot advantage mid-vote. Selections
+  // are tracked by id, so this order never affects the recorded vote.
+  bookIds: ["sola", "kazantzakis", "morel", "ripley", "bukowski"],
 };
 
 /**
@@ -851,9 +855,6 @@ let voters = {};
 let selected = [];
 let submittedName = "";
 let hasVoted = false;
-// Ballot display order — a shuffled copy of ACTIVE_VOTE.bookIds, computed once on
-// first render and held stable for the session (see renderCandidateBooks).
-let ballotOrder = null;
 
 // DOM
 const $ = (id) => document.getElementById(id);
@@ -890,29 +891,14 @@ function renderVoteReadingDate() {
   el.classList.remove("hidden");
 }
 
-// Fisher–Yates shuffle: returns a new array in uniformly-random order. Used so no
-// candidate gets a permanent first-slot advantage on the ballot. A `.sort()` with a
-// random comparator is biased (and browser-dependent), so it is deliberately avoided.
-function shuffled(arr) {
-  const a = arr.slice();
-  // Walk from the end, swapping each element with a uniformly-random earlier one.
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 function renderCandidateBooks() {
   const grid = $("book-grid");
   grid.innerHTML = "";
 
-  // Randomise position once per page load and keep it stable across re-renders
-  // (e.g. after the voter enters their name), so the cards don't jump around.
-  // Selections are tracked by book id, so order never affects the recorded vote.
-  if (!ballotOrder) ballotOrder = shuffled(ACTIVE_VOTE.bookIds);
-
-  ballotOrder.map(getBook).filter(Boolean).forEach((book) => {
+  // Render in ACTIVE_VOTE.bookIds order — a fixed, pre-randomised sequence (see the
+  // comment on bookIds). The order is frozen for the whole vote, so cards keep the
+  // same position across every visit and re-render.
+  ACTIVE_VOTE.bookIds.map(getBook).filter(Boolean).forEach((book) => {
     const card = document.createElement("div");
     card.className = "card";
     card.dataset.id = book.id;
