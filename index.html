@@ -785,7 +785,8 @@ const ARCHIVE = [
 ];
 
 /**
- * Meeting log, ordered any way — `renderAgenda` sorts newest-first by date.
+ * Meeting log, ordered any way — `renderAgenda` splits it into future and
+ * past sub-lists and sorts each ascending by date (oldest → most recent).
  *
  * Per-entry rules:
  *  - `date` is ISO (YYYY-MM-DD).
@@ -821,7 +822,7 @@ const AGENDA = [
     location: "Bar do Pi",
     bookId: "ncs-ceu",
     upToPage: 256,
-    findings: "Um encontro feliz entre os pingos das ondas, os refrescos amarelos e a peripécia belga. Mas no livro pouca felicidade se encontrou. Não há grandes abertas: é um livro mal cozido, com demasiada coisa à mistura. Muitos clichés açorianos, um enredo muito pobre, algumas frases felizes, uma boa captura do que é viver nos Açores — mas com pouco interesse. No entanto, conseguimos rir, discutir e beber. A necessidade de autores locais não foi consensual — aos livros basta serem bons? Mas nas discussões encontrámos consenso: a Ilha oprime tanto o autor como os leitores. As razões, essas, são pessoais e intransmissíveis — por aqui, ficam nebulosas. ☁️🍻🍷🌊",
+    findings: "Um encontro feliz entre os pingos das ondas, os refrescos amarelos e a peripécia belga. Mas no livro pouca felicidade se encontrou. Não há grandes abertas: é um livro mal cozido, com demasiada coisa à mistura. Muitos clichés açorianos, um enredo muito pobre, algumas frases felizes. É uma captura decente do que é viver nos Açores, mas com pouco interesse. Ainda assim, deu para rir, discutir e beber — que é o que interessa, não é? A necessidade de autores locais não foi consensual (aos livros basta serem bons?), mas não há sombra de dúvida de que a Ilha oprime. As razões, essas, são pessoais e intransmissíveis. Por aqui, ficam nebulosas. ☁️🍻🍷🌊",
     participants: ["Fábio Botelho", "Filipa Costa", "Mariana Teixeira", "Miguel Mota"],
   },
   {
@@ -1325,14 +1326,16 @@ function renderAgenda() {
   empty.classList.add("hidden");
 
   const today = todayISO();
-  // Future: ascending (soonest first) so the next meeting lands at the top.
-  // Past: descending (most recent first) so the section reads present → past.
+  // Both sub-lists sort ascending by date (oldest → most recent). Future puts
+  // the soonest meeting at the top. Past is chronological per the club's
+  // convention: the oldest session reads first and the latest sits at the
+  // bottom, so scrolling the past list walks the club's history forward in time.
   const future = AGENDA
     .filter((e) => e.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date));
   const past = AGENDA
     .filter((e) => e.date < today)
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   // Toggle each sub-section's heading + list together. The CSS adjacency rule
   // for the past heading's top margin keys off `#agenda-future-list:not(.hidden)`
