@@ -47,6 +47,14 @@
   /* Votação intro (subtitle + voter badge, sits above name input) */
   .vote-intro { text-align: center; margin-bottom: 24px; }
   .subtitle { font-size: 15px; color: var(--stone-500); margin: 0 0 12px; font-style: italic; }
+  /* Planned reading date for the winning book — an amber pill under the subtitle. */
+  .vote-reading-date {
+    width: fit-content; margin: 0 auto 14px;
+    background: var(--amber-50); color: var(--amber-800);
+    border: 1px solid var(--amber-600); border-radius: 20px;
+    padding: 5px 14px; font-size: 13px; font-weight: 700;
+    font-family: system-ui, sans-serif;
+  }
   .badge {
     display: inline-block; background: var(--amber-100); color: var(--amber-800);
     font-size: 12px; font-weight: 600; padding: 4px 14px; border-radius: 20px;
@@ -441,6 +449,7 @@
 
       <div id="vote-intro" class="vote-intro">
         <p class="subtitle">Escolhe o próximo livro para lermos juntos</p>
+        <p id="vote-reading-date" class="vote-reading-date hidden"></p>
         <div class="badge"><span id="voter-count">0</span> votos registados</div>
       </div>
 
@@ -622,6 +631,46 @@ const BOOKS = {
     wook: "https://www.wook.pt/livro/stoner-john-williams/15934330",
     bertrand: "https://www.bertrand.pt/livro/stoner-john-williams/15934330",
   },
+  bukowski: {
+    emoji: "🥪",
+    title: "Pão com Fiambre", author: "Charles Bukowski", pages: 368,
+    sinopse: "Naquele que é amplamente considerado o melhor de todos os seus romances, Charles Bukowski descreve os longos e amargos anos de uma juventude vivida à margem, através da voz inconfundível de Henry Chinaski, o seu famoso alter-ego. Da infância triste e isolada na Alemanha, marcada por um pai violento, à adolescência embriagada por borbulhas, álcool, mulheres e literatura, Bukowski empresta a sua voz crua e impenitente para descrever como foi tornar-se adulto numa América marcada pelo desespero da Grande Depressão.",
+    claude: "Cru, cómico e, contra todas as expectativas, terno. Crescer na miséria sem pedir pena a ninguém.",
+    wook: "https://www.wook.pt/livro/pao-com-fiambre-charles-bukowski/24061200",
+    bertrand: "https://www.bertrand.pt/livro/pao-com-fiambre-charles-bukowski/24061200",
+  },
+  kazantzakis: {
+    emoji: "🕺",
+    title: "Vida e Andanças de Alexis Zorbás", author: "Nikos Kazantzakis", pages: 384,
+    sinopse: "Publicado em 1946, Vida e Andanças de Alexis Zorbás é, por um lado, a história de um operário grego chamado Zorbás — um homem inebriado pela vida —, do narrador anónimo, um escritor que embarca com Zorbás numa aventura em Creta, quando decidem explorar uma mina de lenhite, e dos homens e das mulheres da cidade onde se vão instalar. Por outro lado, e mais contundentemente, é a história de Deus e do homem, do Diabo e dos Santos, da eterna busca do sentido da vida; uma história sobre o amor, a fé, a liberdade e a coragem.",
+    claude: "«Ensina-me a dançar.» O patrão vive nos livros; Zorbás vive tudo o resto. Um hino à vida.",
+    wook: "https://www.wook.pt/livro/vida-e-andancas-de-alexis-zorbas-nikos-kazantzakis/27836675",
+    bertrand: "https://www.bertrand.pt/livro/vida-e-andancas-de-alexis-zorbas-nikos-kazantzakis/27836675",
+  },
+  ripley: {
+    emoji: "🎭",
+    title: "O Talentoso Mr. Ripley", author: "Patricia Highsmith", pages: 264,
+    sinopse: "Tom Ripley tenta estar sempre um passo à frente dos seus credores e da lei. Mas tudo muda quando, inesperadamente, lhe oferecem uma viagem à Europa, uma oportunidade de recomeçar a vida. Ripley ambiciona ter dinheiro, sucesso e uma boa vida, e está disposto a matar para o conseguir. Quando a sua nova felicidade é ameaçada, a sua reação é tão repentina como chocante.",
+    claude: "«A poeta da apreensão» — Graham Greene. Um assassino encantador por quem, contra toda a moral, torcemos.",
+    wook: "https://www.wook.pt/livro/o-talentoso-mr-ripley-patricia-highsmith/15104998",
+    bertrand: "https://www.bertrand.pt/livro/o-talentoso-mr-ripley-patricia-highsmith/15104998",
+  },
+  sola: {
+    emoji: "😈",
+    title: "Dei-te Olhos e Viste as Trevas", author: "Irene Solà", pages: 160,
+    sinopse: "Na Casa dos Clavell, escondida nas altas montanhas dos Pirenéus catalães num lugar povoado por caçadores de lobos, bandidos, fantasmas, bruxas e demónios, a velha Bernadeta, cuja idade já ninguém sabe precisar, aguarda na cama a hora da sua morte. Uma roda de mulheres «sujas e desabridas, grotescas e ordinárias» prepara a festa para a receber. São as mulheres já mortas da sua família, almas condenadas, desde que Joana, a primeira da linhagem, fez e desfez um pacto com o diabo para arranjar marido – um homem inteiro e herdeiro. Enquanto o Sol nasce e se põe novamente, desfia-se o passar dos séculos e dos acontecimentos presentes e remotos, visíveis e invisíveis. Romance exuberante e magnético, inspirado na História, na geografia, nas tradições e no folclore da Catalunha, Dei-te Olhos e Viste as Trevas molda, com humor e ousadia, um lugar ancestral, caprichoso, inóspito; um purgatório para as almas femininas.",
+    claude: "Um pacto com o diabo, quatro séculos de mulheres mortas, um só dia. Gótico catalão, exuberante e obsceno.",
+    wook: "https://www.wook.pt/livro/dei-te-olhos-e-viste-as-trevas-irene-sola/32511449",
+    bertrand: "https://www.bertrand.pt/livro/dei-te-olhos-e-viste-as-trevas-irene-sola/32511449",
+  },
+  morel: {
+    emoji: "📽️",
+    title: "A Invenção de Morel", author: "Adolfo Bioy Casares", pages: 160,
+    sinopse: "Um fugitivo chega a uma ilha remota que julga deserta. Porém, um dia descobre que não está sozinho. Escondido na densa floresta, ouve vozes e melodias, espia os intrusos, para quem parece ser invisível, e observa as suas estranhas rotinas. Aqui começa o mistério, a alternância entre alucinação e realidade, que o leva a enamorar-se de uma mulher cuja existência é duvidosa.",
+    claude: "Apaixona-se por uma mulher que não o vê nem o ouve.",
+    wook: "https://www.wook.pt/livro/a-invencao-de-morel-adolfo-bioy-casares/22990405",
+    bertrand: "https://www.bertrand.pt/livro/a-invencao-de-morel-adolfo-bioy-casares/22990405",
+  },
 };
 
 // Resolve a bookId to a Book with `id` injected, or null if unknown.
@@ -633,11 +682,12 @@ function getBook(id) {
 
 /**
  * @typedef {{
- *   number:    number,
- *   startedAt: string,
- *   minVotes:  number,
- *   maxVotes:  number,
- *   bookIds:   string[],
+ *   number:       number,
+ *   startedAt:    string,
+ *   minVotes:     number,
+ *   maxVotes:     number,
+ *   bookIds:      string[],
+ *   readingDate?: string,
  * } | null} ActiveVote
  *
  * Invariants for ACTIVE_VOTE (when non-null):
@@ -646,10 +696,21 @@ function getBook(id) {
  *  - `maxVotes` is between 1 and bookIds.length.
  *  - `minVotes` is between 1 and `maxVotes`.
  *  - `startedAt` is an ISO date (YYYY-MM-DD).
+ *  - `readingDate`, when set, is an ISO date (YYYY-MM-DD): the planned session
+ *    date for whichever book wins. Shown on the ballot; optional because a
+ *    vote may open before its session date is fixed.
  */
 
 /** @type {ActiveVote} */
-const ACTIVE_VOTE = null;
+const ACTIVE_VOTE = {
+  number: 3,
+  startedAt: "2026-07-06",
+  // Planned session for the winning book: the first Wednesday of September.
+  readingDate: "2026-09-02",
+  minVotes: 2,
+  maxVotes: 2,
+  bookIds: ["bukowski", "kazantzakis", "ripley", "sola", "morel"],
+};
 
 /**
  * Closed-vote snapshots, ordered newest-first.
@@ -789,6 +850,9 @@ let voters = {};
 let selected = [];
 let submittedName = "";
 let hasVoted = false;
+// Ballot display order — a shuffled copy of ACTIVE_VOTE.bookIds, computed once on
+// first render and held stable for the session (see renderCandidateBooks).
+let ballotOrder = null;
 
 // DOM
 const $ = (id) => document.getElementById(id);
@@ -813,11 +877,41 @@ function updateVoterCount() {
 }
 
 // ---- Render book cards ----
+// Shows the planned session date on the ballot when the active vote carries one.
+// The date is when the winning book will be read; the pill stays hidden when unset.
+function renderVoteReadingDate() {
+  const el = $("vote-reading-date");
+  if (!ACTIVE_VOTE || !ACTIVE_VOTE.readingDate) {
+    el.classList.add("hidden");
+    return;
+  }
+  el.textContent = `📖 Leitura marcada para ${formatLongDate(ACTIVE_VOTE.readingDate)}`;
+  el.classList.remove("hidden");
+}
+
+// Fisher–Yates shuffle: returns a new array in uniformly-random order. Used so no
+// candidate gets a permanent first-slot advantage on the ballot. A `.sort()` with a
+// random comparator is biased (and browser-dependent), so it is deliberately avoided.
+function shuffled(arr) {
+  const a = arr.slice();
+  // Walk from the end, swapping each element with a uniformly-random earlier one.
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function renderCandidateBooks() {
   const grid = $("book-grid");
   grid.innerHTML = "";
 
-  ACTIVE_VOTE.bookIds.map(getBook).filter(Boolean).forEach((book) => {
+  // Randomise position once per page load and keep it stable across re-renders
+  // (e.g. after the voter enters their name), so the cards don't jump around.
+  // Selections are tracked by book id, so order never affects the recorded vote.
+  if (!ballotOrder) ballotOrder = shuffled(ACTIVE_VOTE.bookIds);
+
+  ballotOrder.map(getBook).filter(Boolean).forEach((book) => {
     const card = document.createElement("div");
     card.className = "card";
     card.dataset.id = book.id;
@@ -844,6 +938,11 @@ function renderCandidateBooks() {
 
     grid.appendChild(card);
   });
+
+  // Initialise the footer counter and card states for this ballot. Without this,
+  // the static "0/N" placeholder in the markup lingers until the first click and
+  // misreports maxVotes (e.g. shows "/2" for a head-to-head where maxVotes is 1).
+  updateSelectionUI();
 }
 
 function renderShopLinks(book) {
@@ -967,7 +1066,7 @@ function renderResultsInto(container, books, votes, voters) {
           <span class="result-emoji">${book.emoji}</span>
           <span class="result-book-title">${book.title}</span>
         </div>
-        <span class="result-author">${book.author}</span>
+        <span class="result-author">${book.author} · ${book.pages} pág.</span>
         <span class="result-count">${count} ${count === 1 ? 'voto' : 'votos'}</span>
       </div>
       <span class="result-toggle">➕</span>
@@ -1127,6 +1226,7 @@ function formatDateRange(startedAt, closedAt) {
 
 // ---- Início ----
 const PT_MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const PT_MONTHS_LONG = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 
 // Local-time today as YYYY-MM-DD. Avoids the UTC-vs-local off-by-one at midnight.
 function todayISO() {
@@ -1148,6 +1248,13 @@ function formatAgendaDate(dateStr) {
   const month = PT_MONTHS_SHORT[parseInt(m, 10) - 1] || m;
   const yearSuffix = y === todayISO().slice(0, 4) ? '' : ` ${y}`;
   return `${parseInt(d, 10)} ${month}${yearSuffix}`;
+}
+
+// "2026-09-02" → "2 de setembro de 2026". Long form for the ballot's reading-date pill.
+function formatLongDate(dateStr) {
+  const [y, m, d] = dateStr.split('-');
+  const month = PT_MONTHS_LONG[parseInt(m, 10) - 1] || m;
+  return `${parseInt(d, 10)} de ${month} de ${y}`;
 }
 
 // Relative-time label for a future meeting: "hoje" / "amanhã" / "em N dias".
@@ -1373,14 +1480,16 @@ async function init() {
     return;
   }
 
-  // Active vote: hit the API for live tallies and render the ballot.
-  // Closed vote: skip the API entirely (nothing to display from it) and put
-  // the Votação tab into its inert state so visitors who land there see a
-  // pointer to the Arquivo instead of a stale name prompt.
+  // Render everything sourced from static data (BOOKS / ARCHIVE / AGENDA) up front
+  // and reveal the app immediately — the page no longer blocks on the network.
+  // Live vote data (tallies + the registered-voter count) is fetched in the
+  // background below and patched in once it arrives.
   if (ACTIVE_VOTE) {
-    await loadData();
     renderCandidateBooks();
+    renderVoteReadingDate();
   } else {
+    // Closed vote: nothing live to show, so put the Votação tab into its inert
+    // state pointing at the Arquivo instead of a stale name prompt.
     $("vote-closed-msg").classList.remove("hidden");
     $("vote-intro").classList.add("hidden");
     $("name-section").classList.add("hidden");
@@ -1391,10 +1500,19 @@ async function init() {
   $("loading").classList.add("hidden");
   $("app").classList.remove("hidden");
 
-  // Peek only makes sense against a live ballot — gate by ACTIVE_VOTE so the
-  // button doesn't surface (and can't crash showLiveResults) when closed.
-  if (ACTIVE_VOTE && Object.keys(voters).length > 0) {
-    $("peek-btn").classList.remove("hidden");
+  // Fetch live tallies in the background — only an active vote has any. loadData()
+  // refreshes the voter-count badge when it resolves; we then reveal the peek
+  // button, which only makes sense once there are votes to peek at. The name /
+  // vote flow stays usable in the meantime: the client-side duplicate-name check
+  // simply sees an empty voter set until this resolves, and the server remains the
+  // authority that rejects a duplicate name on submit (submitVote already rolls
+  // back on server error).
+  if (ACTIVE_VOTE) {
+    loadData().then(() => {
+      if (Object.keys(voters).length > 0) {
+        $("peek-btn").classList.remove("hidden");
+      }
+    });
   }
 
   // Name input
