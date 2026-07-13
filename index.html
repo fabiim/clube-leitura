@@ -702,19 +702,7 @@ function getBook(id) {
  */
 
 /** @type {ActiveVote} */
-const ACTIVE_VOTE = {
-  number: 3,
-  startedAt: "2026-07-06",
-  // Planned session for the winning book: the first Wednesday of September.
-  readingDate: "2026-09-02",
-  minVotes: 2,
-  maxVotes: 2,
-  // Ballot display order, randomised once when the vote opened and then frozen:
-  // the ballot renders `bookIds` verbatim, so the cards stay put across visits
-  // and no candidate gets a shifting first-slot advantage mid-vote. Selections
-  // are tracked by id, so this order never affects the recorded vote.
-  bookIds: ["sola", "kazantzakis", "morel", "ripley", "bukowski"],
-};
+const ACTIVE_VOTE = null;
 
 /**
  * Closed-vote snapshots, ordered newest-first.
@@ -750,6 +738,21 @@ const ACTIVE_VOTE = {
 
 /** @type {ArchiveEntry[]} */
 const ARCHIVE = [
+  {
+    number: 3,
+    startedAt: "2026-07-06",
+    closedAt: "2026-07-13",
+    winnerId: "morel",
+    maxVotes: 2,
+    bookIds: ["sola", "kazantzakis", "morel", "ripley", "bukowski"],
+    votes: { morel: 3, bukowski: 2, sola: 1, kazantzakis: 1, ripley: 1 },
+    voters: {
+      "filipa":      { name: "Filipa",      books: ["morel", "bukowski"] },
+      "mariana":     { name: "Mariana",     books: ["sola", "morel"] },
+      "fbotelho":    { name: "fbotelho",    books: ["kazantzakis", "bukowski"] },
+      "miguel mota": { name: "Miguel Mota", books: ["morel", "ripley"] },
+    },
+  },
   {
     number: 2,
     startedAt: "2026-05-15",
