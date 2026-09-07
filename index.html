@@ -671,6 +671,38 @@ const BOOKS = {
     wook: "https://www.wook.pt/livro/a-invencao-de-morel-adolfo-bioy-casares/22990405",
     bertrand: "https://www.bertrand.pt/livro/a-invencao-de-morel-adolfo-bioy-casares/22990405",
   },
+  steinbeck: {
+    emoji: "🦪",
+    title: "A Pérola", author: "John Steinbeck", pages: 80,
+    sinopse: "História comovente de uma pérola enorme, de como foi descoberta e de como se perdeu, levando com ela os sonhos bons e maus que representava. História também de uma família e da solidariedade especial entre uma mulher, um pobre pescador índio e o filho de ambos. Baseada num conto popular mexicano, A Pérola constitui uma inesquecível parábola poética sobre as grandezas e as misérias do mundo em que vivemos.",
+    claude: "Uma pérola perfeita destrói uma família inteira. Parábola seca e implacável sobre ganância — Steinbeck não perdoa ninguém.",
+    wook: "https://www.wook.pt/livro/a-perola-john-steinbeck/15327898",
+    bertrand: "https://www.bertrand.pt/livro/a-perola-john-steinbeck/15327898",
+  },
+  gilman: {
+    emoji: "👩‍🤝‍👩",
+    title: "Terra Delas", author: "Charlotte Perkins Gilman", pages: 240,
+    sinopse: "No início do século XX, três jovens amigos partem para uma expedição a terras longínquas - e acabam por ir parar à Terra Delas, um país extraordinariamente evoluído e civilizado, exclusivamente povoado por mulheres. Um dos três amigos é um ricaço sedutor e fanfarrão; o segundo é um médico sem vocação, alma romântica e cavalheiresca; o terceiro é sociólogo — e é esse o narrador desta história, o que a torna imediatamente hilariante: este sofisticado mundo feminino é-nos apresentado através do espanto absoluto de três representantes do mundo masculino, que vêem ir por água abaixo todas as ideias feitas que têm sobre o que são as mulheres e de que são capazes. Uma ousada aventura no mundo da imaginação que é também uma deliciosa história de amor e amizade, e que nos confronta com a realidade, ainda não ultrapassada, da desigualdade de direitos e expectativas entre homens e mulheres. Terra Delas dá a conhecer aos leitores portugueses a talentosa escritora norte-americana Charlotte Perkins Gilman, cujo pensamento e obra marcaram a história da emancipação feminista.",
+    claude: "1915: três homens descobrem um país só de mulheres — e a piada é sempre à custa deles. Utopia feminista, um século à frente.",
+    wook: "https://www.wook.pt/livro/terra-delas-charlotte-perkins-gilman/23462773",
+    bertrand: "https://www.bertrand.pt/livro/terra-delas-charlotte-perkins-gilman/23462773",
+  },
+  agualusa: {
+    emoji: "🎈",
+    title: "A Vida no Céu", author: "José Eduardo Agualusa", pages: 192,
+    sinopse: "«Depois que o mundo acabou fomos para o céu.» Assim começa este romance. Na sequência de um desastre de proporções bíblicas - o Dilúvio -, os ricos das grandes cidades constroem enormes dirigíveis e vão viver para o céu. Os pobres improvisam balões, que prendem uns aos outros, ligados a redes, formando imensas aldeias flutuantes. Carlos Tucano nasce numa destas aldeias. É, portanto, um filho do céu. Esta é a sua história. Carlos deixa a aldeia onde nasceu e parte à procura do pai, desaparecido numa tempestade. Ao longo desta peregrinação, vai-nos dando a ver a vida no céu, com os seus prodígios, os seus mistérios, e também os seus desacertos, ao mesmo tempo que estabelece ligações com toda uma galeria de personagens extraordinários - uma curandeira e sonhadora profissional sul-africana, um pirata indonésio arrependido, um navegador solitário cego, além de uma jovem adolescente rebelde, Aimée, que conhece no mais belo dirigível do mundo - o Paris. Segundo o Dicionário dos Nefelibatas, incluído no livro, as nuvens (água em estado onírico) são o alfabeto do céu. Este romance ajuda-nos a decifrá-las.",
+    claude: "Do vencedor do Dublin Literary Award: depois do dilúvio, os ricos fogem para dirigíveis; os pobres improvisam balões. Fábula climática à beira do lirismo.",
+    wook: "https://www.wook.pt/livro/a-vida-no-ceu-jose-eduardo-agualusa/15007229",
+    bertrand: "https://www.bertrand.pt/livro/a-vida-no-ceu-jose-eduardo-agualusa/24570417",
+  },
+  wilde: {
+    emoji: "🖼️",
+    title: "O Retrato de Dorian Gray", author: "Oscar Wilde", pages: 288,
+    sinopse: "Dorian Gray é um jovem invulgarmente belo por quem Basil Hallward, um pintor londrino, fica fascinado. Determinado a eternizar a beleza de Dorian numa tela, Basil convence-o a posar para ele. Numa dessas sessões, o jovem conhece Lorde Henry Wotton, um aristocrata cínico e hedonista, que o desperta para a beleza e o seduz para a sua visão do mundo, onde as únicas coisas que valem a pena perseguir são a beleza e o prazer. Horrorizado com o destino inevitável que o fará envelhecer e perder a sua beleza, Dorian comenta com os amigos que está disposto a tudo, até mesmo a vender a alma, para permanecer eternamente jovem e manter a sua beleza. Fortalecido pelo hedonismo, Dorian trata cruelmente a sua noiva, Sybil Vane, que se suicida com o desgosto. Ao saber do sucedido, o jovem começa a notar certas mudanças subtis na sua expressão no quadro, e constata que é o Dorian do quadro que envelhece e que sofre com a passagem dos anos, ao mesmo tempo que o Dorian real permanece com a juventude e beleza intacta. Um romance gótico de horror com um forte tema faustiano, O Retrato de Dorian Gray é considerado pela crítica como a melhor obra de Oscar Wilde.",
+    claude: "«Toda a arte é perfeitamente inútil», escreveu Wilde — depois escreveu o romance mais moralmente perigoso do século XIX. Censurado à nascença.",
+    wook: "https://www.wook.pt/livro/o-retrato-de-dorian-gray-oscar-wilde/3501423",
+    bertrand: "https://www.bertrand.pt/livro/o-retrato-de-dorian-gray-oscar-wilde/3501423",
+  },
 };
 
 // Resolve a bookId to a Book with `id` injected, or null if unknown.
@@ -702,7 +734,14 @@ function getBook(id) {
  */
 
 /** @type {ActiveVote} */
-const ACTIVE_VOTE = null;
+const ACTIVE_VOTE = {
+  number: 4,
+  startedAt: "2026-09-07",
+  minVotes: 2,
+  maxVotes: 2,
+  bookIds: ["steinbeck", "gilman", "agualusa", "wilde"],
+  readingDate: "2026-11-04",
+};
 
 /**
  * Closed-vote snapshots, ordered newest-first.
