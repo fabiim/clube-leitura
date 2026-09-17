@@ -734,14 +734,7 @@ function getBook(id) {
  */
 
 /** @type {ActiveVote} */
-const ACTIVE_VOTE = {
-  number: 4,
-  startedAt: "2026-09-07",
-  minVotes: 2,
-  maxVotes: 2,
-  bookIds: ["steinbeck", "gilman", "agualusa", "wilde"],
-  readingDate: "2026-11-04",
-};
+const ACTIVE_VOTE = null;
 
 /**
  * Closed-vote snapshots, ordered newest-first.
@@ -777,6 +770,21 @@ const ACTIVE_VOTE = {
 
 /** @type {ArchiveEntry[]} */
 const ARCHIVE = [
+  {
+    number: 4,
+    startedAt: "2026-09-07",
+    closedAt: "2026-09-17",
+    winnerId: "wilde",
+    maxVotes: 2,
+    bookIds: ["steinbeck", "gilman", "agualusa", "wilde"],
+    votes: { wilde: 4, steinbeck: 2, gilman: 1, agualusa: 1 },
+    voters: {
+      "miguel mota": { name: "Miguel Mota", books: ["wilde", "gilman"] },
+      "fbotelho":    { name: "fbotelho",    books: ["steinbeck", "wilde"] },
+      "filipa":      { name: "Filipa",      books: ["agualusa", "wilde"] },
+      "mariana":     { name: "Mariana",     books: ["steinbeck", "wilde"] },
+    },
+  },
   {
     number: 3,
     startedAt: "2026-07-06",
