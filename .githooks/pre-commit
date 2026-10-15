@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Runs the render tests before a commit that touches the page or the tests.
+# Commits that only change docs skip the ~3 s Chrome run. Enable once per
+# clone with `git config core.hooksPath .githooks`; bypass with --no-verify.
+
+set -euo pipefail
+
+if ! git diff --cached --name-only | grep -qE '^(index\.html|tests/)'; then
+  exit 0
+fi
+
+exec "$(git rev-parse --show-toplevel)/tests/run.sh"

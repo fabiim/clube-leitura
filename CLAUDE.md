@@ -2,6 +2,18 @@
 
 Project-specific guidance for Claude. These conventions are not obvious from the source — read this before editing `BOOKS` entries.
 
+## Commands
+
+This section replaces a separate `CHEAT.md`. Keep it current when tooling changes.
+
+| Task | Command |
+|---|---|
+| Run locally | Open `index.html` in a browser. No server or build step. |
+| Test | `tests/run.sh` (headless Chrome, about 3 s; see [Tests](#tests)). |
+| Enable the pre-commit hook (once per clone) | `git config core.hooksPath .githooks` |
+| Commit without running the hook | `git commit --no-verify` |
+| Deploy | `git push origin main` (GitHub Pages publishes automatically; see [Deploy](#deploy)). |
+
 ## Book content rules (`BOOKS` entries in `index.html`)
 
 Every book has two prose fields. Each has a strict author and length contract.
@@ -62,6 +74,16 @@ participants: [
 - The name must match the spelling used in other entries' `participants`.
 
 On the page, a participant with a piece gets a "+ 🎁" chip under the findings. Tapping it opens a small drawer with the text.
+
+## Tests
+
+Render sanity tests live in `tests/render.test.js` and run in headless Chrome via `tests/run.sh`. There's no Node and no framework: the runner injects the test file into a copy of `index.html` and reads the PASS/FAIL block back from the dumped DOM. A run takes about 3 s.
+
+- **Run `tests/run.sh` after every change to `index.html`**, code or data, before reporting the change as done.
+- The pre-commit hook in `.githooks/` runs the same script when a commit touches `index.html` or `tests/`. It needs `git config core.hooksPath .githooks` once per clone.
+- **When changing an area of the page, check its test coverage.** Say which tests are missing there and add the cheap ones: what renders, what expands or collapses, and data-shape checks on `BOOKS` / `AGENDA` / `ARCHIVE`. Keep them small. This is sanity checking, not full coverage.
+- Prefer fixtures passed straight to the render functions over assertions on live data, so the tests don't break when a session is added.
+- Never write the literal results tag (`pre` with `id="test-results"`) in the test source, because the runner matches the first occurrence in the DOM.
 
 ## Other guidance
 
