@@ -336,16 +336,9 @@
     transition: border-color 0.15s;
     position: relative;
   }
-  .agenda-row.clickable { cursor: pointer; }
   .agenda-row.next { border-color: var(--amber-700); background: var(--amber-50); }
-  .agenda-toggle {
-    position: absolute; top: 12px; right: 14px;
-    font-size: 18px; color: var(--stone-400);
-    font-family: system-ui, sans-serif; line-height: 1;
-  }
   .agenda-line-main {
     display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
-    padding-right: 26px;
   }
   .agenda-pin { font-size: 16px; flex-shrink: 0; line-height: 1; }
   .agenda-date {
@@ -421,17 +414,30 @@
   .agenda-piece-author {
     margin-top: 8px; font-size: 13px; color: var(--stone-500);
   }
-  /* Book card hidden until the row's clicked. Border divider mirrors the
+  /* Book card, always shown. On upcoming rows a border divider mirrors the
      archive-row pattern so the meeting metadata reads as visually distinct
-     from the embedded book details. */
+     from the embedded book details. Past rows replace that border with a
+     titled divider (below), so the card drops its own. */
   .agenda-book-card {
-    display: none;
     margin-top: 12px; padding-top: 12px;
     border-top: 1px solid var(--stone-200);
   }
-  .agenda-row.expanded .agenda-book-card { display: block; }
+  .agenda-row.past .agenda-book-card { margin-top: 0; padding-top: 0; border-top: none; }
   .agenda-book-card .sinopse { margin-bottom: 8px; }
   .agenda-book-card .claude { margin-bottom: 10px; }
+  .agenda-row.past .agenda-book-card .claude { margin-bottom: 0; }
+  /* Section title centred on a hairline: the two pseudo-elements are flexible
+     rules that fill the space either side of the label. */
+  .agenda-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 18px 0 8px;
+    font-size: 15px; font-variant: small-caps; letter-spacing: 0.08em;
+    color: var(--stone-500);
+  }
+  .agenda-divider::before,
+  .agenda-divider::after {
+    content: ''; flex: 1; border-top: 1px solid var(--stone-200);
+  }
 
   /* Mobile: stack banner contents (title + tabs row don't fit on a phone) */
   @media (max-width: 480px) {
@@ -1482,9 +1488,10 @@ function renderAgenda() {
 
 // Each row is its own meeting card. The header (date · book · location · pin)
 // plus, for past meetings, the findings text and participant chips are always
-// visible. The book's metadata (pages, sinopse, Claude pitch, shop links) sits
-// behind a ➕ toggle so the list stays scannable. The pinned "next" row opens
-// expanded by default — it's the one the user is most likely planning around.
+// visible, and every row shows its book card (sinopse and Claude pitch). Past
+// meetings split into two titled sections, "Discussão" (what the group said
+// and who came) and "Sinopse" (the book), and drop the shop links: the book is
+// already read, so buying it is no longer the point.
 function renderAgendaRow(entry, isPast, isNext) {
   const row = document.createElement('div');
   row.className = 'agenda-row' + (isPast ? ' past' : ' future') + (isNext ? ' next' : '');
@@ -1498,11 +1505,6 @@ function renderAgendaRow(entry, isPast, isNext) {
   const bookEmoji = book ? book.emoji : '❓';
   const bookTitle = book ? book.title : `[${entry.bookId}]`;
   const bookByline = book ? `${book.author} · ${book.pages} pág.` : '';
-
-  // Pinned "next" row auto-expands so the most-imminent book surfaces without
-  // a click; everything else opens on demand.
-  const startsExpanded = !!book && isNext;
-  if (startsExpanded) row.classList.add('expanded');
 
   const countdown = isPast ? null : countdownLabel(entry.date);
 
@@ -1518,45 +1520,45 @@ function renderAgendaRow(entry, isPast, isNext) {
     </div>
     ${bookByline ? `<div class="agenda-author">${bookByline}</div>` : ''}
     <div class="agenda-loc">${entry.location}${entry.time ? ` · ${entry.time}` : ''}</div>
-    ${book ? `<span class="agenda-toggle">${startsExpanded ? '➖' : '➕'}</span>` : ''}
   `;
 
+  const hasParticipants = !!entry.participants && entry.participants.length > 0;
   if (isPast) {
+    if (entry.findings || hasParticipants) {
+      row.appendChild(renderDivider('Discussão'));
+    }
     if (entry.findings) {
       const f = document.createElement('p');
       f.className = 'agenda-findings';
       f.textContent = entry.findings;
       row.appendChild(f);
     }
-    if (entry.participants && entry.participants.length > 0) {
+    if (hasParticipants) {
       row.appendChild(renderParticipants(entry.participants));
     }
   }
 
   if (book) {
+    if (isPast) row.appendChild(renderDivider('Sinopse'));
     const card = document.createElement('div');
     card.className = 'agenda-book-card';
     card.innerHTML = `
       <p class="sinopse">«${book.sinopse}»</p>
       <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${book.claude}</p>
-      <div class="links">${renderShopLinks(book)}</div>
+      ${isPast ? '' : `<div class="links">${renderShopLinks(book)}</div>`}
     `;
     row.appendChild(card);
-
-    // Whole row toggles expansion; shop-link clicks pass through so the user
-    // can follow Wook/Bertrand without collapsing the card under them.
-    row.classList.add('clickable');
-    row.addEventListener('click', (e) => {
-      // Shop links navigate away, and the participant chips and pieces carry
-      // their own drawer, so clicks on them must not collapse the row.
-      if (e.target.closest('.shop-link, .agenda-participants')) return;
-      const isExp = row.classList.toggle('expanded');
-      const toggle = row.querySelector('.agenda-toggle');
-      if (toggle) toggle.textContent = isExp ? '➖' : '➕';
-    });
   }
 
   return row;
+}
+
+// A section title centred between two hairline rules.
+function renderDivider(label) {
+  const d = document.createElement('div');
+  d.className = 'agenda-divider';
+  d.textContent = label;
+  return d;
 }
 
 // Participant chips for a past meeting. A participant who brought a piece
@@ -1568,8 +1570,8 @@ function renderAgendaRow(entry, isPast, isNext) {
 function renderParticipants(participants) {
   const wrap = document.createElement('div');
   wrap.className = 'agenda-participants';
-  // Chips and drawers work independently of any enclosing expandable card:
-  // no click inside this block may reach a card's own toggle.
+  // Chips and drawers work independently of their container: no click inside
+  // this block propagates to whatever encloses it.
   wrap.addEventListener('click', (e) => e.stopPropagation());
   const chips = document.createElement('div');
   chips.className = 'agenda-participant-chips';

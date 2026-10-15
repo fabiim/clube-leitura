@@ -16,13 +16,13 @@ This section replaces a separate `CHEAT.md`. Keep it current when tooling change
 
 ## Spec
 
-A high-level map of behaviour, not a spec. Read the code for details. Update this list when a feature is added or changes shape.
+A high-level map of behaviour, not a detailed spec. Read the code for details. Update this list when a feature is added or changes shape.
 
 - **Single static page.** All data (`BOOKS`, `AGENDA`, `ARCHIVE`, `ACTIVE_VOTE`) lives as constants in `index.html`. The only network call is the live vote tally (Google Apps Script).
 - **Three tabs**, hash-routed: Início, Votação, Arquivo.
-- **Início** lists sessions: upcoming soonest-first (the next one pinned and expanded), past most-recent-first. A pill links to Votação while a vote is open.
-- **Each session** shows a date, a book, and a location. Tapping it expands the book card: sinopse, Claude pitch, and shop links.
-- **Past sessions** add a written account of the discussion and a list of participants. A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
+- **Início** lists sessions: upcoming soonest-first (the next one pinned), past most-recent-first. A pill links to Votação while a vote is open.
+- **Each session** shows a date, a book, a location, and a book card (sinopse, Claude pitch, and shop links). Nothing is collapsed.
+- **Past sessions** split into two titled sections, "Discussão" (the written account and the participants) and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
 - **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
 

@@ -166,31 +166,43 @@
     eq(b.getAttribute("aria-expanded"), "false", "B aria");
   });
 
-  test("piece drawers and the book card expand independently", () => {
-    const chip = document.querySelector("#agenda-past-list .chip-piece");
-    if (!chip) return; // No pieces in AGENDA yet: nothing to check.
-    const row = chip.closest(".agenda-row");
-    const title = row.querySelector(".agenda-book-title");
-    const openDrawers = () => row.querySelectorAll(".agenda-piece.open").length;
-    const expanded = () => row.classList.contains("expanded");
-    eq(expanded(), false, "row starts collapsed");
-    // Opening a drawer leaves the book card closed.
-    chip.click();
-    eq(openDrawers(), 1, "drawer opened");
-    eq(expanded(), false, "chip did not expand the row");
-    // Clicking inside the open drawer changes nothing.
-    row.querySelector(".agenda-piece.open .agenda-piece-text").click();
-    eq(openDrawers(), 1, "drawer still open after clicking its text");
-    eq(expanded(), false, "drawer text did not expand the row");
-    // Expanding the book card leaves the drawer open, and vice versa.
-    title.click();
-    eq(expanded(), true, "row expanded");
-    eq(openDrawers(), 1, "drawer survived row expansion");
-    chip.click();
-    eq(openDrawers(), 0, "drawer closed");
-    eq(expanded(), true, "closing the drawer kept the row expanded");
-    title.click();
-    eq(expanded(), false, "row collapsed again");
+  // Fixture meeting rows built straight from renderAgendaRow. Any real book id
+  // works; the tests only need one that resolves so the book card exists.
+  const anyBookId = Object.keys(BOOKS)[0];
+  function pastRow() {
+    return renderAgendaRow({
+      date: "2020-01-01", location: "x", bookId: anyBookId, findings: "relato",
+      participants: ["Só Nome", { name: "Ana", piece: { text: "texto" } }],
+    }, true, false);
+  }
+
+  test("a past row shows Discussão then Sinopse, with no toggle or shop links", () => {
+    // Order of the row's sections: Discussão divider, findings, chips, then
+    // the Sinopse divider and the book card.
+    const row = pastRow();
+    const dividers = [...row.querySelectorAll(".agenda-divider")].map((d) => d.textContent);
+    eq(dividers.join(" | "), "Discussão | Sinopse", "divider titles");
+    const order = [...row.children].map((c) => c.className).filter((c) => /divider|findings|participants|book-card/.test(c));
+    eq(order.join(" "), "agenda-divider agenda-findings agenda-participants agenda-divider agenda-book-card", "section order");
+    eq(row.querySelector(".agenda-more"), null, "no toggle");
+    eq(row.querySelector(".shop-link"), null, "no shop links");
+    assert(row.querySelector(".agenda-book-card .sinopse"), "sinopse shown");
+  });
+
+  test("a past row with no findings or participants has no Discussão title", () => {
+    const row = renderAgendaRow({ date: "2020-01-01", location: "x", bookId: anyBookId }, true, false);
+    const dividers = [...row.querySelectorAll(".agenda-divider")].map((d) => d.textContent);
+    eq(dividers.join(" | "), "Sinopse", "only Sinopse");
+  });
+
+  test("upcoming rows show the book card and no section titles", () => {
+    // Both the pinned next row and a later one.
+    [true, false].forEach((isNext) => {
+      const row = renderAgendaRow({ date: "2999-01-01", location: "x", bookId: anyBookId }, false, isNext);
+      assert(row.querySelector(".agenda-book-card .sinopse"), `sinopse shown (next=${isNext})`);
+      eq(row.querySelector(".agenda-divider"), null, `no dividers (next=${isNext})`);
+      eq(row.querySelector(".agenda-more"), null, `no toggle (next=${isNext})`);
+    });
   });
 
   const out = document.createElement("pre");
