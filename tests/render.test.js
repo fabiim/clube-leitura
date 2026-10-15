@@ -103,6 +103,19 @@
     eq(d.querySelector(".agenda-piece-text").textContent, "<b>não é html</b>", "literal text");
   });
 
+  // ---- Ordering ----
+
+  test("past sessions list most recent first, future sessions soonest first", () => {
+    // Expected order is derived from AGENDA itself, so adding a session never breaks this.
+    const today = todayISO();
+    const rendered = (id) => [...document.querySelectorAll(`#${id} .agenda-row .agenda-date`)].map((d) => d.textContent);
+    const expected = (keep, cmp) => AGENDA.filter((e) => keep(e.date)).sort(cmp).map((e) => formatAgendaDate(e.date));
+    eq(rendered("agenda-past-list").join(" | "),
+      expected((d) => d < today, (a, b) => b.date.localeCompare(a.date)).join(" | "), "past order");
+    eq(rendered("agenda-future-list").join(" | "),
+      expected((d) => d >= today, (a, b) => a.date.localeCompare(b.date)).join(" | "), "future order");
+  });
+
   // ---- Expansion ----
 
   test("only one drawer is open at a time, and a second click closes it", () => {

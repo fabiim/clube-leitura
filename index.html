@@ -876,7 +876,8 @@ const ARCHIVE = [
 
 /**
  * Meeting log, ordered any way — `renderAgenda` splits it into future and
- * past sub-lists and sorts each ascending by date (oldest → most recent).
+ * past sub-lists, sorting future ascending (soonest first) and past
+ * descending (most recent first).
  *
  * Per-entry rules:
  *  - `date` is ISO (YYYY-MM-DD).
@@ -1452,16 +1453,15 @@ function renderAgenda() {
   empty.classList.add("hidden");
 
   const today = todayISO();
-  // Both sub-lists sort ascending by date (oldest → most recent). Future puts
-  // the soonest meeting at the top. Past is chronological per the club's
-  // convention: the oldest session reads first and the latest sits at the
-  // bottom, so scrolling the past list walks the club's history forward in time.
+  // Future sorts ascending so the soonest meeting sits at the top. Past sorts
+  // descending so the most recent session reads first, directly below the
+  // upcoming ones, and scrolling down walks the club's history back in time.
   const future = AGENDA
     .filter((e) => e.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date));
   const past = AGENDA
     .filter((e) => e.date < today)
-    .sort((a, b) => a.date.localeCompare(b.date));
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   // Toggle each sub-section's heading + list together. The CSS adjacency rule
   // for the past heading's top margin keys off `#agenda-future-list:not(.hidden)`
