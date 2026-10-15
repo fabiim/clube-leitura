@@ -375,15 +375,51 @@
     font-size: 14px; color: var(--stone-700); line-height: 1.55;
     margin-top: 8px;
   }
-  .agenda-participants {
-    display: flex; flex-wrap: wrap; gap: 4px;
-    margin-top: 8px;
-  }
+  .agenda-participants { margin-top: 8px; cursor: default; }
+  .agenda-participant-chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .agenda-participants .chip-small {
     display: inline-block; padding: 2px 9px;
     background: var(--stone-100); color: var(--stone-500);
     border-radius: 12px; font-size: 11px;
     font-family: system-ui, sans-serif;
+  }
+  /* Chips that open a piece read as tappable: button reset, amber accent. */
+  .agenda-participants .chip-piece {
+    border: 1px solid var(--amber-100); background: var(--amber-50);
+    color: var(--amber-800); cursor: pointer; line-height: inherit;
+  }
+  /* The open chip stands out from its siblings: deeper fill, darker border,
+     bold name, and the gift in full colour. Closed gifts are muted so a row
+     of chips doesn't out-shout the names. */
+  .agenda-participants .chip-piece.open {
+    background: var(--amber-100); border-color: var(--amber-700);
+    font-weight: 600;
+  }
+  .chip-piece-sign { font-weight: 700; }
+  .chip-piece-gift { filter: saturate(0.35); opacity: 0.75; }
+  .chip-piece.open .chip-piece-gift { filter: none; opacity: 1; }
+  /* The piece drawer: same serif body as the findings, set apart by a thin
+     amber rule, a touch of indent, and blank space above the text. */
+  .agenda-piece {
+    display: none;
+    margin-top: 10px; padding: 14px 0 4px 14px;
+    border-left: 2px solid var(--amber-100);
+  }
+  .agenda-piece.open { display: block; }
+  .agenda-piece-who {
+    font-family: system-ui, sans-serif; font-size: 11px;
+    color: var(--stone-400); margin-bottom: 10px;
+  }
+  .agenda-piece-title {
+    font-size: 15px; font-weight: 600; color: var(--stone-800);
+    margin-bottom: 6px;
+  }
+  .agenda-piece-text {
+    margin: 0; font-size: 14px; color: var(--stone-700); line-height: 1.6;
+    font-style: italic; white-space: pre-wrap;
+  }
+  .agenda-piece-author {
+    margin-top: 8px; font-size: 13px; color: var(--stone-500);
   }
   /* Book card hidden until the row's clicked. Border divider mirrors the
      archive-row pattern so the meeting metadata reads as visually distinct
@@ -852,7 +888,14 @@ const ARCHIVE = [
  *  - `upToPage` is the planned reading target for this session.
  *  - `findings` and `participants` are valid only for entries
  *    whose `date` is strictly before today.
+ *  - A participant is either a bare name or `{ name, piece }`, where `piece`
+ *    is the poem, song lyric, quote, or excerpt that person brought to the
+ *    session. The bare-name form stays valid so older entries need no rewrite.
+ *  - `piece.text` is verbatim; line breaks (`\n`) and leading spaces are
+ *    preserved on render. `title` and `author` are optional.
  *
+ * @typedef {{ text: string, title?: string, author?: string }} Piece
+ * @typedef {string | { name: string, piece?: Piece }} Participant
  * @typedef {{
  *   date:          string,
  *   time?:         string,
@@ -860,7 +903,7 @@ const ARCHIVE = [
  *   bookId:        string,
  *   upToPage?:     number,
  *   findings?:     string,
- *   participants?: string[],
+ *   participants?: Participant[],
  * }} AgendaEntry
  */
 
@@ -1453,12 +1496,7 @@ function renderAgendaRow(entry, isPast, isNext) {
       row.appendChild(f);
     }
     if (entry.participants && entry.participants.length > 0) {
-      const p = document.createElement('div');
-      p.className = 'agenda-participants';
-      p.innerHTML = entry.participants
-        .map((n) => `<span class="chip-small">${n}</span>`)
-        .join('');
-      row.appendChild(p);
+      row.appendChild(renderParticipants(entry.participants));
     }
   }
 
@@ -1476,7 +1514,9 @@ function renderAgendaRow(entry, isPast, isNext) {
     // can follow Wook/Bertrand without collapsing the card under them.
     row.classList.add('clickable');
     row.addEventListener('click', (e) => {
-      if (e.target.closest('.shop-link')) return;
+      // Shop links navigate away, and the participant chips and pieces carry
+      // their own drawer, so clicks on them must not collapse the row.
+      if (e.target.closest('.shop-link, .agenda-participants')) return;
       const isExp = row.classList.toggle('expanded');
       const toggle = row.querySelector('.agenda-toggle');
       if (toggle) toggle.textContent = isExp ? '➖' : '➕';
@@ -1484,6 +1524,104 @@ function renderAgendaRow(entry, isPast, isNext) {
   }
 
   return row;
+}
+
+// Participant chips for a past meeting. A participant who brought a piece
+// (poem, lyric, quote, excerpt) gets a "+ 🎁" chip that opens a small drawer
+// with the text. Drawers sit below the chip row in participant order, and at
+// most one is open per meeting: opening a drawer closes the one already open,
+// so the reader never has to work out which text belongs to which chip. Built
+// with DOM nodes and `textContent` so the verbatim text can't be parsed as HTML.
+function renderParticipants(participants) {
+  const wrap = document.createElement('div');
+  wrap.className = 'agenda-participants';
+  const chips = document.createElement('div');
+  chips.className = 'agenda-participant-chips';
+  wrap.appendChild(chips);
+
+  // One open/close setter per drawer, so a click can close its siblings.
+  const setters = [];
+
+  participants.forEach((p) => {
+    const name = typeof p === 'string' ? p : p.name;
+    const piece = typeof p === 'string' ? null : p.piece;
+
+    // Plain participants keep the original static chip.
+    if (!piece) {
+      const chip = document.createElement('span');
+      chip.className = 'chip-small';
+      chip.textContent = name;
+      chips.appendChild(chip);
+      return;
+    }
+
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip-small chip-piece';
+    chip.setAttribute('aria-expanded', 'false');
+    const sign = document.createElement('span');
+    sign.className = 'chip-piece-sign';
+    sign.textContent = '+';
+    const gift = document.createElement('span');
+    gift.className = 'chip-piece-gift';
+    gift.textContent = '🎁';
+    chip.append(name + ' ', sign, ' ', gift);
+    chips.appendChild(chip);
+
+    const drawer = renderPiece(name, piece);
+    wrap.appendChild(drawer);
+
+    const setOpen = (open) => {
+      drawer.classList.toggle('open', open);
+      chip.classList.toggle('open', open);
+      chip.setAttribute('aria-expanded', String(open));
+      sign.textContent = open ? '−' : '+';
+    };
+    setters.push(setOpen);
+
+    // Close every drawer, then reopen this one unless it was the open one.
+    chip.addEventListener('click', () => {
+      const wasOpen = drawer.classList.contains('open');
+      setters.forEach((set) => set(false));
+      if (!wasOpen) setOpen(true);
+    });
+  });
+
+  return wrap;
+}
+
+// One participant's piece: who brought it (marked with a feather), an optional
+// title, the verbatim text with its line breaks intact, and an optional author
+// attribution.
+function renderPiece(name, piece) {
+  const drawer = document.createElement('div');
+  drawer.className = 'agenda-piece';
+
+  const who = document.createElement('div');
+  who.className = 'agenda-piece-who';
+  who.textContent = `🪶 ${name} trouxe`;
+  drawer.appendChild(who);
+
+  if (piece.title) {
+    const title = document.createElement('div');
+    title.className = 'agenda-piece-title';
+    title.textContent = piece.title;
+    drawer.appendChild(title);
+  }
+
+  const text = document.createElement('p');
+  text.className = 'agenda-piece-text';
+  text.textContent = piece.text;
+  drawer.appendChild(text);
+
+  if (piece.author) {
+    const author = document.createElement('div');
+    author.className = 'agenda-piece-author';
+    author.textContent = `— ${piece.author}`;
+    drawer.appendChild(author);
+  }
+
+  return drawer;
 }
 
 // ---- Router ----

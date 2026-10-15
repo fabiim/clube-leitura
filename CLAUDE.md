@@ -45,6 +45,24 @@ Don't restate the plot. Don't write from publisher copy alone.
 
 The two fields render side-by-side on the ballot card, the "Estamos a ler" expansion, and the archive details. The split is intentional: `sinopse` is the publisher's neutral description; `claude` is the editorial recommendation marked with the Claude logo (`assets/claude.png`).
 
+## Participant pieces (`AGENDA[].participants[].piece`)
+
+Each participant may bring a poem, a song lyric, a quote, or a book excerpt to a session. Record it on that session's past `AGENDA` entry by turning the participant's bare name into an object:
+
+```js
+participants: [
+  { name: "Fábio Botelho", piece: { title: "Autopsicografia", author: "Fernando Pessoa", text: "O poeta é um fingidor.\nFinge tão completamente\n…" } },
+  "Filipa Costa",
+],
+```
+
+- **`text` is verbatim**, exactly as the person brought it. Keep line breaks as `\n` and leading spaces as they are, because the renderer preserves both. Don't fix spelling, modernise orthography, or trim stanzas.
+- **`title` and `author` are optional.** Fill them only when known. Don't guess, and don't look a quote up to "complete" an attribution unless the user asks.
+- **Participants without a piece stay bare strings.** Don't convert them to `{ name }`.
+- The name must match the spelling used in other entries' `participants`.
+
+On the page, a participant with a piece gets a "+ 🎁" chip under the findings. Tapping it opens a small drawer with the text.
+
 ## Other guidance
 
 - Close-vote / open-vote workflows are still pending — see plan.md step 8.
