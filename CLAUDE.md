@@ -98,7 +98,7 @@ quotes: [
 ],
 ```
 
-- **`text` is verbatim.** Keep line breaks as `\n`. Don't add quotation marks, because the renderer adds them.
+- **`text` is verbatim.** Keep line breaks as `\n`. Don't add quotation marks: the page shows none, because the Citações title already marks them as quotes.
 - **`by` is optional.** When set, it must match a name in that session's `participants` exactly. The page shows the shortest name that still identifies the person in that session.
 
 ## Tests

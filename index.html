@@ -426,11 +426,11 @@
   .agenda-book-card .sinopse { margin-bottom: 8px; }
   .agenda-book-card .claude { margin-bottom: 10px; }
   .agenda-row.past .agenda-book-card .claude { margin-bottom: 0; }
-  /* Quotes: set apart by italics, indent, and a matching pair of amber curly
-     marks, but kept quiet (body size, mid-grey) so they don't out-shout the
-     rest of the card. The negative text-indent hangs the opening mark into
-     the indent so the text keeps a straight left edge. The picker's name is
-     small, grey, and upright so it reads as metadata, not part of the quote. */
+  /* Quotes: set apart by italics and an indent, with no quotation marks
+     because the Citações title already says what they are. Kept quiet (body
+     size, mid-grey) so they don't out-shout the rest of the card. The
+     picker's name is small, grey, and upright so it reads as metadata, not
+     part of the quote. */
   .agenda-quotes {
     display: flex; flex-direction: column; gap: 16px;
     margin: 8px 0 4px;
@@ -438,11 +438,7 @@
   .agenda-quote { margin: 0; padding-left: 22px; }
   .agenda-quote-text {
     margin: 0; font-size: 15.5px; line-height: 1.5; font-style: italic;
-    color: var(--stone-600); white-space: pre-wrap; text-indent: -0.5em;
-  }
-  .agenda-quote-mark {
-    font-family: Georgia, serif; font-style: normal;
-    color: var(--amber-600); opacity: 0.7;
+    color: var(--stone-600); white-space: pre-wrap;
   }
   .agenda-quote-by {
     font-family: system-ui, sans-serif; font-size: 11px; font-style: normal;
@@ -1631,8 +1627,8 @@ function renderAgendaRow(entry, isPast, isNext) {
 }
 
 // A session's quotes, always visible: they're the most memorable lines of
-// the discussion, so they shouldn't hide behind a tap. Each quote is wrapped
-// in a matching pair of styled curly marks and, when someone picked it, followed by their
+// the discussion, so they shouldn't hide behind a tap. Each quote is shown
+// without quotation marks and, when someone picked it, followed by their
 // shortest unique name among `participantNames` in small grey parentheses. The
 // non-breaking space and the label's `nowrap` keep "(Filipa)" attached to the
 // last word, so it never sits alone on a line. Built with `textContent` so the
@@ -1645,14 +1641,7 @@ function renderQuotes(quotes, participantNames) {
     quote.className = 'agenda-quote';
     const text = document.createElement('p');
     text.className = 'agenda-quote-text';
-    // Opening mark, verbatim text, closing mark, each as its own node.
-    const mark = (c) => {
-      const m = document.createElement('span');
-      m.className = 'agenda-quote-mark';
-      m.textContent = c;
-      return m;
-    };
-    text.append(mark('“'), q.text, mark('”'));
+    text.textContent = q.text;
     if (q.by) {
       const by = document.createElement('span');
       by.className = 'agenda-quote-by';
