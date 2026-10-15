@@ -501,6 +501,22 @@
   .shelf-log a { color: var(--amber-700); text-decoration: none; font-weight: 600; }
   .shelf-log a:hover { text-decoration: underline; }
   .shelf-log-date { color: var(--stone-500); }
+  /* Filter chips are tappable, so a selected one turns amber. */
+  .shelf-filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+  .shelf-filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .shelf-filter-label {
+    font-family: system-ui, sans-serif; font-size: 12px; color: var(--stone-500);
+    margin-right: 2px;
+  }
+  .shelf-chip {
+    font-family: system-ui, sans-serif; font-size: 13px; line-height: inherit;
+    padding: 3px 10px; border-radius: 14px; cursor: pointer;
+    border: 1px solid var(--stone-200); background: var(--stone-50); color: var(--stone-600);
+  }
+  .shelf-chip:hover { border-color: var(--stone-300); }
+  .shelf-chip.active { border-color: var(--amber-700); background: var(--amber-100); color: var(--amber-800); font-weight: 600; }
+  .shelf-chip-count { color: var(--stone-500); font-weight: 400; }
+  .shelf-chip.active .shelf-chip-count { color: var(--amber-800); }
 
   /* Mobile: stack banner contents (title + tabs row don't fit on a phone) */
   @media (max-width: 480px) {
@@ -603,7 +619,9 @@
     <!-- View: Estante. Built on first visit (see ensureEstante). -->
     <section id="view-estante" data-view="estante" class="hidden">
       <h2 class="section-heading">Estante</h2>
+      <div id="shelf-filters" class="shelf-filters"></div>
       <div id="shelf-list" class="grid"></div>
+      <p id="shelf-empty" class="muted hidden">Nenhum livro com estes filtros.</p>
     </section>
 
     <!-- View: Arquivo -->
@@ -2105,12 +2123,118 @@ function renderPiece(name, piece) {
 //
 // The view is built on its first visit rather than at load: one card per
 // book is a few hundred DOM nodes that most visits never look at.
+//
+// Filters live in the URL, so a filtered view can be bookmarked or shared:
+// `#estante?por=fabio,filipa&estado=ideia`. Within a group the chips are
+// alternatives (Fábio or Filipa); across groups they narrow (and an idea).
+// Filtering only hides cards; nothing is rebuilt.
 let shelfBuilt = false;
+// The Estante's last hash, filters included, so leaving the tab and coming
+// back keeps them.
+let lastShelfHash = "#estante";
 
 function ensureEstante() {
   if (shelfBuilt) return;
   shelfBuilt = true;
   renderEstante();
+  renderShelfFilters();
+}
+
+// The filter state in a URL query, keeping only ids that exist, so a stale
+// or mistyped link shows everything rather than nothing.
+function readShelfFilters(query) {
+  const ids = (key, known) => new Set((query.get(key) || "").split(",").filter((id) => known.includes(id)));
+  return {
+    por: ids("por", Object.keys(PEOPLE)),
+    estado: ids("estado", BOOK_STATUSES.map((st) => st.id)),
+  };
+}
+
+// The hash for a filter state. Ids are plain [a-z-], so they need no
+// escaping and the URL stays readable.
+function shelfHash(filters) {
+  const parts = [];
+  if (filters.por.size) parts.push(`por=${[...filters.por].join(",")}`);
+  if (filters.estado.size) parts.push(`estado=${[...filters.estado].join(",")}`);
+  return "#estante" + (parts.length ? `?${parts.join("&")}` : "");
+}
+
+// Whether a shelf card passes the filters. An empty group lets everything
+// through; a book with several suggesters matches any of them.
+function shelfCardMatches(card, filters) {
+  const by = card.dataset.by.split(" ");
+  return (filters.por.size === 0 || by.some((id) => filters.por.has(id)))
+    && (filters.estado.size === 0 || filters.estado.has(card.dataset.status));
+}
+
+// Two rows of chips, one per person and one per status, each with the
+// number of books it matches on its own.
+function renderShelfFilters() {
+  const wrap = $("shelf-filters");
+  wrap.innerHTML = "";
+  const cards = [...$("shelf-list").querySelectorAll(".shelf-card")];
+  const names = Object.values(PEOPLE).map((p) => p.name);
+
+  const row = (label, group, chips) => {
+    const r = document.createElement("div");
+    r.className = "shelf-filter-row";
+    const l = document.createElement("span");
+    l.className = "shelf-filter-label";
+    l.textContent = label;
+    r.appendChild(l);
+    chips.forEach(({ id, text, count }) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "shelf-chip";
+      chip.dataset.group = group;
+      chip.dataset.id = id;
+      const c = document.createElement("span");
+      c.className = "shelf-chip-count";
+      c.textContent = ` ${count}`;
+      chip.append(text, c);
+      chip.addEventListener("click", () => toggleShelfFilter(group, id));
+      r.appendChild(chip);
+    });
+    wrap.appendChild(r);
+  };
+
+  row("Sugerido por", "por", Object.entries(PEOPLE).map(([id, p]) => ({
+    id, text: shortestName(p.name, names),
+    count: cards.filter((c) => c.dataset.by.split(" ").includes(id)).length,
+  })));
+  row("Estado", "estado", BOOK_STATUSES.map((st) => ({
+    id: st.id, text: `${st.emoji} ${st.label}`,
+    count: cards.filter((c) => c.dataset.status === st.id).length,
+  })));
+}
+
+// A chip tap flips one id in the URL's filter state, then repaints.
+// replaceState rather than a hash assignment: filter taps shouldn't each
+// become a Back-button step, and it doesn't fire hashchange.
+function toggleShelfFilter(group, id) {
+  const filters = readShelfFilters(parseHash(window.location.hash).query);
+  if (filters[group].has(id)) filters[group].delete(id);
+  else filters[group].add(id);
+  history.replaceState(null, "", shelfHash(filters));
+  applyShelfFilters(filters);
+}
+
+// Shows the matching cards, marks the selected chips, and says so when
+// nothing matches. Remembers the state for the next tab switch.
+function applyShelfFilters(filters) {
+  lastShelfHash = shelfHash(filters);
+  let shown = 0;
+  $("shelf-list").querySelectorAll(".shelf-card").forEach((card) => {
+    const ok = shelfCardMatches(card, filters);
+    card.classList.toggle("hidden", !ok);
+    if (ok) shown++;
+  });
+  $("shelf-filters").querySelectorAll(".shelf-chip").forEach((chip) => {
+    const on = filters[chip.dataset.group].has(chip.dataset.id);
+    chip.classList.toggle("active", on);
+    chip.setAttribute("aria-pressed", String(on));
+  });
+  $("shelf-empty").classList.toggle("hidden", shown > 0);
 }
 
 function renderEstante() {
@@ -2209,7 +2333,8 @@ function currentTab() {
 function navigateTo(tab) {
   if (!TABS.includes(tab)) tab = 'inicio';
   if (currentTab() === tab) return;
-  window.location.hash = '#' + tab;
+  // The Estante tab returns to the filters last used in this visit.
+  window.location.hash = tab === 'estante' ? lastShelfHash : '#' + tab;
 }
 
 function applyRoute() {
@@ -2222,9 +2347,13 @@ function applyRoute() {
   });
 
   // A sub-path points at one item in the view: "#arquivo/4" is vote #4.
-  const { sub } = parseHash(window.location.hash);
+  // A query carries a view's state: the Estante's filters.
+  const { sub, query } = parseHash(window.location.hash);
   if (tab === 'arquivo' && sub) openArchiveEntry(Number(sub));
-  if (tab === 'estante') ensureEstante();
+  if (tab === 'estante') {
+    ensureEstante();
+    applyShelfFilters(readShelfFilters(query));
+  }
 }
 
 function initRouter() {

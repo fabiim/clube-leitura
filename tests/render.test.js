@@ -333,6 +333,64 @@
     eq(sorted.join(" | "), "Lido novo | Lido velho | Ideia", "order");
   });
 
+  test("shelf filters round-trip through the URL and drop unknown ids", () => {
+    // The query grammar: por=<person ids>&estado=<status ids>, comma-separated.
+    const f = readShelfFilters(new URLSearchParams("por=fabio,ninguem,filipa&estado=ideia,nada"));
+    eq([...f.por].join(), "fabio,filipa", "known people only");
+    eq([...f.estado].join(), "ideia", "known statuses only");
+    eq(shelfHash(f), "#estante?por=fabio,filipa&estado=ideia", "hash");
+    eq(shelfHash(readShelfFilters(new URLSearchParams(""))), "#estante", "no filters");
+    const back = readShelfFilters(parseHash(shelfHash(f)).query);
+    eq(shelfHash(back), shelfHash(f), "round trip");
+  });
+
+  test("shelf filters OR within a group and AND across groups", () => {
+    // Fixture cards stand in for shelf cards: only their data attributes matter.
+    const card = (by, status) => {
+      const d = document.createElement("div");
+      d.dataset.by = by;
+      d.dataset.status = status;
+      return d;
+    };
+    const f = (por, estado) => ({ por: new Set(por), estado: new Set(estado) });
+    const both = card("fabio filipa", "ideia");
+    assert(shelfCardMatches(both, f([], [])), "no filters let everything through");
+    assert(shelfCardMatches(both, f(["filipa"], [])), "second suggester matches");
+    assert(shelfCardMatches(both, f(["mariana", "fabio"], [])), "any listed person matches");
+    assert(!shelfCardMatches(both, f(["mariana"], [])), "other person doesn't");
+    assert(shelfCardMatches(both, f(["fabio"], ["ideia", "lido"])), "person and status");
+    assert(!shelfCardMatches(both, f(["fabio"], ["lido"])), "status narrows");
+  });
+
+  test("tapping chips filters the shelf, marks chips, updates the URL, and empties cleanly", () => {
+    // Drives the live Estante through its chips, then restores the page.
+    ensureEstante();
+    const chip = (group, id) => $("shelf-filters").querySelector(`.shelf-chip[data-group="${group}"][data-id="${id}"]`);
+    const visible = () => [...$("shelf-list").querySelectorAll(".shelf-card:not(.hidden)")];
+    const start = window.location.href;
+
+    chip("por", "fabio").click();
+    assert(window.location.hash === "#estante?por=fabio", `hash is ${window.location.hash}`);
+    assert(chip("por", "fabio").classList.contains("active"), "chip marked");
+    eq(chip("por", "fabio").getAttribute("aria-pressed"), "true", "aria-pressed");
+    assert(visible().length > 0 && visible().every((c) => c.dataset.by.split(" ").includes("fabio")), "only Fábio's books");
+    eq(lastShelfHash, "#estante?por=fabio", "remembered for the tab");
+
+    // A status nobody's book has, combined with a person, empties the list.
+    const empty = BOOK_STATUSES.find((st) => !visible().some((c) => c.dataset.status === st.id));
+    if (empty) {
+      chip("estado", empty.id).click();
+      eq(visible().length, 0, "no cards");
+      assert(!$("shelf-empty").classList.contains("hidden"), "empty message shown");
+      chip("estado", empty.id).click();
+    }
+    chip("por", "fabio").click();
+    eq(window.location.hash, "#estante", "cleared");
+    eq(visible().length, Object.keys(BOOKS).length, "all books back");
+    assert($("shelf-empty").classList.contains("hidden"), "empty message hidden");
+    history.replaceState(null, "", start);
+  });
+
   test("every book has a sinopse and a punchline, and ballot sinopses fit 150 words", () => {
     // CLAUDE.md "Book content rules": both prose fields are required, and
     // sinopses written under the current rule have a hard 150-word ceiling.
