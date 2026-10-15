@@ -428,9 +428,7 @@
   .agenda-row.past .agenda-book-card .claude { margin-bottom: 0; }
   /* Quotes: set apart by italics and an indent, with no quotation marks
      because the Citações title already says what they are. Kept quiet (body
-     size, mid-grey) so they don't out-shout the rest of the card. The
-     picker's name is small, grey, and upright so it reads as metadata, not
-     part of the quote. */
+     size, mid-grey) so they don't out-shout the rest of the card. */
   .agenda-quotes {
     display: flex; flex-direction: column; gap: 16px;
     margin: 8px 0 4px;
@@ -439,12 +437,6 @@
   .agenda-quote-text {
     margin: 0; font-size: 15.5px; line-height: 1.5; font-style: italic;
     color: var(--stone-600); white-space: pre-wrap;
-    display: flow-root; /* Contain the floated picker label. */
-  }
-  .agenda-quote-by {
-    font-family: system-ui, sans-serif; font-size: 11px; font-style: normal;
-    color: var(--stone-400); float: right; margin-left: 12px;
-    line-height: 23px; /* One text line (15.5px × 1.5), so it sits on the baseline row. */
   }
   /* Section title centred on a hairline: the two pseudo-elements are flexible
      rules that fill the space either side of the label. */
@@ -1607,9 +1599,8 @@ function renderAgendaRow(entry, isPast, isNext) {
       row.appendChild(renderParticipants(entry.participants));
     }
     if (hasQuotes) {
-      const names = (entry.participants || []).map((p) => typeof p === 'string' ? p : p.name);
       row.appendChild(renderDivider('Citações'));
-      row.appendChild(renderQuotes(entry.quotes, names));
+      row.appendChild(renderQuotes(entry.quotes));
     }
   }
 
@@ -1630,12 +1621,9 @@ function renderAgendaRow(entry, isPast, isNext) {
 
 // A session's quotes, always visible: they're the most memorable lines of
 // the discussion, so they shouldn't hide behind a tap. Each quote is shown
-// without quotation marks and, when someone picked it, followed by their
-// shortest unique name among `participantNames` in small grey parentheses,
-// floated right so it sits on the quote's last line when there is room, and
-// drops to the line below when there isn't. Built with
+// without quotation marks, and the picker in `by` is not shown. Built with
 // `textContent` so the verbatim text can't be parsed as HTML.
-function renderQuotes(quotes, participantNames) {
+function renderQuotes(quotes) {
   const wrap = document.createElement('div');
   wrap.className = 'agenda-quotes';
   quotes.forEach((q) => {
@@ -1644,12 +1632,6 @@ function renderQuotes(quotes, participantNames) {
     const text = document.createElement('p');
     text.className = 'agenda-quote-text';
     text.textContent = q.text;
-    if (q.by) {
-      const by = document.createElement('span');
-      by.className = 'agenda-quote-by';
-      by.textContent = `(${shortestName(q.by, participantNames)})`;
-      text.appendChild(by);
-    }
     quote.appendChild(text);
     wrap.appendChild(quote);
   });

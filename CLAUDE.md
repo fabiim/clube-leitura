@@ -22,7 +22,7 @@ A high-level map of behaviour, not a detailed spec. Read the code for details. U
 - **Three tabs**, hash-routed: Início, Votação, Arquivo.
 - **Início** lists sessions: upcoming soonest-first (the next one pinned), past most-recent-first. A pill links to Votação while a vote is open.
 - **Each session** shows a date, a book, a location, and a book card (sinopse, Claude pitch, and shop links). Nothing is collapsed.
-- **Past sessions** split into titled sections: "Discussão" (the written account and the participants), "Citações" (passages from the book the group liked, always visible, each optionally tagged with who picked it), and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
+- **Past sessions** split into titled sections: "Discussão" (the written account and the participants), "Citações" (passages from the book the group liked, always visible; who picked each one is recorded but not shown), and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
 - **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
 
@@ -99,7 +99,7 @@ quotes: [
 ```
 
 - **`text` is verbatim.** Keep line breaks as `\n`. Don't add quotation marks: the page shows none, because the Citações title already marks them as quotes.
-- **`by` is optional.** When set, it must match a name in that session's `participants` exactly. The page shows the shortest name that still identifies the person in that session.
+- **`by` is optional.** When set, it must match a name in that session's `participants` exactly. The page doesn't show it for now; commit 13c629c has the last version that showed it.
 
 ## Tests
 

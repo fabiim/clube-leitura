@@ -126,21 +126,17 @@
     });
   });
 
-  test("quotes render in order, verbatim, with the picker's short name", () => {
-    // Two pickers sharing a first name get surnames; a quote without `by`
-    // has no label; HTML in the text stays literal.
+  test("quotes render in order, verbatim, without the picker's name", () => {
+    // The `by` field is data only; HTML in the text stays literal.
     const el = renderQuotes([
       { text: "linha 1\n  linha 2", by: "Filipa Costa" },
       { text: "<b>não é html</b>" },
-      { text: "outra", by: "Filipa Ramos" },
-    ], ["Filipa Costa", "Filipa Ramos", "Rui"]);
+    ]);
     const quotes = [...el.querySelectorAll("blockquote.agenda-quote")];
-    eq(quotes.length, 3, "three quotes");
-    eq(quotes[0].querySelector(".agenda-quote-text").textContent, "linha 1\n  linha 2(Costa)", "first quote");
-    eq(quotes[1].querySelector(".agenda-quote-by"), null, "no picker label");
+    eq(quotes.length, 2, "two quotes");
+    eq(quotes[0].textContent, "linha 1\n  linha 2", "first quote, no name");
     eq(quotes[1].querySelector("b"), null, "no parsed <b>");
     eq(quotes[1].textContent, "<b>não é html</b>", "literal text");
-    eq(quotes[2].querySelector(".agenda-quote-by").textContent, "(Ramos)", "third picker");
   });
 
   // ---- Names ----
