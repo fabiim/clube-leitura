@@ -1039,6 +1039,32 @@ function getBook(id) {
   return b ? { id, ...b } : null;
 }
 
+// A book's statuses, strongest first, with their labels. The order is the
+// precedence `bookStatus` applies, and the order the Estante lists them in.
+const BOOK_STATUSES = [
+  { id: "lido",    emoji: "📗", label: "Lido" },
+  { id: "a-ler",   emoji: "⏳", label: "A ler" },
+  { id: "a-votos", emoji: "🗳️", label: "A votos" },
+  { id: "perdeu",  emoji: "🥀", label: "Perdeu" },
+  { id: "ideia",   emoji: "💡", label: "Ideia" },
+];
+
+// Where a book stands today, from its log alone. Sessions decide first,
+// because the club can read a book that lost its vote (a tie, say): any
+// past session means it was read, and an upcoming one, or a won vote,
+// means it is next. Then an open vote (one with no won or lost event yet),
+// then a lost vote. A book nothing has happened to is an idea. A session
+// dated today counts as upcoming, as in `isFutureDate`.
+function bookStatus(log, today) {
+  const closed = new Set(log.filter((e) => e.type === "won" || e.type === "lost").map((e) => e.vote));
+  const sessions = log.filter((e) => e.type === "session");
+  if (sessions.some((e) => e.date < today)) return "lido";
+  if (sessions.length > 0 || log.some((e) => e.type === "won")) return "a-ler";
+  if (log.some((e) => e.type === "voting" && !closed.has(e.vote))) return "a-votos";
+  if (log.some((e) => e.type === "lost")) return "perdeu";
+  return "ideia";
+}
+
 /**
  * @typedef {{
  *   number:       number,

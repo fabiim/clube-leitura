@@ -189,6 +189,37 @@
     });
   });
 
+  test("bookStatus follows sessions, then won, open, and lost votes, then idea", () => {
+    // Fixture logs for each precedence rule, judged on a fixed "today".
+    const today = "2026-06-01";
+    const s = { type: "suggested", date: "2026-01-01", by: "fabio" };
+    const cases = [
+      ["only suggested", [s], "ideia"],
+      ["on an open vote", [s, { type: "voting", date: "2026-05-01", vote: 7 }], "a-votos"],
+      ["lost one vote, on another open one", [s,
+        { type: "voting", date: "2026-02-01", vote: 6 }, { type: "lost", date: "2026-02-03", vote: 6 },
+        { type: "voting", date: "2026-05-01", vote: 7 }], "a-votos"],
+      ["lost its only vote", [s,
+        { type: "voting", date: "2026-02-01", vote: 6 }, { type: "lost", date: "2026-02-03", vote: 6 }], "perdeu"],
+      ["won, no session yet", [s,
+        { type: "voting", date: "2026-02-01", vote: 6 }, { type: "won", date: "2026-02-03", vote: 6 }], "a-ler"],
+      ["session today", [s, { type: "session", date: today }], "a-ler"],
+      ["lost, then read anyway", [s,
+        { type: "voting", date: "2026-02-01", vote: 6 }, { type: "lost", date: "2026-02-03", vote: 6 },
+        { type: "session", date: "2026-03-01" }], "lido"],
+      ["one session past, one ahead", [s,
+        { type: "session", date: "2026-05-01" }, { type: "session", date: "2026-07-01" }], "lido"],
+    ];
+    cases.forEach(([name, log, want]) => eq(bookStatus(log, today), want, name));
+  });
+
+  test("BOOK_STATUSES covers every status bookStatus returns", () => {
+    // The Estante labels and filters come from this list.
+    const ids = BOOK_STATUSES.map((st) => st.id);
+    eq(ids.join(), "lido,a-ler,a-votos,perdeu,ideia", "status order");
+    Object.values(BOOKS).forEach((b) => assert(ids.includes(bookStatus(b.log, todayISO())), "unknown status"));
+  });
+
   test("every book has a sinopse and a punchline, and ballot sinopses fit 150 words", () => {
     // CLAUDE.md "Book content rules": both prose fields are required, and
     // sinopses written under the current rule have a hard 150-word ceiling.
