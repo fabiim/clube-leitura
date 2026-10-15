@@ -122,6 +122,20 @@
     });
   });
 
+  test("every book has a sinopse and a punchline, and ballot sinopses fit 150 words", () => {
+    // CLAUDE.md "Book content rules": both prose fields are required, and
+    // sinopses written under the current rule have a hard 150-word ceiling.
+    // Only books on the open ballot are checked, because older books still
+    // carry longer publisher copy.
+    Object.entries(BOOKS).forEach(([id, book]) => {
+      assert(book.sinopse && book.punchline, `${id}: missing sinopse or punchline`);
+    });
+    (ACTIVE_VOTE?.bookIds ?? []).forEach((id) => {
+      const words = BOOKS[id].sinopse.trim().split(/\s+/).length;
+      assert(words <= 150, `${id}: sinopse has ${words} words, over the 150 ceiling`);
+    });
+  });
+
   test("AGENDA quotes are on past sessions, have text, and name a participant", () => {
     AGENDA.forEach((entry) => {
       if (!entry.quotes) return;

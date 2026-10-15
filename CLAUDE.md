@@ -50,46 +50,55 @@ Known gaps, not yet fixed: `stone-400` is still used for some readable text (res
 
 ## Book content rules (`BOOKS` entries in `index.html`)
 
-Every book has two prose fields. Each has a strict author and length contract.
+Every book has two prose fields, `sinopse` and `punchline`, both written by Claude from the same research. Each has a focused job:
 
-### `sinopse` — publisher copy preferred, Claude-authored allowed as fallback
+| | `sinopse` | `punchline` |
+|---|---|---|
+| Job | **Informative.** What the book is: premise, setting, people, themes, context. | **Appealing.** Why you'd want to read it: one hook. |
+| Length | Aim for 120 words or fewer; **150 is a hard ceiling**. | 1–2 sentences, about 12–30 words. Strictly shorter than the sinopse. |
 
-Two valid sources, in preference order:
+Both must not be boring, and both share these rules:
 
-1. **Verbatim publisher copy** from a reputable Portuguese-language page (Almedina, Wook, Bertrand, Quetzal, Porto Editora, Livros do Brasil, Continente, Note, FNAC). Copy as-is, one source per book, no blending. Strip only obvious noise (a leading "Sinopse:" label, trailing "Críticas de imprensa" blocks, marketing fluff like "portes grátis") and leave the prose untouched. If the publisher copy is long, prefer copying it whole over rewriting to fit.
+- **Ground them in research.** Read the publisher's copy (see [Source-fetch reality](#source-fetch-reality-as-of-2026-10-15)) and at least one other source: reader reviews (Wook, Goodreads), blogs, press. Don't invent facts the sources don't support.
+- **No spoilers.** Never reveal major scenes, twists, or the ending.
+- **No awards** (Nobel, Pulitzer, and the like): they tell the reader nothing about why the book is worth their evening.
+- **Plain words** everyone in the group understands: no insider terms only readers of the book would know, no clever wordplay about the book rather than the experience of reading it.
+- **Different angles.** The punchline may use story details and may sum up the sinopse, but in other words or from another angle. They render one under the other, so the same sentence twice reads as filler.
 
-2. **Claude-authored** when no good publisher copy exists — page missing, bibliography-only, critic-only, paywalled, or markedly weaker than what Claude can write from research. Must be grounded in at least two independent online sources: blog reviews, social media, Goodreads, critical pieces. Register: **neutral and descriptive**, in the voice a publisher would use — not the editorial-pitch register of the `punchline` field.
+Until 2026-10-15 the sinopse was verbatim publisher copy and the punchline was the "claude" pitch. The user found the publisher copy dull (often a list of characters) and too long on a phone. Older books still carry that copy until someone asks for a rewrite.
 
-If a publisher source becomes available for a Claude-authored book and is markedly better, swap it in.
+### `sinopse` — informative, and not boring
 
-### Source-fetch reality (as of 2026-05-15)
+Describe the book so a reader understands what it is and wants to open it: who, where, what pulls them in, what kind of experience it is. Size it to the book: cover the dimensions that sources across the web usually mention (setting, characters, themes, form, context), no more. Active verbs, concrete details. A test enforces the 150-word ceiling for books on the open ballot.
 
-Wook, Bertrand, FNAC, and most large publisher pages (Quetzal, Porto Editora, Livros do Brasil) return HTTP 403 to automated fetch — both Claude's WebFetch tool and `curl` with a browser user-agent. Almedina works for many titles. OLX listings sometimes quote the publisher back-cover.
+### Source-fetch reality (as of 2026-10-15)
 
-When the rule wants a specific publisher's copy and automation can't reach it, ask the user to open the page in a browser and paste the text. Don't accept search-snippet paraphrases as substitutes for verbatim copy.
+Wook, Bertrand, FNAC, Almedina's search, and most large publisher pages (Quetzal, Porto Editora, Livros do Brasil) sit behind Cloudflare. They return 403 to WebFetch, to `curl` with a browser user-agent, and to headless Chrome.
 
-### `punchline` — the pitch
+Use the cheapest route that works, in this order. Reading a whole Wook page through Chrome costs about 2–3k tokens of noise per book (recommendations, reviews); a `curl` with only the needed fields extracted costs a few hundred.
 
-A short editorial recommendation. One good reason to read this book. It must earn its place by being **sharp, incisive, active, engaging**:
+1. **Product URL: one Chrome `navigate`, no page read.** With the Claude-in-Chrome extension (`mcp__claude-in-chrome__*`), `navigate` to `https://www.wook.pt/pesquisa?keyword=<ISBN>`. An ISBN search redirects to the product page, and the tab context in the result shows the final URL. If it still shows the search URL, the redirect hasn't finished; call `tabs_context_mcp` once to read it. Wook and Bertrand share product ids, so the Bertrand URL is the same path on `bertrand.pt`.
+2. **Sinopse and page count: `curl`, extract only those fields.** Try Almedina (`almedina.net/catalogsearch/result/?q=<ISBN>` redirects to the product page) or the publisher's own site (Relógio d'Água works). Almedina's `robots.txt` disallows `/catalogsearch/`, so keep it to a few spaced-out lookups. Copy can differ between shops; pick one source per book.
+3. **Fallback: read the page in Chrome.** Only when step 2 fails or the Wook copy is needed. `get_page_text` sometimes runs before the page finishes loading and returns an error or the previous page; check the URL in the result and retry once. Take the SINOPSE verbatim (minus noise like "Críticas" or "Wook diz"), `Páginas`, price, and availability.
+
+Close the Chrome tabs you opened. If the extension isn't connected (`tabs_context_mcp` says so), ask the user to open Chrome with it and sign in to claude.ai. Don't ask them to paste text when one of these routes can reach the page, and don't accept search-snippet paraphrases as substitutes for verbatim copy.
+
+### `punchline` — appealing, marked with 👊
+
+One reason to read this book, said so it lands. Use whatever material reviewers and readers find most gripping: a critic quote with attribution ("Bryan Appleyard", "New York Times"), an image, a paradox, the premise, characters, or a story detail. It must be:
 
 - **Sharp** — declarative, no hedging ("talvez", "considerado por alguns", "tem-se considerado").
 - **Incisive** — cut every word that isn't pulling weight. Two-word punchlines work.
 - **Active** — verbs over nouns, concrete over abstract.
-- **Engaging** — open with the hook (a critical quote, a paradox, an image), never with setup.
-
-Length: 1–2 sentences, typically **12–30 words**. Strictly shorter than the sinopse. Shorter is better when it lands.
-
-Research before writing: blogs, Goodreads, social media, critical pieces. The sinopse already describes the book; this section pitches the *why*. Use real critic quotes with attribution ("Bryan Appleyard", "New York Times") when you have them. Awards and critical reception are fair game ("Pulitzer 2007", "Nobel 2022") — they sharpen the pitch.
+- **Engaging** — open with the hook, never with setup. Sell the story, the stakes, and what it feels like to read it.
 
 Patterns that already work in this registry:
 
 - **Quote + punchline** — `stoner`: *«O melhor romance que ninguém leu» — Bryan Appleyard. Vida apagada, prosa devastadora.*
 - **Adjective cluster + recommendation** — `saramago`: *Curto, divertido, filosófico, português. A escolha mais segura para começar.*
-- **Award + characterisation** — `kang`: *Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.*
+- **Quote + story** — `dostoievski`: *«O romance mais magistral que alguma vez se escreveu» — Freud. Três irmãos — paixão, razão e fé — e um pai assassinado. A alma humana inteira numa família.*
 
-Don't restate the plot. Don't write from publisher copy alone.
-
-The two fields render side-by-side on the ballot card, the "Estamos a ler" expansion, and the archive details. The split is intentional: `sinopse` is the publisher's neutral description; `punchline` is the editorial recommendation marked with 👊.
+The two fields render one under the other on the ballot card, the session cards, and the archive details. Both are set in Literata, upright. The punchline sits in an amber box on upcoming sessions and the ballot, and loses the box on past sessions.
 
 ## Participant pieces (`AGENDA[].participants[].piece`)
 
