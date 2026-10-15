@@ -6,7 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <title>Clube do Livro — Votação</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Literata:opsz,wght@7..72,400;7..72,700&display=swap" rel="stylesheet">
 <style>
   /* ============================================================
      CONFIGURAÇÃO: Cola o teu URL do Google Apps Script aqui
@@ -106,6 +106,9 @@
   .title-row { display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; }
   .emoji { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
   .book-title { font-size: 18px; font-weight: 700; color: var(--stone-800); line-height: 1.3; }
+  /* Book titles share Literata with the sinopse below them, so a card reads
+     as one typographic unit. Headings and UI keep Crimson Text and system-ui. */
+  .book-title, .agenda-book-title, .result-book-title { font-family: 'Literata', Georgia, serif; }
   .author { font-size: 13px; color: var(--stone-500); font-family: system-ui, sans-serif; }
 
   .check {
@@ -117,11 +120,18 @@
   .check-mark { color: var(--amber-700); font-weight: 800; font-size: 14px; display: none; }
   .card.selected .check-mark { display: block; }
 
-  .sinopse { margin: 0 0 8px; font-size: 14px; color: var(--stone-600); line-height: 1.55; font-style: italic; }
+  /* Reading text (sinopse and punchline) is set in Literata, a serif
+     drawn for long reading on screens: its tall x-height stays legible at
+     16px where Crimson Text looks small. Upright, because italic tires the
+     eye over a whole paragraph. */
+  .sinopse {
+    margin: 0 0 10px; font-family: 'Literata', Georgia, serif;
+    font-size: 16px; color: var(--stone-700); line-height: 1.6;
+  }
   .punchline {
-    margin: 0 0 10px; font-size: 13px; color: var(--amber-800); line-height: 1.4;
-    font-family: system-ui, sans-serif; background: var(--amber-100);
-    padding: 6px 10px; border-radius: 8px; font-weight: 500;
+    margin: 0 0 10px; font-size: 15px; color: var(--amber-800); line-height: 1.5;
+    font-family: 'Literata', Georgia, serif; background: var(--amber-100);
+    padding: 8px 12px; border-radius: 8px;
   }
   .punchline-icon { font-style: normal; }
   .links { display: flex; align-items: center; gap: 6px; }
@@ -371,8 +381,10 @@
     color: var(--stone-500);
   }
   .agenda-row.past .agenda-book-emoji { opacity: 0.55; }
+  /* The written account is reading text, so it takes the sinopse's type. */
   .agenda-findings {
-    font-size: 14px; color: var(--stone-700); line-height: 1.55;
+    font-family: 'Literata', Georgia, serif;
+    font-size: 16px; color: var(--stone-700); line-height: 1.6;
     margin-top: 8px;
   }
   .agenda-participants { margin-top: 14px; cursor: default; }
@@ -398,7 +410,7 @@
   .chip-piece-sign { font-weight: 700; }
   .chip-piece-gift { filter: saturate(0.35); opacity: 0.75; }
   .chip-piece.open .chip-piece-gift { filter: none; opacity: 1; }
-  /* The piece drawer: same serif body as the findings, set apart by a thin
+  /* The piece drawer: the page's Crimson Text body, set apart by a thin
      amber rule, a touch of indent, and blank space above the text. */
   .agenda-piece {
     display: none;
@@ -433,12 +445,11 @@
   .agenda-book-card .sinopse { margin-bottom: 8px; }
   .agenda-book-card .punchline { margin-bottom: 10px; }
   /* On past sessions the punchline has done its job, so it drops its box
-     and takes the sinopse's type (serif italic, same size, colour, and
-     leading), marked only by the 👊 icon. */
+     and takes the sinopse's size, colour, and leading, marked only by the 👊
+     icon. */
   .agenda-row.past .agenda-book-card .punchline {
     margin-bottom: 0; background: transparent; padding: 0;
-    font-family: inherit; font-size: 14px; font-weight: normal;
-    font-style: italic; line-height: 1.55; color: var(--stone-600);
+    font-size: 16px; line-height: 1.6; color: var(--stone-700);
   }
   /* Quotes: centred italics on a pale teal band with hairline rules above
      and below, with no quotation marks because the Citações title already
@@ -1114,7 +1125,7 @@ function renderCandidateBooks() {
         </div>
         <div class="check"><span class="check-mark">✓</span></div>
       </div>
-      <p class="sinopse">«${book.sinopse}»</p>
+      <p class="sinopse">${book.sinopse}</p>
       <p class="punchline"><span class="punchline-icon" aria-hidden="true">👊</span> ${book.punchline}</p>
       <div class="links">${renderShopLinks(book)}</div>
     `;
@@ -1259,7 +1270,7 @@ function renderResultsInto(container, books, votes, voters) {
       </div>
       <span class="result-toggle">➕</span>
       <div class="result-details">
-        <p class="sinopse">«${book.sinopse}»</p>
+        <p class="sinopse">${book.sinopse}</p>
         <p class="punchline"><span class="punchline-icon" aria-hidden="true">👊</span> ${book.punchline}</p>
         <div class="links">${renderShopLinks(book)}</div>
       </div>
@@ -1629,7 +1640,7 @@ function renderAgendaRow(entry, isPast, isNext) {
     const card = document.createElement('div');
     card.className = 'agenda-book-card';
     card.innerHTML = `
-      <p class="sinopse">«${book.sinopse}»</p>
+      <p class="sinopse">${book.sinopse}</p>
       <p class="punchline"><span class="punchline-icon" aria-hidden="true">👊</span> ${book.punchline}</p>
       ${isPast ? '' : `<div class="links">${renderShopLinks(book)}</div>`}
     `;
