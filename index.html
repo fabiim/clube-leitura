@@ -1411,6 +1411,32 @@ function countdownLabel(dateStr) {
   return `${days}d`;
 }
 
+// Folds case and accents so "Fábio" and "fabio" compare equal.
+function nameKey(s) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+// The shortest label that still identifies `name` among `names` (typically
+// the people at one session). Tries the first name, then the last name, then
+// first and last together, and takes the first candidate whose words don't
+// all appear in any other name; otherwise returns the full name. That
+// fallback is only unambiguous because names within a session are unique,
+// which the render tests check against the data. Words are compared with
+// `nameKey`; the label keeps the original spelling.
+function shortestName(name, names) {
+  const words = name.trim().split(/\s+/);
+  const others = names
+    .filter((n) => nameKey(n.trim()) !== nameKey(name.trim()))
+    .map((n) => new Set(nameKey(n).split(/\s+/)));
+  const first = words[0];
+  const last = words[words.length - 1];
+  const candidates = words.length === 1 ? [[first]] : [[first], [last], [first, last]];
+  // A candidate identifies `name` when no other name contains all its words.
+  const found = candidates.find((c) =>
+    !others.some((o) => c.every((w) => o.has(nameKey(w)))));
+  return found ? found.join(' ') : name.trim();
+}
+
 function renderInicio() {
   renderCalloutSlot();
   renderAgenda();

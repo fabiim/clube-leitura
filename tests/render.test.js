@@ -103,6 +103,36 @@
     eq(d.querySelector(".agenda-piece-text").textContent, "<b>não é html</b>", "literal text");
   });
 
+  test("participant names are unique within each session", () => {
+    // shortestName falls back to the full name, which only identifies a
+    // person if no one else in the session has the same name.
+    AGENDA.forEach((entry) => {
+      const keys = (entry.participants || []).map((p) => nameKey(typeof p === "string" ? p : p.name).trim());
+      const dup = keys.find((k, i) => keys.indexOf(k) !== i);
+      assert(dup === undefined, `duplicate participant "${dup}" on ${entry.date}`);
+    });
+  });
+
+  // ---- Names ----
+
+  test("shortestName picks first, then last, then first + last, then full", () => {
+    // Each case: [name, other names in the session, expected label].
+    const cases = [
+      ["Filipa Costa", ["Mariana Teixeira"], "Filipa"],
+      ["Filipa Costa", ["Filipa Ramos"], "Costa"],
+      ["Filipa Costa", ["Filipa Ramos", "Ana Costa"], "Filipa Costa"],
+      ["Filipa Costa", ["Filipa de Medeiros Costa"], "Filipa Costa"],
+      ["Filipa Maria Costa", ["Filipa Costa"], "Filipa Maria Costa"],
+      ["Fábio Botelho", ["fabio Mota"], "Botelho"],
+      ["Ana", ["Ana Costa"], "Ana"],
+      ["Ana Costa", ["Ana"], "Costa"],
+      ["Rui", [], "Rui"],
+    ];
+    cases.forEach(([name, others, expected]) => {
+      eq(shortestName(name, [name, ...others]), expected, `${name} among ${others.join(", ") || "nobody"}`);
+    });
+  });
+
   // ---- Ordering ----
 
   // Renders the agenda from fixture sessions on a fixed "today", then restores
