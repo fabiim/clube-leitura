@@ -637,6 +637,33 @@ const PEOPLE = {
  *    (live ballot AND historical archive/agenda views). Only vote tallies
  *    and voter records are frozen inside ARCHIVE entries.
  *
+ * The book log. Every book carries `log`, the canonical history of what
+ * happened to it: who suggested it, which votes it was on and how each
+ * ended, and its sessions. ACTIVE_VOTE, ARCHIVE, and AGENDA keep their own
+ * copy of those facts as render data for their views (tallies, voters,
+ * findings); the render tests check that both sides agree, so opening or
+ * closing a vote, or adding a session, means updating the logs too.
+ *
+ * Log invariants:
+ *  - Events are sorted by date, ascending. Same-day events keep their
+ *    natural order: suggested, voting, won/lost, session.
+ *  - Every book has at least one `suggested` event. A book suggested by
+ *    several people has one event per person. When the real date is
+ *    unknown, it is the date of the book's first other event.
+ *  - `by` is a key in PEOPLE.
+ *  - `voting` is dated at the vote's startedAt, `won`/`lost` at its
+ *    closedAt; `session` at the session's date, one per AGENDA entry.
+ *
+ * Suggesters are shown only in the Estante, never on the ballot.
+ *
+ * @typedef {
+ *   | { type: "suggested", date: string, by: string }
+ *   | { type: "voting",    date: string, vote: number }
+ *   | { type: "won",       date: string, vote: number }
+ *   | { type: "lost",      date: string, vote: number }
+ *   | { type: "session",   date: string }
+ * } BookEvent
+ *
  * @typedef {{
  *   emoji:          string,
  *   title:          string,
@@ -647,6 +674,7 @@ const PEOPLE = {
  *   wook?:          string,
  *   bertrand?:      string,
  *   letrasLavadas?: string,
+ *   log:            BookEvent[],
  * }} Book
  */
 
@@ -659,6 +687,13 @@ const BOOKS = {
     punchline: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
     wook: "https://www.wook.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
     bertrand: "https://www.bertrand.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
+    log: [
+      { type: "suggested", date: "2026-05-13", by: "fabio" },
+      { type: "session",   date: "2026-05-13" },
+      { type: "voting",    date: "2026-05-14", vote: 1 },
+      { type: "won",       date: "2026-05-15", vote: 1 },
+      { type: "session",   date: "2026-06-03" },
+    ],
   },
   kang: {
     emoji: "🌿",
@@ -667,6 +702,11 @@ const BOOKS = {
     punchline: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
     wook: "https://www.wook.pt/livro/a-vegetariana-han-kang/18547889",
     bertrand: "https://www.bertrand.pt/livro/a-vegetariana-han-kang/18547889",
+    log: [
+      { type: "suggested", date: "2026-05-14", by: "fabio" },
+      { type: "voting",    date: "2026-05-14", vote: 1 },
+      { type: "lost",      date: "2026-05-15", vote: 1 },
+    ],
   },
   camus: {
     emoji: "☀️",
@@ -675,6 +715,11 @@ const BOOKS = {
     punchline: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
     wook: "https://www.wook.pt/livro/o-estrangeiro-albert-camus/15328334",
     bertrand: "https://www.bertrand.pt/livro/o-estrangeiro-albert-camus/15328334",
+    log: [
+      { type: "suggested", date: "2026-05-14", by: "fabio" },
+      { type: "voting",    date: "2026-05-14", vote: 1 },
+      { type: "lost",      date: "2026-05-15", vote: 1 },
+    ],
   },
   vhm: {
     emoji: "⚙️",
@@ -683,6 +728,11 @@ const BOOKS = {
     punchline: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
     wook: "https://www.wook.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
     bertrand: "https://www.bertrand.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
+    log: [
+      { type: "suggested", date: "2026-05-14", by: "fabio" },
+      { type: "voting",    date: "2026-05-14", vote: 1 },
+      { type: "lost",      date: "2026-05-15", vote: 1 },
+    ],
   },
   ncs: {
     emoji: "⛵",
@@ -691,6 +741,11 @@ const BOOKS = {
     punchline: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
     wook: "https://www.wook.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
     bertrand: "https://www.bertrand.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
+    log: [
+      { type: "suggested", date: "2026-05-14", by: "fabio" },
+      { type: "voting",    date: "2026-05-14", vote: 1 },
+      { type: "lost",      date: "2026-05-15", vote: 1 },
+    ],
   },
   amado: {
     emoji: "🏖️",
@@ -699,6 +754,11 @@ const BOOKS = {
     punchline: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
     wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
     bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
+    log: [
+      { type: "suggested", date: "2026-05-14", by: "fabio" },
+      { type: "voting",    date: "2026-05-14", vote: 1 },
+      { type: "lost",      date: "2026-05-15", vote: 1 },
+    ],
   },
   "ncs-ceu": {
     emoji: "☁️",
@@ -707,6 +767,12 @@ const BOOKS = {
     punchline: "Açorianidade dupla — passado e presente — com humor melancólico. O território é o nosso.",
     wook: "https://www.wook.pt/livro/ceu-nublado-com-boas-abertas-nuno-costa-santos/16954064",
     bertrand: "https://www.bertrand.pt/livro/ceu-nublado-com-boas-abertas-nuno-costa-santos/16954064",
+    log: [
+      { type: "suggested", date: "2026-05-15", by: "miguel" },
+      { type: "voting",    date: "2026-05-15", vote: 2 },
+      { type: "won",       date: "2026-05-18", vote: 2 },
+      { type: "session",   date: "2026-07-01" },
+    ],
   },
   voltaire: {
     emoji: "🌍",
@@ -715,6 +781,11 @@ const BOOKS = {
     punchline: "Curto, mordaz, divertidíssimo. E com Lisboa pós-terramoto no centro da acção.",
     wook: "https://www.wook.pt/livro/candido-ou-o-otimismo-voltaire/17900982",
     bertrand: "https://www.bertrand.pt/livro/candido-ou-o-otimismo-voltaire/17900982",
+    log: [
+      { type: "suggested", date: "2026-05-15", by: "filipa" },
+      { type: "voting",    date: "2026-05-15", vote: 2 },
+      { type: "lost",      date: "2026-05-18", vote: 2 },
+    ],
   },
   ernaux: {
     emoji: "🕰️",
@@ -723,6 +794,11 @@ const BOOKS = {
     punchline: "Nobel 2022. Escreveu uma autobiografia inteira sem nunca dizer «eu».",
     wook: "https://www.wook.pt/livro/os-anos-annie-ernaux/23706033",
     bertrand: "https://www.bertrand.pt/livro/os-anos-annie-ernaux/23706033",
+    log: [
+      { type: "suggested", date: "2026-05-15", by: "fabio" },
+      { type: "voting",    date: "2026-05-15", vote: 2 },
+      { type: "lost",      date: "2026-05-18", vote: 2 },
+    ],
   },
   rhys: {
     emoji: "🌊",
@@ -731,6 +807,12 @@ const BOOKS = {
     punchline: "Curto, gótico-caribenho, pós-colonial. Resgata uma personagem de Charlotte Brontë e devolve-lhe a voz.",
     wook: "https://www.wook.pt/livro/vasto-mar-de-sargacos-jean-rhys/18944750",
     bertrand: "https://www.bertrand.pt/livro/vasto-mar-de-sargacos-jean-rhys/18944750",
+    log: [
+      { type: "suggested", date: "2026-05-15", by: "mariana" },
+      { type: "voting",    date: "2026-05-15", vote: 2 },
+      { type: "lost",      date: "2026-05-18", vote: 2 },
+      { type: "session",   date: "2026-08-05" },
+    ],
   },
   stoner: {
     emoji: "✒️",
@@ -739,6 +821,11 @@ const BOOKS = {
     punchline: "«O melhor romance que ninguém leu» — Bryan Appleyard. Vida apagada, prosa devastadora.",
     wook: "https://www.wook.pt/livro/stoner-john-williams/15934330",
     bertrand: "https://www.bertrand.pt/livro/stoner-john-williams/15934330",
+    log: [
+      { type: "suggested", date: "2026-05-15", by: "fabio" },
+      { type: "voting",    date: "2026-05-15", vote: 2 },
+      { type: "lost",      date: "2026-05-18", vote: 2 },
+    ],
   },
   bukowski: {
     emoji: "🥪",
@@ -747,6 +834,11 @@ const BOOKS = {
     punchline: "Cru, cómico e, contra todas as expectativas, terno. Crescer na miséria sem pedir pena a ninguém.",
     wook: "https://www.wook.pt/livro/pao-com-fiambre-charles-bukowski/24061200",
     bertrand: "https://www.bertrand.pt/livro/pao-com-fiambre-charles-bukowski/24061200",
+    log: [
+      { type: "suggested", date: "2026-07-06", by: "fabio" },
+      { type: "voting",    date: "2026-07-06", vote: 3 },
+      { type: "lost",      date: "2026-07-13", vote: 3 },
+    ],
   },
   kazantzakis: {
     emoji: "🕺",
@@ -755,6 +847,11 @@ const BOOKS = {
     punchline: "«Ensina-me a dançar.» O patrão vive nos livros; Zorbás vive tudo o resto. Um hino à vida.",
     wook: "https://www.wook.pt/livro/vida-e-andancas-de-alexis-zorbas-nikos-kazantzakis/27836675",
     bertrand: "https://www.bertrand.pt/livro/vida-e-andancas-de-alexis-zorbas-nikos-kazantzakis/27836675",
+    log: [
+      { type: "suggested", date: "2026-07-06", by: "fabio" },
+      { type: "voting",    date: "2026-07-06", vote: 3 },
+      { type: "lost",      date: "2026-07-13", vote: 3 },
+    ],
   },
   ripley: {
     emoji: "🎭",
@@ -763,6 +860,11 @@ const BOOKS = {
     punchline: "Um assassino encantador por quem, contra toda a moral, torcemos.",
     wook: "https://www.wook.pt/livro/o-talentoso-mr-ripley-patricia-highsmith/15104998",
     bertrand: "https://www.bertrand.pt/livro/o-talentoso-mr-ripley-patricia-highsmith/15104998",
+    log: [
+      { type: "suggested", date: "2026-07-06", by: "fabio" },
+      { type: "voting",    date: "2026-07-06", vote: 3 },
+      { type: "lost",      date: "2026-07-13", vote: 3 },
+    ],
   },
   sola: {
     emoji: "😈",
@@ -771,6 +873,11 @@ const BOOKS = {
     punchline: "Um pacto com o diabo, quatro séculos de mulheres mortas, um só dia. Gótico catalão, exuberante e obsceno.",
     wook: "https://www.wook.pt/livro/dei-te-olhos-e-viste-as-trevas-irene-sola/32511449",
     bertrand: "https://www.bertrand.pt/livro/dei-te-olhos-e-viste-as-trevas-irene-sola/32511449",
+    log: [
+      { type: "suggested", date: "2026-07-06", by: "mariana" },
+      { type: "voting",    date: "2026-07-06", vote: 3 },
+      { type: "lost",      date: "2026-07-13", vote: 3 },
+    ],
   },
   morel: {
     emoji: "📽️",
@@ -779,6 +886,12 @@ const BOOKS = {
     punchline: "Apaixona-se por uma mulher que não o vê nem o ouve.",
     wook: "https://www.wook.pt/livro/a-invencao-de-morel-adolfo-bioy-casares/22990405",
     bertrand: "https://www.bertrand.pt/livro/a-invencao-de-morel-adolfo-bioy-casares/22990405",
+    log: [
+      { type: "suggested", date: "2026-07-06", by: "mariana" },
+      { type: "voting",    date: "2026-07-06", vote: 3 },
+      { type: "won",       date: "2026-07-13", vote: 3 },
+      { type: "session",   date: "2026-10-14" },
+    ],
   },
   steinbeck: {
     emoji: "🦪",
@@ -787,6 +900,11 @@ const BOOKS = {
     punchline: "Uma pérola perfeita destrói uma família inteira. Parábola seca e implacável sobre ganância — Steinbeck não perdoa ninguém.",
     wook: "https://www.wook.pt/livro/a-perola-john-steinbeck/15327898",
     bertrand: "https://www.bertrand.pt/livro/a-perola-john-steinbeck/15327898",
+    log: [
+      { type: "suggested", date: "2026-09-07", by: "mariana" },
+      { type: "voting",    date: "2026-09-07", vote: 4 },
+      { type: "lost",      date: "2026-09-17", vote: 4 },
+    ],
   },
   gilman: {
     emoji: "👩‍🤝‍👩",
@@ -795,6 +913,11 @@ const BOOKS = {
     punchline: "1915: três homens descobrem um país só de mulheres — e a piada é sempre à custa deles. Utopia feminista, um século à frente.",
     wook: "https://www.wook.pt/livro/terra-delas-charlotte-perkins-gilman/23462773",
     bertrand: "https://www.bertrand.pt/livro/terra-delas-charlotte-perkins-gilman/23462773",
+    log: [
+      { type: "suggested", date: "2026-09-07", by: "mariana" },
+      { type: "voting",    date: "2026-09-07", vote: 4 },
+      { type: "lost",      date: "2026-09-17", vote: 4 },
+    ],
   },
   agualusa: {
     emoji: "🎈",
@@ -803,6 +926,11 @@ const BOOKS = {
     punchline: "Do vencedor do Dublin Literary Award: depois do dilúvio, os ricos fogem para dirigíveis; os pobres improvisam balões. Fábula climática à beira do lirismo.",
     wook: "https://www.wook.pt/livro/a-vida-no-ceu-jose-eduardo-agualusa/15007229",
     bertrand: "https://www.bertrand.pt/livro/a-vida-no-ceu-jose-eduardo-agualusa/24570417",
+    log: [
+      { type: "suggested", date: "2026-09-07", by: "filipa" },
+      { type: "voting",    date: "2026-09-07", vote: 4 },
+      { type: "lost",      date: "2026-09-17", vote: 4 },
+    ],
   },
   wilde: {
     emoji: "🖼️",
@@ -811,6 +939,12 @@ const BOOKS = {
     punchline: "«Toda a arte é perfeitamente inútil», escreveu Wilde — depois escreveu o romance mais moralmente perigoso do século XIX. Censurado à nascença.",
     wook: "https://www.wook.pt/livro/o-retrato-de-dorian-gray-oscar-wilde/3501423",
     bertrand: "https://www.bertrand.pt/livro/o-retrato-de-dorian-gray-oscar-wilde/3501423",
+    log: [
+      { type: "suggested", date: "2026-09-07", by: "fabio" },
+      { type: "voting",    date: "2026-09-07", vote: 4 },
+      { type: "won",       date: "2026-09-17", vote: 4 },
+      { type: "session",   date: "2026-11-11" },
+    ],
   },
   "steinbeck-eden": {
     emoji: "⚖️",
@@ -819,6 +953,10 @@ const BOOKS = {
     punchline: "O livro da vida de Steinbeck. Caim e Abel na Califórnia. Estamos condenados a ser o que herdamos?",
     wook: "https://www.wook.pt/livro/a-leste-do-paraiso-john-steinbeck/15327895",
     bertrand: "https://www.bertrand.pt/livro/a-leste-do-paraiso-john-steinbeck/15327895",
+    log: [
+      { type: "suggested", date: "2026-10-15", by: "fabio" },
+      { type: "voting",    date: "2026-10-15", vote: 5 },
+    ],
   },
   "steinbeck-vinhas": {
     emoji: "🛣️",
@@ -827,6 +965,10 @@ const BOOKS = {
     punchline: "Uma família na estrada para a Califórnia perde tudo menos a dignidade e a teimosia de ter esperança.",
     wook: "https://www.wook.pt/livro/as-vinhas-da-ira-john-steinbeck/15327902",
     bertrand: "https://www.bertrand.pt/livro/as-vinhas-da-ira-john-steinbeck/15327902",
+    log: [
+      { type: "suggested", date: "2026-10-15", by: "fabio" },
+      { type: "voting",    date: "2026-10-15", vote: 5 },
+    ],
   },
   eliot: {
     emoji: "🏘️",
@@ -835,6 +977,10 @@ const BOOKS = {
     punchline: "«Um dos poucos romances ingleses escritos para adultos» — Virginia Woolf. Dois idealistas, muitos fracassos, e uma cidade inteira a assistir.",
     wook: "https://www.wook.pt/livro/middlemarch-george-eliot/33669488",
     bertrand: "https://www.bertrand.pt/livro/middlemarch-george-eliot/33669488",
+    log: [
+      { type: "suggested", date: "2026-10-15", by: "fabio" },
+      { type: "voting",    date: "2026-10-15", vote: 5 },
+    ],
   },
   dostoievski: {
     emoji: "⛪",
@@ -843,6 +989,10 @@ const BOOKS = {
     punchline: "Se Deus não existe, tudo é permitido? Nesta família, ninguém tem as mãos limpas.",
     wook: "https://www.wook.pt/livro/os-irmaos-karamazov-volume-i-fiodor-dostoievski/24781241",
     bertrand: "https://www.bertrand.pt/livro/os-irmaos-karamazov-volume-i-fiodor-dostoievski/24781241",
+    log: [
+      { type: "suggested", date: "2026-10-15", by: "fabio" },
+      { type: "voting",    date: "2026-10-15", vote: 5 },
+    ],
   },
   leguin: {
     emoji: "❄️",
@@ -851,6 +1001,10 @@ const BOOKS = {
     punchline: "Dois estranhos a puxar um trenó através do gelo. Uma das grandes amizades da ficção científica.",
     wook: "https://www.wook.pt/livro/a-mao-esquerda-das-trevas-ursula-k-le-guin/22468294",
     bertrand: "https://www.bertrand.pt/livro/a-mao-esquerda-das-trevas-ursula-k-le-guin/22468294",
+    log: [
+      { type: "suggested", date: "2026-10-15", by: "mariana" },
+      { type: "voting",    date: "2026-10-15", vote: 5 },
+    ],
   },
   "patti-smith": {
     emoji: "🎸",
@@ -859,6 +1013,10 @@ const BOOKS = {
     punchline: "Patti Smith e Robert Mapplethorpe, pobres, apaixonados e a inventarem-se artistas na Nova Iorque dos anos 60. Uma carta de amor a um amigo perdido.",
     wook: "https://www.wook.pt/livro/apenas-miudos-patti-smith/10966185",
     bertrand: "https://www.bertrand.pt/livro/apenas-miudos-patti-smith/10966185",
+    log: [
+      { type: "suggested", date: "2026-10-15", by: "miguel" },
+      { type: "voting",    date: "2026-10-15", vote: 5 },
+    ],
   },
   carolina: {
     emoji: "📓",
@@ -867,6 +1025,10 @@ const BOOKS = {
     punchline: "Quando tinha fome, via o mundo amarelo. Um diário escrito à fome, sem pena de si mesma.",
     wook: "https://www.wook.pt/livro/quarto-de-despejo-carolina-maria-de-jesus/25898338",
     bertrand: "https://www.bertrand.pt/livro/quarto-de-despejo-carolina-maria-de-jesus/25898338",
+    log: [
+      { type: "suggested", date: "2026-10-15", by: "filipa" },
+      { type: "voting",    date: "2026-10-15", vote: 5 },
+    ],
   },
 };
 

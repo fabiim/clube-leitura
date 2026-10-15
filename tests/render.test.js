@@ -146,6 +146,49 @@
     });
   });
 
+  test("every book log is well formed, sorted, and has a suggester in PEOPLE", () => {
+    // The log's shape rules from the BOOKS doc comment.
+    const fields = { suggested: ["by"], voting: ["vote"], won: ["vote"], lost: ["vote"], session: [] };
+    Object.entries(BOOKS).forEach(([id, book]) => {
+      assert(Array.isArray(book.log), `${id}: log is not an array`);
+      book.log.forEach((e, i) => {
+        const where = `${id} log[${i}]`;
+        assert(e.type in fields, `${where}: unknown type "${e.type}"`);
+        assert(/^\d{4}-\d{2}-\d{2}$/.test(e.date), `${where}: date "${e.date}" is not ISO`);
+        // Exactly the fields its type allows, so a typo can't hide.
+        eq(Object.keys(e).sort().join(), ["date", "type", ...fields[e.type]].sort().join(), `${where} fields`);
+        if (e.type === "suggested") assert(e.by in PEOPLE, `${where}: "${e.by}" is not in PEOPLE`);
+        if (i > 0) assert(book.log[i - 1].date <= e.date, `${where}: out of date order`);
+      });
+      assert(book.log.some((e) => e.type === "suggested"), `${id}: nobody suggested it`);
+    });
+  });
+
+  test("book logs agree with ACTIVE_VOTE, ARCHIVE, and AGENDA, both ways", () => {
+    // The log is canonical and the other constants are render copies, so
+    // every fact must appear on both sides: nothing missing, nothing extra.
+    const expected = Object.fromEntries(Object.keys(BOOKS).map((id) => [id, []]));
+    const add = (id, key) => {
+      assert(id in expected, `unknown book "${id}" in ${key}`);
+      expected[id].push(key);
+    };
+    if (ACTIVE_VOTE) {
+      ACTIVE_VOTE.bookIds.forEach((id) => add(id, `voting ${ACTIVE_VOTE.startedAt} #${ACTIVE_VOTE.number}`));
+    }
+    ARCHIVE.forEach((v) => v.bookIds.forEach((id) => {
+      add(id, `voting ${v.startedAt} #${v.number}`);
+      add(id, `${id === v.winnerId ? "won" : "lost"} ${v.closedAt} #${v.number}`);
+    }));
+    AGENDA.forEach((s) => add(s.bookId, `session ${s.date}`));
+
+    Object.entries(BOOKS).forEach(([id, book]) => {
+      const actual = book.log
+        .filter((e) => e.type !== "suggested")
+        .map((e) => `${e.type} ${e.date}` + (e.vote === undefined ? "" : ` #${e.vote}`));
+      eq(actual.sort().join(" | "), expected[id].sort().join(" | "), `${id} log`);
+    });
+  });
+
   test("every book has a sinopse and a punchline, and ballot sinopses fit 150 words", () => {
     // CLAUDE.md "Book content rules": both prose fields are required, and
     // sinopses written under the current rule have a hard 150-word ceiling.
