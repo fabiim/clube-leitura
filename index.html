@@ -1700,6 +1700,15 @@ function paintArchiveDetails(container, entry) {
   renderResultsInto(results, books, entry.votes, entry.voters);
 }
 
+// Expands vote `number` in the Arquivo and scrolls it to the middle of the
+// screen, for links that point at one vote. An unknown number does nothing.
+function openArchiveEntry(number) {
+  if (!ARCHIVE.some((e) => e.number === number)) return;
+  expandedEntries.add(number);
+  renderArquivo();
+  $("archive-list").querySelector(`[data-number="${number}"]`).scrollIntoView({ block: "center" });
+}
+
 // `DD/MM – DD/MM` (same year) or `DD/MM/YY – DD/MM/YY` (cross-year). Inputs are ISO.
 function formatDateRange(startedAt, closedAt) {
   const [sy, sm, sd] = startedAt.split("-");
@@ -2066,9 +2075,19 @@ function renderPiece(name, piece) {
 // ---- Router ----
 const TABS = ['inicio', 'votacao', 'arquivo'];
 
+// Splits a location hash into its parts: "#arquivo/4" is tab "arquivo" with
+// sub-path "4", and "#estante?por=fabio" is tab "estante" with query
+// "por=fabio". An unknown or empty tab falls back to Início, and the
+// sub-path and query then mean nothing, so they are dropped.
+function parseHash(hash) {
+  const [path, query = ''] = hash.replace(/^#/, '').split('?');
+  const [tab, ...rest] = path.split('/');
+  if (!TABS.includes(tab)) return { tab: 'inicio', sub: '', query: new URLSearchParams() };
+  return { tab, sub: rest.join('/'), query: new URLSearchParams(query) };
+}
+
 function currentTab() {
-  const h = window.location.hash.replace(/^#/, '');
-  return TABS.includes(h) ? h : 'inicio';
+  return parseHash(window.location.hash).tab;
 }
 
 function navigateTo(tab) {
@@ -2085,6 +2104,10 @@ function applyRoute() {
   document.querySelectorAll('.tab').forEach((a) => {
     a.classList.toggle('active', a.dataset.tab === tab);
   });
+
+  // A sub-path points at one item in the view: "#arquivo/4" is vote #4.
+  const { sub } = parseHash(window.location.hash);
+  if (tab === 'arquivo' && sub) openArchiveEntry(Number(sub));
 }
 
 function initRouter() {

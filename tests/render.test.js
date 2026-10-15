@@ -246,6 +246,31 @@
     });
   });
 
+  test("parseHash splits tab, sub-path, and query, falling back to Início", () => {
+    // The router's hash grammar: #tab[/sub][?query].
+    const show = (h) => {
+      const r = parseHash(h);
+      return `${r.tab}|${r.sub}|${r.query.toString()}`;
+    };
+    eq(show(""), "inicio||", "empty");
+    eq(show("#arquivo"), "arquivo||", "tab only");
+    eq(show("#arquivo/4"), "arquivo|4|", "sub-path");
+    eq(show("#votacao?x=1&y=2"), "votacao||x=1&y=2", "query");
+    eq(show("#nada/4?x=1"), "inicio||", "unknown tab drops the rest");
+  });
+
+  test("openArchiveEntry expands that vote's row and ignores unknown numbers", () => {
+    // Deep links like #arquivo/4 land on the vote, opened.
+    const n = ARCHIVE[ARCHIVE.length - 1].number;
+    openArchiveEntry(n);
+    const row = $("archive-list").querySelector(`[data-number="${n}"]`);
+    assert(row.classList.contains("expanded"), "row expanded");
+    assert(row.querySelector(".archive-details").children.length > 0, "details painted");
+    openArchiveEntry(9999);
+    expandedEntries.delete(n);
+    renderArquivo();
+  });
+
   test("every book has a sinopse and a punchline, and ballot sinopses fit 150 words", () => {
     // CLAUDE.md "Book content rules": both prose fields are required, and
     // sinopses written under the current rule have a hard 150-word ceiling.
