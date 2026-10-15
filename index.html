@@ -425,7 +425,12 @@
   .agenda-row.past .agenda-book-card { margin-top: 0; padding-top: 0; border-top: none; }
   .agenda-book-card .sinopse { margin-bottom: 8px; }
   .agenda-book-card .claude { margin-bottom: 10px; }
-  .agenda-row.past .agenda-book-card .claude { margin-bottom: 0; }
+  /* On past sessions the pitch has done its job, so it drops its box and
+     reads as a plain line of grey text, marked only by the Claude icon. */
+  .agenda-row.past .agenda-book-card .claude {
+    margin-bottom: 0; background: transparent; padding: 0;
+    color: var(--stone-600);
+  }
   /* Quotes: set apart by italics and an indent, with no quotation marks
      because the Citações title already says what they are. Kept quiet (body
      size, mid-grey) so they don't out-shout the rest of the card. */
