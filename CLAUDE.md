@@ -21,7 +21,7 @@ A high-level map of behaviour, not a detailed spec. Read the code for details. U
 - **Single static page.** All data (`BOOKS`, `AGENDA`, `ARCHIVE`, `ACTIVE_VOTE`) lives as constants in `index.html`. The only network call is the live vote tally (Google Apps Script).
 - **Three tabs**, hash-routed: Início, Votação, Arquivo.
 - **Início** lists sessions: upcoming soonest-first (the next one pinned), past most-recent-first. A pill links to Votação while a vote is open.
-- **Each session** shows a date, a book, a location, and a book card (sinopse, Claude pitch, and shop links). Nothing is collapsed.
+- **Each session** shows a date, a book, a location, and a book card (sinopse, punchline, and shop links). Nothing is collapsed.
 - **Past sessions** split into titled sections: "Discussão" (the written account and the participants), "Citações" (passages from the book the group liked, always visible; who picked each one is recorded but not shown), and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
 - **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
@@ -35,7 +35,7 @@ The scale steps are Tailwind's (50 lightest, 900 darkest), so a missing step can
 | Family | Role | Where |
 |---|---|---|
 | `stone` (+ `white`) | Neutral. The page, cards, text, and rules. Most of the page. | Everything not listed below. |
-| `amber` | Accent. Something tappable, selected, or current. | Tabs, links, the selected ballot card, the next session, the vote pill, gift chips and drawer, the Claude pitch on upcoming sessions. |
+| `amber` | Accent. Something tappable, selected, or current. | Tabs, links, the selected ballot card, the next session, the vote pill, gift chips and drawer, the punchline on upcoming sessions. |
 | `teal` | The group's own words, kept apart from amber. | Session quotes (`teal-50` band, `teal-200` rules). Also a tied vote. |
 | `green`, `red` | Status only. | Vote confirmation, error box. |
 
@@ -58,7 +58,7 @@ Two valid sources, in preference order:
 
 1. **Verbatim publisher copy** from a reputable Portuguese-language page (Almedina, Wook, Bertrand, Quetzal, Porto Editora, Livros do Brasil, Continente, Note, FNAC). Copy as-is, one source per book, no blending. Strip only obvious noise (a leading "Sinopse:" label, trailing "Críticas de imprensa" blocks, marketing fluff like "portes grátis") and leave the prose untouched. If the publisher copy is long, prefer copying it whole over rewriting to fit.
 
-2. **Claude-authored** when no good publisher copy exists — page missing, bibliography-only, critic-only, paywalled, or markedly weaker than what Claude can write from research. Must be grounded in at least two independent online sources: blog reviews, social media, Goodreads, critical pieces. Register: **neutral and descriptive**, in the voice a publisher would use — not the editorial-pitch register of the `claude` field.
+2. **Claude-authored** when no good publisher copy exists — page missing, bibliography-only, critic-only, paywalled, or markedly weaker than what Claude can write from research. Must be grounded in at least two independent online sources: blog reviews, social media, Goodreads, critical pieces. Register: **neutral and descriptive**, in the voice a publisher would use — not the editorial-pitch register of the `punchline` field.
 
 If a publisher source becomes available for a Claude-authored book and is markedly better, swap it in.
 
@@ -68,7 +68,7 @@ Wook, Bertrand, FNAC, and most large publisher pages (Quetzal, Porto Editora, Li
 
 When the rule wants a specific publisher's copy and automation can't reach it, ask the user to open the page in a browser and paste the text. Don't accept search-snippet paraphrases as substitutes for verbatim copy.
 
-### `claude` — the pitch
+### `punchline` — the pitch
 
 A short editorial recommendation. One good reason to read this book. It must earn its place by being **sharp, incisive, active, engaging**:
 
@@ -89,7 +89,7 @@ Patterns that already work in this registry:
 
 Don't restate the plot. Don't write from publisher copy alone.
 
-The two fields render side-by-side on the ballot card, the "Estamos a ler" expansion, and the archive details. The split is intentional: `sinopse` is the publisher's neutral description; `claude` is the editorial recommendation marked with the Claude logo (`assets/claude.png`).
+The two fields render side-by-side on the ballot card, the "Estamos a ler" expansion, and the archive details. The split is intentional: `sinopse` is the publisher's neutral description; `punchline` is the editorial recommendation marked with 👊.
 
 ## Participant pieces (`AGENDA[].participants[].piece`)
 

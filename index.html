@@ -118,14 +118,12 @@
   .card.selected .check-mark { display: block; }
 
   .sinopse { margin: 0 0 8px; font-size: 14px; color: var(--stone-600); line-height: 1.55; font-style: italic; }
-  .claude {
+  .punchline {
     margin: 0 0 10px; font-size: 13px; color: var(--amber-800); line-height: 1.4;
     font-family: system-ui, sans-serif; background: var(--amber-100);
     padding: 6px 10px; border-radius: 8px; font-weight: 500;
   }
-  .claude-icon {
-    width: 16px; height: 16px; vertical-align: -3px;
-  }
+  .punchline-icon { font-style: normal; }
   .links { display: flex; align-items: center; gap: 6px; }
   .shop-link {
     font-size: 13px; color: var(--amber-700); text-decoration: none;
@@ -433,19 +431,19 @@
   }
   .agenda-row.past .agenda-book-card { margin-top: 0; padding-top: 0; border-top: none; }
   .agenda-book-card .sinopse { margin-bottom: 8px; }
-  .agenda-book-card .claude { margin-bottom: 10px; }
-  /* On past sessions the pitch has done its job, so it drops its box and
-     takes the sinopse's type (serif italic, same size, colour, and leading),
-     marked only by the Claude icon. */
-  .agenda-row.past .agenda-book-card .claude {
+  .agenda-book-card .punchline { margin-bottom: 10px; }
+  /* On past sessions the punchline has done its job, so it drops its box
+     and takes the sinopse's type (serif italic, same size, colour, and
+     leading), marked only by the 👊 icon. */
+  .agenda-row.past .agenda-book-card .punchline {
     margin-bottom: 0; background: transparent; padding: 0;
     font-family: inherit; font-size: 14px; font-weight: normal;
     font-style: italic; line-height: 1.55; color: var(--stone-600);
   }
   /* Quotes: centred italics on a pale teal band with hairline rules above
      and below, with no quotation marks because the Citações title already
-     says what they are. Teal keeps them apart from the amber of the Claude
-     pitch and the gifts. Text stays mid-grey so they don't out-shout the
+     says what they are. Teal keeps them apart from the amber of the
+     punchline and the gifts. Text stays mid-grey so they don't out-shout the
      rest of the card. */
   .agenda-quotes {
     display: flex; flex-direction: column; gap: 16px;
@@ -610,7 +608,7 @@ const API_URL = atob(_E);
  *   author:         string,
  *   pages:          number,
  *   sinopse:        string,
- *   claude:         string,
+ *   punchline:      string,
  *   wook?:          string,
  *   bertrand?:      string,
  *   letrasLavadas?: string,
@@ -623,7 +621,7 @@ const BOOKS = {
     emoji: "💀",
     title: "As Intermitências da Morte", author: "José Saramago", pages: 210,
     sinopse: "No dia seguinte ninguém morreu. O autor desenvolve a hipótese em todas as suas consequências, numa ampla divagação sobre a vida, a morte, o amor, e o sentido da nossa existência.",
-    claude: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
+    punchline: "Curto, divertido, filosófico, português. A escolha mais segura para começar.",
     wook: "https://www.wook.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
     bertrand: "https://www.bertrand.pt/livro/as-intermitencias-da-morte-jose-saramago/15723884",
   },
@@ -631,7 +629,7 @@ const BOOKS = {
     emoji: "🌿",
     title: "A Vegetariana", author: "Han Kang", pages: 180,
     sinopse: "Yeong-hye decide deitar fora toda a carne e tornar-se vegetariana depois de um pesadelo. O seu ato de renúncia desencadeia reações extremadas da família. Erótico, violento, poético.",
-    claude: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
+    punchline: "Acessível mas provocador. Vencedor do Nobel. Vai dividir a sala — e isso é bom.",
     wook: "https://www.wook.pt/livro/a-vegetariana-han-kang/18547889",
     bertrand: "https://www.bertrand.pt/livro/a-vegetariana-han-kang/18547889",
   },
@@ -639,7 +637,7 @@ const BOOKS = {
     emoji: "☀️",
     title: "O Estrangeiro", author: "Albert Camus", pages: 120,
     sinopse: "Meursault recebe um telegrama: a mãe morreu. De regresso a casa após o funeral, enceta amizade com um vizinho de práticas duvidosas, reencontra uma antiga colega de trabalho com quem se envolve, vai à praia — até que ocorre um homicídio. Romance estranho, desconcertante sob uma aparente singeleza estilística, em O Estrangeiro joga-se o destino de um homem perante o absurdo e questiona-se o sentido da existência.",
-    claude: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
+    punchline: "A prosa mais simples da lista. Desconforto moral sem dificuldade de leitura.",
     wook: "https://www.wook.pt/livro/o-estrangeiro-albert-camus/15328334",
     bertrand: "https://www.bertrand.pt/livro/o-estrangeiro-albert-camus/15328334",
   },
@@ -647,7 +645,7 @@ const BOOKS = {
     emoji: "⚙️",
     title: "A Máquina de Fazer Espanhóis", author: "Valter Hugo Mãe", pages: 260,
     sinopse: "Surpreendente retrato da vida dos velhos, este livro fala dos fantasmas da portugalidade e da candura que existe mesmo nos momentos mais tristes. Delicadíssimo, corajoso e inesquecível.",
-    claude: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
+    punchline: "Engraçado e devastador ao mesmo tempo. Profundamente português.",
     wook: "https://www.wook.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
     bertrand: "https://www.bertrand.pt/livro/a-maquina-de-fazer-espanhois-valter-hugo-mae/16188109",
   },
@@ -655,7 +653,7 @@ const BOOKS = {
     emoji: "⛵",
     title: "Como Um Marinheiro Eu Partirei", author: "Nuno Costa Santos", pages: 160,
     sinopse: "Uma narrativa profundamente humana que revisita a vida do cantor belga Jacques Brel e a sua passagem crepuscular pelos Açores. Romance, biografia, reportagem e reflexão sobre os nossos medos mais secretos.",
-    claude: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
+    punchline: "Curto, musical e açoriano. Uma dupla biografia íntima que nos toca perto de casa.",
     wook: "https://www.wook.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
     bertrand: "https://www.bertrand.pt/livro/como-um-marinheiro-eu-partirei-nuno-costa-santos/28476353",
   },
@@ -663,7 +661,7 @@ const BOOKS = {
     emoji: "🏖️",
     title: "Capitães da Areia", author: "Jorge Amado", pages: 272,
     sinopse: "Jorge Amado descreve, em páginas de grande beleza e dramatismo, a vida dos meninos abandonados nas ruas de São Salvador da Bahia. Publicado em 1937, teve a primeira edição queimada em praça pública.",
-    claude: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
+    punchline: "Um clássico da lusofonia. Lê-se de um fôlego e garante debate sobre justiça social.",
     wook: "https://www.wook.pt/livro/capitaes-da-areia-jorge-amado/14447153",
     bertrand: "https://www.bertrand.pt/livro/capitaes-da-areia-jorge-amado/14447153",
   },
@@ -671,7 +669,7 @@ const BOOKS = {
     emoji: "☁️",
     title: "Céu Nublado com Boas Abertas", author: "Nuno Costa Santos", pages: 256,
     sinopse: "Regresso de um neto aos Açores em busca dos diários do avô, internado nos anos 40 no sanatório do Caramulo. Pelo caminho cruza-se com um navegador francês em apuros, uma stripper ruiva, um casal chinês a tentar integrar-se no arquipélago e um fã de Kafka que descobriu que o escritor sonhou viver nos Açores. Histórias do passado e do presente que se enovelam.",
-    claude: "Açorianidade dupla — passado e presente — com humor melancólico. O território é o nosso.",
+    punchline: "Açorianidade dupla — passado e presente — com humor melancólico. O território é o nosso.",
     wook: "https://www.wook.pt/livro/ceu-nublado-com-boas-abertas-nuno-costa-santos/16954064",
     bertrand: "https://www.bertrand.pt/livro/ceu-nublado-com-boas-abertas-nuno-costa-santos/16954064",
   },
@@ -679,7 +677,7 @@ const BOOKS = {
     emoji: "🌍",
     title: "Cândido, ou o Otimismo", author: "Voltaire", pages: 120,
     sinopse: "Cândido, educado pelo mestre Pangloss a crer que «tudo está pelo melhor no melhor dos mundos possíveis», é expulso do castelo e atira-se ao mundo. Atravessa três continentes a coleccionar guerras, naufrágios, autos-de-fé e o terramoto de Lisboa. Sátira filosófica curtíssima, escrita em três dias, banida e queimada à publicação.",
-    claude: "Curto, mordaz, divertidíssimo. E com Lisboa pós-terramoto no centro da acção.",
+    punchline: "Curto, mordaz, divertidíssimo. E com Lisboa pós-terramoto no centro da acção.",
     wook: "https://www.wook.pt/livro/candido-ou-o-otimismo-voltaire/17900982",
     bertrand: "https://www.bertrand.pt/livro/candido-ou-o-otimismo-voltaire/17900982",
   },
@@ -687,7 +685,7 @@ const BOOKS = {
     emoji: "🕰️",
     title: "Os Anos", author: "Annie Ernaux", pages: 200,
     sinopse: "Sessenta anos da vida de uma mulher — e do século que a faz. Da criança na Normandia ocupada à sexagenária pós-11-Setembro, passando por Sartre, Maio 68, a Loi Veil, Mitterrand e a queda do Muro. Autobiografia coletiva de uma geração inteira.",
-    claude: "Nobel 2022. Escreveu uma autobiografia inteira sem nunca dizer «eu».",
+    punchline: "Nobel 2022. Escreveu uma autobiografia inteira sem nunca dizer «eu».",
     wook: "https://www.wook.pt/livro/os-anos-annie-ernaux/23706033",
     bertrand: "https://www.bertrand.pt/livro/os-anos-annie-ernaux/23706033",
   },
@@ -695,7 +693,7 @@ const BOOKS = {
     emoji: "🌊",
     title: "Vasto Mar de Sargaços", author: "Jean Rhys", pages: 180,
     sinopse: "Nascida na opressiva sociedade colonialista da Jamaica dos anos 30, Antoinette Cosway conhece um jovem inglês que é atraído pela sua beleza e sensualidade. Após o casamento, começam a circular boatos que instalam a desconfiança entre o casal. Apanhada entre as exigências do marido e o seu sentido de pertença, Antoinette é levada à loucura.",
-    claude: "Curto, gótico-caribenho, pós-colonial. Resgata uma personagem de Charlotte Brontë e devolve-lhe a voz.",
+    punchline: "Curto, gótico-caribenho, pós-colonial. Resgata uma personagem de Charlotte Brontë e devolve-lhe a voz.",
     wook: "https://www.wook.pt/livro/vasto-mar-de-sargacos-jean-rhys/18944750",
     bertrand: "https://www.bertrand.pt/livro/vasto-mar-de-sargacos-jean-rhys/18944750",
   },
@@ -703,7 +701,7 @@ const BOOKS = {
     emoji: "✒️",
     title: "Stoner", author: "John Williams", pages: 263,
     sinopse: "William Stoner, filho de pequenos agricultores pobres do Missouri, é enviado para a universidade em 1910 para estudar agronomia e voltar para a terra. Numa aula sobre um soneto de Shakespeare, qualquer coisa muda. Troca a agronomia pela literatura inglesa e nunca mais sai do campus. Casa-se por engano com uma mulher que não o quer, fracassa enquanto pai, sustenta uma única paixão clandestina, perde uma guerra surda de corredor a um colega rancoroso, e continua a ensinar. Uma vida que se conta numa linha e que Williams escreve com a precisão de quem sabe que essa linha é tudo.",
-    claude: "«O melhor romance que ninguém leu» — Bryan Appleyard. Vida apagada, prosa devastadora.",
+    punchline: "«O melhor romance que ninguém leu» — Bryan Appleyard. Vida apagada, prosa devastadora.",
     wook: "https://www.wook.pt/livro/stoner-john-williams/15934330",
     bertrand: "https://www.bertrand.pt/livro/stoner-john-williams/15934330",
   },
@@ -711,7 +709,7 @@ const BOOKS = {
     emoji: "🥪",
     title: "Pão com Fiambre", author: "Charles Bukowski", pages: 368,
     sinopse: "Naquele que é amplamente considerado o melhor de todos os seus romances, Charles Bukowski descreve os longos e amargos anos de uma juventude vivida à margem, através da voz inconfundível de Henry Chinaski, o seu famoso alter-ego. Da infância triste e isolada na Alemanha, marcada por um pai violento, à adolescência embriagada por borbulhas, álcool, mulheres e literatura, Bukowski empresta a sua voz crua e impenitente para descrever como foi tornar-se adulto numa América marcada pelo desespero da Grande Depressão.",
-    claude: "Cru, cómico e, contra todas as expectativas, terno. Crescer na miséria sem pedir pena a ninguém.",
+    punchline: "Cru, cómico e, contra todas as expectativas, terno. Crescer na miséria sem pedir pena a ninguém.",
     wook: "https://www.wook.pt/livro/pao-com-fiambre-charles-bukowski/24061200",
     bertrand: "https://www.bertrand.pt/livro/pao-com-fiambre-charles-bukowski/24061200",
   },
@@ -719,7 +717,7 @@ const BOOKS = {
     emoji: "🕺",
     title: "Vida e Andanças de Alexis Zorbás", author: "Nikos Kazantzakis", pages: 384,
     sinopse: "Publicado em 1946, Vida e Andanças de Alexis Zorbás é, por um lado, a história de um operário grego chamado Zorbás — um homem inebriado pela vida —, do narrador anónimo, um escritor que embarca com Zorbás numa aventura em Creta, quando decidem explorar uma mina de lenhite, e dos homens e das mulheres da cidade onde se vão instalar. Por outro lado, e mais contundentemente, é a história de Deus e do homem, do Diabo e dos Santos, da eterna busca do sentido da vida; uma história sobre o amor, a fé, a liberdade e a coragem.",
-    claude: "«Ensina-me a dançar.» O patrão vive nos livros; Zorbás vive tudo o resto. Um hino à vida.",
+    punchline: "«Ensina-me a dançar.» O patrão vive nos livros; Zorbás vive tudo o resto. Um hino à vida.",
     wook: "https://www.wook.pt/livro/vida-e-andancas-de-alexis-zorbas-nikos-kazantzakis/27836675",
     bertrand: "https://www.bertrand.pt/livro/vida-e-andancas-de-alexis-zorbas-nikos-kazantzakis/27836675",
   },
@@ -727,7 +725,7 @@ const BOOKS = {
     emoji: "🎭",
     title: "O Talentoso Mr. Ripley", author: "Patricia Highsmith", pages: 264,
     sinopse: "Tom Ripley tenta estar sempre um passo à frente dos seus credores e da lei. Mas tudo muda quando, inesperadamente, lhe oferecem uma viagem à Europa, uma oportunidade de recomeçar a vida. Ripley ambiciona ter dinheiro, sucesso e uma boa vida, e está disposto a matar para o conseguir. Quando a sua nova felicidade é ameaçada, a sua reação é tão repentina como chocante.",
-    claude: "Um assassino encantador por quem, contra toda a moral, torcemos.",
+    punchline: "Um assassino encantador por quem, contra toda a moral, torcemos.",
     wook: "https://www.wook.pt/livro/o-talentoso-mr-ripley-patricia-highsmith/15104998",
     bertrand: "https://www.bertrand.pt/livro/o-talentoso-mr-ripley-patricia-highsmith/15104998",
   },
@@ -735,7 +733,7 @@ const BOOKS = {
     emoji: "😈",
     title: "Dei-te Olhos e Viste as Trevas", author: "Irene Solà", pages: 160,
     sinopse: "Na Casa dos Clavell, escondida nas altas montanhas dos Pirenéus catalães num lugar povoado por caçadores de lobos, bandidos, fantasmas, bruxas e demónios, a velha Bernadeta, cuja idade já ninguém sabe precisar, aguarda na cama a hora da sua morte. Uma roda de mulheres «sujas e desabridas, grotescas e ordinárias» prepara a festa para a receber. São as mulheres já mortas da sua família, almas condenadas, desde que Joana, a primeira da linhagem, fez e desfez um pacto com o diabo para arranjar marido – um homem inteiro e herdeiro. Enquanto o Sol nasce e se põe novamente, desfia-se o passar dos séculos e dos acontecimentos presentes e remotos, visíveis e invisíveis. Romance exuberante e magnético, inspirado na História, na geografia, nas tradições e no folclore da Catalunha, Dei-te Olhos e Viste as Trevas molda, com humor e ousadia, um lugar ancestral, caprichoso, inóspito; um purgatório para as almas femininas.",
-    claude: "Um pacto com o diabo, quatro séculos de mulheres mortas, um só dia. Gótico catalão, exuberante e obsceno.",
+    punchline: "Um pacto com o diabo, quatro séculos de mulheres mortas, um só dia. Gótico catalão, exuberante e obsceno.",
     wook: "https://www.wook.pt/livro/dei-te-olhos-e-viste-as-trevas-irene-sola/32511449",
     bertrand: "https://www.bertrand.pt/livro/dei-te-olhos-e-viste-as-trevas-irene-sola/32511449",
   },
@@ -743,7 +741,7 @@ const BOOKS = {
     emoji: "📽️",
     title: "A Invenção de Morel", author: "Adolfo Bioy Casares", pages: 160,
     sinopse: "Um fugitivo chega a uma ilha remota que julga deserta. Porém, um dia descobre que não está sozinho. Escondido na densa floresta, ouve vozes e melodias, espia os intrusos, para quem parece ser invisível, e observa as suas estranhas rotinas. Aqui começa o mistério, a alternância entre alucinação e realidade, que o leva a enamorar-se de uma mulher cuja existência é duvidosa.",
-    claude: "Apaixona-se por uma mulher que não o vê nem o ouve.",
+    punchline: "Apaixona-se por uma mulher que não o vê nem o ouve.",
     wook: "https://www.wook.pt/livro/a-invencao-de-morel-adolfo-bioy-casares/22990405",
     bertrand: "https://www.bertrand.pt/livro/a-invencao-de-morel-adolfo-bioy-casares/22990405",
   },
@@ -751,7 +749,7 @@ const BOOKS = {
     emoji: "🦪",
     title: "A Pérola", author: "John Steinbeck", pages: 80,
     sinopse: "História comovente de uma pérola enorme, de como foi descoberta e de como se perdeu, levando com ela os sonhos bons e maus que representava. História também de uma família e da solidariedade especial entre uma mulher, um pobre pescador índio e o filho de ambos. Baseada num conto popular mexicano, A Pérola constitui uma inesquecível parábola poética sobre as grandezas e as misérias do mundo em que vivemos.",
-    claude: "Uma pérola perfeita destrói uma família inteira. Parábola seca e implacável sobre ganância — Steinbeck não perdoa ninguém.",
+    punchline: "Uma pérola perfeita destrói uma família inteira. Parábola seca e implacável sobre ganância — Steinbeck não perdoa ninguém.",
     wook: "https://www.wook.pt/livro/a-perola-john-steinbeck/15327898",
     bertrand: "https://www.bertrand.pt/livro/a-perola-john-steinbeck/15327898",
   },
@@ -759,7 +757,7 @@ const BOOKS = {
     emoji: "👩‍🤝‍👩",
     title: "Terra Delas", author: "Charlotte Perkins Gilman", pages: 240,
     sinopse: "No início do século XX, três jovens amigos partem para uma expedição a terras longínquas - e acabam por ir parar à Terra Delas, um país extraordinariamente evoluído e civilizado, exclusivamente povoado por mulheres. Um dos três amigos é um ricaço sedutor e fanfarrão; o segundo é um médico sem vocação, alma romântica e cavalheiresca; o terceiro é sociólogo — e é esse o narrador desta história, o que a torna imediatamente hilariante: este sofisticado mundo feminino é-nos apresentado através do espanto absoluto de três representantes do mundo masculino, que vêem ir por água abaixo todas as ideias feitas que têm sobre o que são as mulheres e de que são capazes. Uma ousada aventura no mundo da imaginação que é também uma deliciosa história de amor e amizade, e que nos confronta com a realidade, ainda não ultrapassada, da desigualdade de direitos e expectativas entre homens e mulheres. Terra Delas dá a conhecer aos leitores portugueses a talentosa escritora norte-americana Charlotte Perkins Gilman, cujo pensamento e obra marcaram a história da emancipação feminista.",
-    claude: "1915: três homens descobrem um país só de mulheres — e a piada é sempre à custa deles. Utopia feminista, um século à frente.",
+    punchline: "1915: três homens descobrem um país só de mulheres — e a piada é sempre à custa deles. Utopia feminista, um século à frente.",
     wook: "https://www.wook.pt/livro/terra-delas-charlotte-perkins-gilman/23462773",
     bertrand: "https://www.bertrand.pt/livro/terra-delas-charlotte-perkins-gilman/23462773",
   },
@@ -767,7 +765,7 @@ const BOOKS = {
     emoji: "🎈",
     title: "A Vida no Céu", author: "José Eduardo Agualusa", pages: 192,
     sinopse: "«Depois que o mundo acabou fomos para o céu.» Assim começa este romance. Na sequência de um desastre de proporções bíblicas - o Dilúvio -, os ricos das grandes cidades constroem enormes dirigíveis e vão viver para o céu. Os pobres improvisam balões, que prendem uns aos outros, ligados a redes, formando imensas aldeias flutuantes. Carlos Tucano nasce numa destas aldeias. É, portanto, um filho do céu. Esta é a sua história. Carlos deixa a aldeia onde nasceu e parte à procura do pai, desaparecido numa tempestade. Ao longo desta peregrinação, vai-nos dando a ver a vida no céu, com os seus prodígios, os seus mistérios, e também os seus desacertos, ao mesmo tempo que estabelece ligações com toda uma galeria de personagens extraordinários - uma curandeira e sonhadora profissional sul-africana, um pirata indonésio arrependido, um navegador solitário cego, além de uma jovem adolescente rebelde, Aimée, que conhece no mais belo dirigível do mundo - o Paris. Segundo o Dicionário dos Nefelibatas, incluído no livro, as nuvens (água em estado onírico) são o alfabeto do céu. Este romance ajuda-nos a decifrá-las.",
-    claude: "Do vencedor do Dublin Literary Award: depois do dilúvio, os ricos fogem para dirigíveis; os pobres improvisam balões. Fábula climática à beira do lirismo.",
+    punchline: "Do vencedor do Dublin Literary Award: depois do dilúvio, os ricos fogem para dirigíveis; os pobres improvisam balões. Fábula climática à beira do lirismo.",
     wook: "https://www.wook.pt/livro/a-vida-no-ceu-jose-eduardo-agualusa/15007229",
     bertrand: "https://www.bertrand.pt/livro/a-vida-no-ceu-jose-eduardo-agualusa/24570417",
   },
@@ -775,7 +773,7 @@ const BOOKS = {
     emoji: "🖼️",
     title: "O Retrato de Dorian Gray", author: "Oscar Wilde", pages: 288,
     sinopse: "Dorian Gray é um jovem invulgarmente belo por quem Basil Hallward, um pintor londrino, fica fascinado. Determinado a eternizar a beleza de Dorian numa tela, Basil convence-o a posar para ele. Numa dessas sessões, o jovem conhece Lorde Henry Wotton, um aristocrata cínico e hedonista, que o desperta para a beleza e o seduz para a sua visão do mundo, onde as únicas coisas que valem a pena perseguir são a beleza e o prazer. Horrorizado com o destino inevitável que o fará envelhecer e perder a sua beleza, Dorian comenta com os amigos que está disposto a tudo, até mesmo a vender a alma, para permanecer eternamente jovem e manter a sua beleza. Fortalecido pelo hedonismo, Dorian trata cruelmente a sua noiva, Sybil Vane, que se suicida com o desgosto. Ao saber do sucedido, o jovem começa a notar certas mudanças subtis na sua expressão no quadro, e constata que é o Dorian do quadro que envelhece e que sofre com a passagem dos anos, ao mesmo tempo que o Dorian real permanece com a juventude e beleza intacta. Um romance gótico de horror com um forte tema faustiano, O Retrato de Dorian Gray é considerado pela crítica como a melhor obra de Oscar Wilde.",
-    claude: "«Toda a arte é perfeitamente inútil», escreveu Wilde — depois escreveu o romance mais moralmente perigoso do século XIX. Censurado à nascença.",
+    punchline: "«Toda a arte é perfeitamente inútil», escreveu Wilde — depois escreveu o romance mais moralmente perigoso do século XIX. Censurado à nascença.",
     wook: "https://www.wook.pt/livro/o-retrato-de-dorian-gray-oscar-wilde/3501423",
     bertrand: "https://www.bertrand.pt/livro/o-retrato-de-dorian-gray-oscar-wilde/3501423",
   },
@@ -1117,7 +1115,7 @@ function renderCandidateBooks() {
         <div class="check"><span class="check-mark">✓</span></div>
       </div>
       <p class="sinopse">«${book.sinopse}»</p>
-      <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${book.claude}</p>
+      <p class="punchline"><span class="punchline-icon" aria-hidden="true">👊</span> ${book.punchline}</p>
       <div class="links">${renderShopLinks(book)}</div>
     `;
 
@@ -1262,7 +1260,7 @@ function renderResultsInto(container, books, votes, voters) {
       <span class="result-toggle">➕</span>
       <div class="result-details">
         <p class="sinopse">«${book.sinopse}»</p>
-        <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${book.claude}</p>
+        <p class="punchline"><span class="punchline-icon" aria-hidden="true">👊</span> ${book.punchline}</p>
         <div class="links">${renderShopLinks(book)}</div>
       </div>
     `;
@@ -1570,7 +1568,7 @@ function renderAgenda() {
 
 // Each row is its own meeting card. The header (date · book · location · pin)
 // plus, for past meetings, the findings text and participant chips are always
-// visible, and every row shows its book card (sinopse and Claude pitch). Past
+// visible, and every row shows its book card (sinopse and punchline). Past
 // meetings split into titled sections: "Discussão" (what the group said and
 // who came), "Citações" (passages the group liked, when any), and "Sinopse"
 // (the book). They drop the shop links: the book is already read, so buying
@@ -1632,7 +1630,7 @@ function renderAgendaRow(entry, isPast, isNext) {
     card.className = 'agenda-book-card';
     card.innerHTML = `
       <p class="sinopse">«${book.sinopse}»</p>
-      <p class="claude"><img src="assets/claude.png" class="claude-icon" alt=""> ${book.claude}</p>
+      <p class="punchline"><span class="punchline-icon" aria-hidden="true">👊</span> ${book.punchline}</p>
       ${isPast ? '' : `<div class="links">${renderShopLinks(book)}</div>`}
     `;
     row.appendChild(card);
