@@ -105,15 +105,44 @@
 
   // ---- Ordering ----
 
+  // Renders the agenda from fixture sessions on a fixed "today", then restores
+  // the real AGENDA and clock. Unknown book ids render as "[id]", which labels
+  // each row. Returns the labels of the future and past lists, top to bottom.
+  function renderAgendaFixture(today, entries) {
+    const real = AGENDA.splice(0, AGENDA.length, ...entries);
+    const realToday = todayISO;
+    todayISO = () => today;
+    try {
+      renderAgenda();
+      const labels = (id) => [...document.querySelectorAll(`#${id} .agenda-book-title`)].map((t) => t.textContent);
+      return { future: labels("agenda-future-list"), past: labels("agenda-past-list") };
+    } finally {
+      AGENDA.splice(0, AGENDA.length, ...real);
+      todayISO = realToday;
+      renderAgenda();
+    }
+  }
+
   test("past sessions list most recent first, future sessions soonest first", () => {
-    // Expected order is derived from AGENDA itself, so adding a session never breaks this.
-    const today = todayISO();
-    const rendered = (id) => [...document.querySelectorAll(`#${id} .agenda-row .agenda-date`)].map((d) => d.textContent);
-    const expected = (keep, cmp) => AGENDA.filter((e) => keep(e.date)).sort(cmp).map((e) => formatAgendaDate(e.date));
-    eq(rendered("agenda-past-list").join(" | "),
-      expected((d) => d < today, (a, b) => b.date.localeCompare(a.date)).join(" | "), "past order");
-    eq(rendered("agenda-future-list").join(" | "),
-      expected((d) => d >= today, (a, b) => a.date.localeCompare(b.date)).join(" | "), "future order");
+    // Fixture order is shuffled, and the past spans a year boundary.
+    const { future, past } = renderAgendaFixture("2026-06-15", [
+      { date: "2026-01-10", location: "x", bookId: "jan" },
+      { date: "2026-09-01", location: "x", bookId: "set" },
+      { date: "2025-12-01", location: "x", bookId: "dez" },
+      { date: "2026-05-20", location: "x", bookId: "mai" },
+      { date: "2026-07-01", location: "x", bookId: "jul" },
+    ]);
+    eq(past.join(" "), "[mai] [jan] [dez]", "past order");
+    eq(future.join(" "), "[jul] [set]", "future order");
+  });
+
+  test("a session dated today is listed as upcoming, not past", () => {
+    const { future, past } = renderAgendaFixture("2026-06-15", [
+      { date: "2026-06-14", location: "x", bookId: "ontem" },
+      { date: "2026-06-15", location: "x", bookId: "hoje" },
+    ]);
+    eq(future.join(" "), "[hoje]", "future");
+    eq(past.join(" "), "[ontem]", "past");
   });
 
   // ---- Expansion ----
