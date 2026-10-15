@@ -113,6 +113,36 @@
     });
   });
 
+  test("AGENDA quotes are on past sessions, have text, and name a participant", () => {
+    AGENDA.forEach((entry) => {
+      if (!entry.quotes) return;
+      assert(Array.isArray(entry.quotes), `quotes not an array on ${entry.date}`);
+      assert(entry.date < todayISO(), `quotes on a future session ${entry.date}`);
+      const names = (entry.participants || []).map((p) => typeof p === "string" ? p : p.name);
+      entry.quotes.forEach((q, i) => {
+        assert(typeof q.text === "string" && q.text.trim() !== "", `empty quote ${i} on ${entry.date}`);
+        assert(q.by === undefined || names.includes(q.by), `quote ${i} on ${entry.date}: "${q.by}" is not a participant`);
+      });
+    });
+  });
+
+  test("quotes render in order, verbatim, with the picker's short name", () => {
+    // Two pickers sharing a first name get surnames; a quote without `by`
+    // has no label; HTML in the text stays literal.
+    const el = renderQuotes([
+      { text: "linha 1\n  linha 2", by: "Filipa Costa" },
+      { text: "<b>não é html</b>" },
+      { text: "outra", by: "Filipa Ramos" },
+    ], ["Filipa Costa", "Filipa Ramos", "Rui"]);
+    const quotes = [...el.querySelectorAll("blockquote.agenda-quote")];
+    eq(quotes.length, 3, "three quotes");
+    eq(quotes[0].querySelector(".agenda-quote-text").textContent, "linha 1\n  linha 2”\u00a0(Costa)", "first quote");
+    eq(quotes[1].querySelector(".agenda-quote-by"), null, "no picker label");
+    eq(quotes[1].querySelector("b"), null, "no parsed <b>");
+    eq(quotes[1].textContent, "<b>não é html</b>”", "literal text");
+    eq(quotes[2].querySelector(".agenda-quote-by").textContent, "\u00a0(Ramos)", "third picker");
+  });
+
   // ---- Names ----
 
   test("shortestName picks first, then last, then first + last, then full", () => {
@@ -233,6 +263,23 @@
       eq(row.querySelector(".agenda-divider"), null, `no dividers (next=${isNext})`);
       eq(row.querySelector(".agenda-more"), null, `no toggle (next=${isNext})`);
     });
+  });
+
+  test("quotes get their own Citações section between Discussão and Sinopse", () => {
+    const row = renderAgendaRow({
+      date: "2020-01-01", location: "x", bookId: anyBookId, findings: "relato",
+      quotes: [{ text: "q", by: "Ana" }], participants: ["Ana"],
+    }, true, false);
+    const order = [...row.children]
+      .filter((c) => /divider|findings|quotes|participants/.test(c.className))
+      .map((c) => c.className === "agenda-divider" ? c.textContent : c.className);
+    eq(order.join(" "), "Discussão agenda-findings agenda-participants Citações agenda-quotes Sinopse", "section order");
+  });
+
+  test("a past row with only quotes has Citações but no Discussão", () => {
+    const row = renderAgendaRow({ date: "2020-01-01", location: "x", bookId: anyBookId, quotes: [{ text: "q" }] }, true, false);
+    const titles = [...row.querySelectorAll(".agenda-divider")].map((d) => d.textContent);
+    eq(titles.join(" | "), "Citações | Sinopse", "titles");
   });
 
   const out = document.createElement("pre");

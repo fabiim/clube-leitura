@@ -426,6 +426,28 @@
   .agenda-book-card .sinopse { margin-bottom: 8px; }
   .agenda-book-card .claude { margin-bottom: 10px; }
   .agenda-row.past .agenda-book-card .claude { margin-bottom: 0; }
+  /* Quotes: set apart by italics, a faded amber opening mark hanging in the
+     left gutter, and indent, but kept quiet (body size, mid-grey) so they
+     don't out-shout the rest of the card. The picker's name is small, grey,
+     and upright so it reads as metadata, not part of the quote. */
+  .agenda-quotes {
+    display: flex; flex-direction: column; gap: 16px;
+    margin: 8px 0 4px;
+  }
+  .agenda-quote { position: relative; margin: 0; padding-left: 22px; }
+  .agenda-quote::before {
+    content: '\201C'; position: absolute; left: 0; top: -2px;
+    font-family: Georgia, serif; font-size: 28px; line-height: 1;
+    color: var(--amber-600); opacity: 0.55;
+  }
+  .agenda-quote-text {
+    margin: 0; font-size: 15.5px; line-height: 1.5; font-style: italic;
+    color: var(--stone-600); white-space: pre-wrap;
+  }
+  .agenda-quote-by {
+    font-family: system-ui, sans-serif; font-size: 11px; font-style: normal;
+    color: var(--stone-400); white-space: nowrap;
+  }
   /* Section title centred on a hairline: the two pseudo-elements are flexible
      rules that fill the space either side of the label. */
   .agenda-divider {
@@ -893,8 +915,12 @@ const ARCHIVE = [
  *    being omitted, because a row with no location at all reads as broken.
  *  - `bookId` references a key in BOOKS.
  *  - `upToPage` is the planned reading target for this session.
- *  - `findings` and `participants` are valid only for entries
+ *  - `findings`, `quotes`, and `participants` are valid only for entries
  *    whose `date` is strictly before today.
+ *  - `quotes` are passages from the session's book that the group liked,
+ *    in display order. `text` is verbatim, with line breaks preserved.
+ *    `by`, optional, is who picked it and must equal the `name` of one of
+ *    that entry's participants; it renders as their shortest unique name.
  *  - A participant is either a bare name or `{ name, piece }`, where `piece`
  *    is the poem, song lyric, quote, or excerpt that person brought to the
  *    session. The bare-name form stays valid so older entries need no rewrite.
@@ -903,6 +929,7 @@ const ARCHIVE = [
  *
  * @typedef {{ text: string, title?: string, author?: string }} Piece
  * @typedef {string | { name: string, piece?: Piece }} Participant
+ * @typedef {{ text: string, by?: string }} Quote
  * @typedef {{
  *   date:          string,
  *   time?:         string,
@@ -910,6 +937,7 @@ const ARCHIVE = [
  *   bookId:        string,
  *   upToPage?:     number,
  *   findings?:     string,
+ *   quotes?:       Quote[],
  *   participants?: Participant[],
  * }} AgendaEntry
  */
@@ -1515,9 +1543,10 @@ function renderAgenda() {
 // Each row is its own meeting card. The header (date · book · location · pin)
 // plus, for past meetings, the findings text and participant chips are always
 // visible, and every row shows its book card (sinopse and Claude pitch). Past
-// meetings split into two titled sections, "Discussão" (what the group said
-// and who came) and "Sinopse" (the book), and drop the shop links: the book is
-// already read, so buying it is no longer the point.
+// meetings split into titled sections: "Discussão" (what the group said and
+// who came), "Citações" (passages the group liked, when any), and "Sinopse"
+// (the book). They drop the shop links: the book is already read, so buying
+// it is no longer the point.
 function renderAgendaRow(entry, isPast, isNext) {
   const row = document.createElement('div');
   row.className = 'agenda-row' + (isPast ? ' past' : ' future') + (isNext ? ' next' : '');
@@ -1549,6 +1578,7 @@ function renderAgendaRow(entry, isPast, isNext) {
   `;
 
   const hasParticipants = !!entry.participants && entry.participants.length > 0;
+  const hasQuotes = !!entry.quotes && entry.quotes.length > 0;
   if (isPast) {
     if (entry.findings || hasParticipants) {
       row.appendChild(renderDivider('Discussão'));
@@ -1561,6 +1591,11 @@ function renderAgendaRow(entry, isPast, isNext) {
     }
     if (hasParticipants) {
       row.appendChild(renderParticipants(entry.participants));
+    }
+    if (hasQuotes) {
+      const names = (entry.participants || []).map((p) => typeof p === 'string' ? p : p.name);
+      row.appendChild(renderDivider('Citações'));
+      row.appendChild(renderQuotes(entry.quotes, names));
     }
   }
 
@@ -1577,6 +1612,34 @@ function renderAgendaRow(entry, isPast, isNext) {
   }
 
   return row;
+}
+
+// A session's quotes, always visible: they're the most memorable lines of
+// the discussion, so they shouldn't hide behind a tap. The opening mark comes
+// from CSS; each quote is closed with "”" and, when someone picked it, followed by their
+// shortest unique name among `participantNames` in small grey parentheses. The
+// non-breaking space and the label's `nowrap` keep "(Filipa)" attached to the
+// last word, so it never sits alone on a line. Built with `textContent` so the
+// verbatim text can't be parsed as HTML.
+function renderQuotes(quotes, participantNames) {
+  const wrap = document.createElement('div');
+  wrap.className = 'agenda-quotes';
+  quotes.forEach((q) => {
+    const quote = document.createElement('blockquote');
+    quote.className = 'agenda-quote';
+    const text = document.createElement('p');
+    text.className = 'agenda-quote-text';
+    text.textContent = `${q.text}”`;
+    if (q.by) {
+      const by = document.createElement('span');
+      by.className = 'agenda-quote-by';
+      by.textContent = `\u00a0(${shortestName(q.by, participantNames)})`;
+      text.appendChild(by);
+    }
+    quote.appendChild(text);
+    wrap.appendChild(quote);
+  });
+  return wrap;
 }
 
 // A section title centred between two hairline rules.

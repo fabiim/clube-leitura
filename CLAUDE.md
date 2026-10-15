@@ -22,7 +22,7 @@ A high-level map of behaviour, not a detailed spec. Read the code for details. U
 - **Three tabs**, hash-routed: Início, Votação, Arquivo.
 - **Início** lists sessions: upcoming soonest-first (the next one pinned), past most-recent-first. A pill links to Votação while a vote is open.
 - **Each session** shows a date, a book, a location, and a book card (sinopse, Claude pitch, and shop links). Nothing is collapsed.
-- **Past sessions** split into two titled sections, "Discussão" (the written account and the participants) and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
+- **Past sessions** split into titled sections: "Discussão" (the written account and the participants), "Citações" (passages from the book the group liked, always visible, each optionally tagged with who picked it), and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
 - **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
 
@@ -86,6 +86,20 @@ participants: [
 - The name must match the spelling used in other entries' `participants`.
 
 On the page, a participant with a piece gets a "+ 🎁" chip under the findings. Tapping it opens a small drawer with the text.
+
+## Session quotes (`AGENDA[].quotes`)
+
+A past session may list passages from its book that the group liked. They render in a "Citações" section, in array order.
+
+```js
+quotes: [
+  { text: "Uma frase do livro…", by: "Filipa Costa" },
+  { text: "Outra, sem autor." },
+],
+```
+
+- **`text` is verbatim.** Keep line breaks as `\n`. Don't add quotation marks, because the renderer adds them.
+- **`by` is optional.** When set, it must match a name in that session's `participants` exactly. The page shows the shortest name that still identifies the person in that session.
 
 ## Tests
 
