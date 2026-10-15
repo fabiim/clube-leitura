@@ -18,12 +18,13 @@ This section replaces a separate `CHEAT.md`. Keep it current when tooling change
 
 A high-level map of behaviour, not a detailed spec. Read the code for details. Update this list when a feature is added or changes shape.
 
-- **Single static page.** All data (`BOOKS`, `AGENDA`, `ARCHIVE`, `ACTIVE_VOTE`) lives as constants in `index.html`. The only network call is the live vote tally (Google Apps Script).
-- **Three tabs**, hash-routed: Início, Votação, Arquivo.
+- **Single static page.** All data (`PEOPLE`, `BOOKS`, `AGENDA`, `ARCHIVE`, `ACTIVE_VOTE`) lives as constants in `index.html`. The only network call is the live vote tally (Google Apps Script).
+- **Four tabs**, hash-routed: Início, Votação, Estante, Arquivo. `#arquivo/N` opens vote N expanded and centred.
 - **Início** lists sessions: upcoming soonest-first (the next one pinned), past most-recent-first. A pill links to Votação while a vote is open.
 - **Each session** shows a date, a book, a location, and a book card (sinopse, punchline, and shop links). Nothing is collapsed.
 - **Past sessions** split into titled sections: "Discussão" (the written account and the participants), "Citações" (passages from the book the group liked, always visible; who picked each one is recorded but not shown), and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
+- **Estante** lists every book in `BOOKS` on the ballot's card, with a status (Lido, A ler, A votos, Perdeu, Ideia) and its history from the book log. Chips filter by suggester and status; the filters live in the URL (`#estante?por=fabio&estado=ideia`). Built on first visit. The only view that shows who suggested a book: the ballot never does.
 - **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
 
 ## Colour palette
@@ -34,8 +35,8 @@ The scale steps are Tailwind's (50 lightest, 900 darkest), so a missing step can
 
 | Family | Role | Where |
 |---|---|---|
-| `stone` (+ `white`) | Neutral. The page, cards, text, and rules. Most of the page. | Everything not listed below. |
-| `amber` | Accent. Something tappable, selected, or current. | Tabs, links, the selected ballot card, the next session, the vote pill, gift chips and drawer, the punchline on upcoming sessions. |
+| `stone` (+ `white`) | Neutral. The page, cards, text, and rules. Most of the page. | Everything not listed below, including the Estante's status badges and history text. |
+| `amber` | Accent. Something tappable, selected, or current. | Tabs, links, the selected ballot card, the next session, the vote pill, gift chips and drawer, the punchline on upcoming sessions, the Estante's selected filter chips and vote links. |
 | `teal` | The group's own words, kept apart from amber. | Session quotes (`teal-50` band, `teal-200` rules). Also a tied vote. |
 | `green`, `red` | Status only. | Vote confirmation, error box. |
 
@@ -151,6 +152,32 @@ participants: [
 - The name must match the spelling used in other entries' `participants`.
 
 On the page, a participant with a piece gets a "+ 🎁" chip under the findings. Tapping it opens a small drawer with the text.
+
+## People (`PEOPLE`)
+
+One entry per club member: `id → { name }`. Book logs refer to people by id; session participants and quote pickers use the full `name`, which must match exactly. Names must stay unique once case and accents are ignored. Ballot voters are not people entries: `ARCHIVE` keeps names as typed on the form. Add a person here before using them anywhere else, and never rename an id once used.
+
+## Book log (`BOOKS[].log`)
+
+Every book carries `log`, the canonical history of what happened to it. The Estante derives each book's status and history from it.
+
+```js
+log: [
+  { type: "suggested", date: "2026-10-03", by: "fabio" },
+  { type: "voting",    date: "2026-10-15", vote: 5 },
+  { type: "lost",      date: "2026-10-25", vote: 5 },
+  { type: "session",   date: "2026-12-09" },
+],
+```
+
+- **Types:** `suggested` (with `by`, a `PEOPLE` id), `voting`, `won`, `lost` (with `vote`, the vote number), and `session`. Sorted by date; on the same day, suggested, then voting, then won/lost, then session.
+- **Every book has at least one `suggested` event**, one per person who suggested it. If the date is unknown, use the date of the book's first other event.
+- **To add an idea**, add a `BOOKS` entry whose log holds only its `suggested` event(s). It shows as 💡 Ideia.
+- **The log and the other constants must agree, both ways.** `ACTIVE_VOTE`, `ARCHIVE`, and `AGENDA` keep their own copies as render data, and a test fails on any mismatch. So:
+  - **Opening a vote:** add `voting` (dated `startedAt`) to each candidate.
+  - **Closing a vote:** add `won` to the winner and `lost` to the others (dated `closedAt`).
+  - **Adding a session:** add `session` (dated the session's date) to its book.
+- **Status precedence:** a past session means Lido; an upcoming session or a won vote, A ler; a vote with no won/lost yet, A votos; a lost vote, Perdeu; otherwise Ideia. A book can lose a vote and still be read (vote #2's tie).
 
 ## Session quotes (`AGENDA[].quotes`)
 

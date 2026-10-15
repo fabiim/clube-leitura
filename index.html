@@ -1120,6 +1120,9 @@ function bookStatus(log, today) {
  *   readingDate?: string,
  * } | null} ActiveVote
  *
+ * Each candidate's log, which is canonical, has a `voting` event for this
+ * vote dated `startedAt`; opening a vote means adding those events too.
+ *
  * Invariants for ACTIVE_VOTE (when non-null):
  *  - `number` is exactly ARCHIVE[0].number + 1 (or 1 when ARCHIVE is empty).
  *  - `bookIds` is non-empty; each id resolves in BOOKS; ids are unique.
@@ -1155,6 +1158,9 @@ const ACTIVE_VOTE = {
  *  - `votes` keys are a subset of `bookIds`.
  *  - `voters[nameKey].books` are a subset of `bookIds`.
  *  - Every id in `bookIds` resolves in BOOKS.
+ *
+ * Which books were on each vote, and which won, is also in the books' logs,
+ * which are canonical: closing a vote means adding `won`/`lost` events too.
  *
  * Invariants (across array):
  *  - ARCHIVE[0].number > ARCHIVE[1].number > … > ARCHIVE[N-1].number.
@@ -1247,6 +1253,9 @@ const ARCHIVE = [
  * Meeting log, ordered any way — `renderAgenda` splits it into future and
  * past sub-lists, sorting future ascending (soonest first) and past
  * descending (most recent first).
+ *
+ * Each entry's book and date are also a `session` event in that book's
+ * log, which is canonical: adding a session means adding the event too.
  *
  * Per-entry rules:
  *  - `date` is ISO (YYYY-MM-DD).
