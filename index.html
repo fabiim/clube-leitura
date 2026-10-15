@@ -1568,6 +1568,9 @@ function renderAgendaRow(entry, isPast, isNext) {
 function renderParticipants(participants) {
   const wrap = document.createElement('div');
   wrap.className = 'agenda-participants';
+  // Chips and drawers work independently of any enclosing expandable card:
+  // no click inside this block may reach a card's own toggle.
+  wrap.addEventListener('click', (e) => e.stopPropagation());
   const chips = document.createElement('div');
   chips.className = 'agenda-participant-chips';
   wrap.appendChild(chips);

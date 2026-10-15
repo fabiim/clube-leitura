@@ -124,14 +124,31 @@
     eq(b.getAttribute("aria-expanded"), "false", "B aria");
   });
 
-  test("clicking a piece chip on the page does not toggle its meeting row", () => {
+  test("piece drawers and the book card expand independently", () => {
     const chip = document.querySelector("#agenda-past-list .chip-piece");
     if (!chip) return; // No pieces in AGENDA yet: nothing to check.
     const row = chip.closest(".agenda-row");
-    const before = row.classList.contains("expanded");
+    const title = row.querySelector(".agenda-book-title");
+    const openDrawers = () => row.querySelectorAll(".agenda-piece.open").length;
+    const expanded = () => row.classList.contains("expanded");
+    eq(expanded(), false, "row starts collapsed");
+    // Opening a drawer leaves the book card closed.
     chip.click();
-    eq(row.classList.contains("expanded"), before, "row expansion unchanged");
-    chip.click(); // Leave the drawer closed again.
+    eq(openDrawers(), 1, "drawer opened");
+    eq(expanded(), false, "chip did not expand the row");
+    // Clicking inside the open drawer changes nothing.
+    row.querySelector(".agenda-piece.open .agenda-piece-text").click();
+    eq(openDrawers(), 1, "drawer still open after clicking its text");
+    eq(expanded(), false, "drawer text did not expand the row");
+    // Expanding the book card leaves the drawer open, and vice versa.
+    title.click();
+    eq(expanded(), true, "row expanded");
+    eq(openDrawers(), 1, "drawer survived row expansion");
+    chip.click();
+    eq(openDrawers(), 0, "drawer closed");
+    eq(expanded(), true, "closing the drawer kept the row expanded");
+    title.click();
+    eq(expanded(), false, "row collapsed again");
   });
 
   const out = document.createElement("pre");
