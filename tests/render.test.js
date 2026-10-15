@@ -271,6 +271,68 @@
     renderArquivo();
   });
 
+  test("the Estante is empty until its first visit, then lists every book once", () => {
+    // Built lazily, so a page load that never opens it pays nothing.
+    eq($("shelf-list").children.length, 0, "no cards before the first visit");
+    ensureEstante();
+    const ids = [...$("shelf-list").querySelectorAll(".shelf-card")].map((c) => c.dataset.id);
+    eq(ids.slice().sort().join(), Object.keys(BOOKS).sort().join(), "one card per book");
+    ensureEstante();
+    eq($("shelf-list").children.length, ids.length, "a second visit doesn't rebuild");
+  });
+
+  test("a shelf card shows its status badge and its log in order", () => {
+    // Fixture book, judged on a fixed day: lost #1, read later.
+    const book = { ...getBook(Object.keys(BOOKS)[0]), log: [
+      { type: "suggested", date: "2020-01-01", by: "fabio" },
+      { type: "voting", date: "2020-01-02", vote: 1 },
+      { type: "lost", date: "2020-01-03", vote: 1 },
+      { type: "session", date: "2020-02-01" },
+      { type: "session", date: "2020-03-01" },
+    ]};
+    const card = renderShelfCard(book, "2020-02-15");
+    eq(card.querySelector(".card-top .shelf-status").textContent, "📗 Lido", "badge");
+    eq(card.dataset.status, "lido", "data-status");
+    eq(card.dataset.by, "fabio", "data-by");
+    const lines = [...card.querySelectorAll(".shelf-log li")].map((li) => li.textContent);
+    eq(lines.join(" | "), [
+      "💡 Sugerido por Fábio · 1 Jan 2020",
+      `🗳️ Na votação #1 → · 2 Jan 2020`,
+      `🥀 Perdeu a votação #1 → · 3 Jan 2020`,
+      "📖 Sessão · 1 Fev 2020",
+      "📅 Sessão marcada · 1 Mar 2020",
+    ].join(" | "), "log lines");
+  });
+
+  test("vote links point at the open ballot or the vote's Arquivo entry", () => {
+    // Closed votes deep-link into the Arquivo; the open vote goes to Votação.
+    const href = (vote) => renderLogEvent({ type: "voting", date: "2020-01-01", vote }, "2020-01-01").querySelector("a").getAttribute("href");
+    eq(href(1), "#arquivo/1", "closed vote");
+    if (ACTIVE_VOTE) eq(href(ACTIVE_VOTE.number), "#votacao", "open vote");
+  });
+
+  test("a book suggested by two people lists both, and data-by holds each once", () => {
+    // One suggested event per person; data-by feeds the person filter.
+    const book = { ...getBook(Object.keys(BOOKS)[0]), log: [
+      { type: "suggested", date: "2020-01-01", by: "fabio" },
+      { type: "suggested", date: "2020-01-05", by: "filipa" },
+    ]};
+    const card = renderShelfCard(book, "2020-02-01");
+    eq(card.dataset.by, "fabio filipa", "data-by");
+    eq(card.dataset.status, "ideia", "status");
+    eq(card.querySelectorAll(".shelf-log li").length, 2, "two lines");
+  });
+
+  test("sortShelf orders by status, then most recent event, then title", () => {
+    const mk = (title, log) => ({ title, log });
+    const sorted = sortShelf([
+      mk("Ideia", [{ type: "suggested", date: "2020-09-01", by: "fabio" }]),
+      mk("Lido velho", [{ type: "session", date: "2020-01-01" }]),
+      mk("Lido novo", [{ type: "session", date: "2020-03-01" }]),
+    ], "2020-12-01").map((b) => b.title);
+    eq(sorted.join(" | "), "Lido novo | Lido velho | Ideia", "order");
+  });
+
   test("every book has a sinopse and a punchline, and ballot sinopses fit 150 words", () => {
     // CLAUDE.md "Book content rules": both prose fields are required, and
     // sinopses written under the current rule have a hard 150-word ceiling.

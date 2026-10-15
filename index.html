@@ -482,6 +482,26 @@
     content: ''; flex: 1; border-top: 1px solid var(--stone-200);
   }
 
+  /* Estante: the ballot's card, not tappable, with a status badge in the
+     corner and the book's history under the links. Both are stone, because
+     neither is interactive; only the vote links in the history are amber. */
+  .shelf-card { cursor: default; }
+  .shelf-card:hover { border-color: var(--stone-200); }
+  .shelf-status {
+    flex-shrink: 0; white-space: nowrap; padding: 2px 9px; border-radius: 12px;
+    background: var(--stone-100); color: var(--stone-600);
+    font-family: system-ui, sans-serif; font-size: 12px;
+  }
+  .shelf-log {
+    list-style: none; margin-top: 12px; padding-top: 10px;
+    border-top: 1px solid var(--stone-200);
+    display: flex; flex-direction: column; gap: 4px;
+    font-family: system-ui, sans-serif; font-size: 13px; color: var(--stone-600);
+  }
+  .shelf-log a { color: var(--amber-700); text-decoration: none; font-weight: 600; }
+  .shelf-log a:hover { text-decoration: underline; }
+  .shelf-log-date { color: var(--stone-500); }
+
   /* Mobile: stack banner contents (title + tabs row don't fit on a phone) */
   @media (max-width: 480px) {
     .banner { flex-direction: column; align-items: stretch; gap: 6px; }
@@ -508,6 +528,7 @@
       <nav class="tabs">
         <a href="#inicio"  class="tab" data-tab="inicio">Início</a>
         <a href="#votacao" class="tab" data-tab="votacao">Votação</a>
+        <a href="#estante" class="tab" data-tab="estante">Estante</a>
         <a href="#arquivo" class="tab" data-tab="arquivo">Arquivo</a>
       </nav>
     </header>
@@ -577,6 +598,12 @@
       <!-- Peek / Back buttons -->
       <button id="peek-btn" class="peek-btn hidden">👀 Espreitar resultados</button>
       <button id="back-btn" class="peek-btn hidden">← Voltar para votar</button>
+    </section>
+
+    <!-- View: Estante. Built on first visit (see ensureEstante). -->
+    <section id="view-estante" data-view="estante" class="hidden">
+      <h2 class="section-heading">Estante</h2>
+      <div id="shelf-list" class="grid"></div>
     </section>
 
     <!-- View: Arquivo -->
@@ -2072,8 +2099,97 @@ function renderPiece(name, piece) {
   return drawer;
 }
 
+// ---- Estante ----
+// Every book in BOOKS, each on the ballot's card with its status and its
+// history. This is the only view that shows who suggested a book.
+//
+// The view is built on its first visit rather than at load: one card per
+// book is a few hundred DOM nodes that most visits never look at.
+let shelfBuilt = false;
+
+function ensureEstante() {
+  if (shelfBuilt) return;
+  shelfBuilt = true;
+  renderEstante();
+}
+
+function renderEstante() {
+  const list = $("shelf-list");
+  list.innerHTML = "";
+  const today = todayISO();
+  sortShelf(Object.keys(BOOKS).map(getBook), today).forEach((book) => {
+    list.appendChild(renderShelfCard(book, today));
+  });
+}
+
+// Strongest status first (the order of BOOK_STATUSES), then the book with
+// the most recent event, then by title, so the order is stable.
+function sortShelf(books, today) {
+  const rank = (b) => BOOK_STATUSES.findIndex((st) => st.id === bookStatus(b.log, today));
+  const latest = (b) => b.log.length ? b.log[b.log.length - 1].date : "";
+  return [...books].sort((a, b) =>
+    rank(a) - rank(b) || latest(b).localeCompare(latest(a)) || a.title.localeCompare(b.title));
+}
+
+// One book: the shared card, its status badge in the corner, and its log.
+// `data-status` and `data-by` (space-separated suggester ids) are what the
+// filters match on.
+function renderShelfCard(book, today) {
+  const status = BOOK_STATUSES.find((st) => st.id === bookStatus(book.log, today));
+  const badge = `<span class="shelf-status">${status.emoji} ${status.label}</span>`;
+  const card = renderBookCard(book, badge);
+  card.classList.add("shelf-card");
+  card.dataset.status = status.id;
+  card.dataset.by = [...new Set(book.log.filter((e) => e.type === "suggested").map((e) => e.by))].join(" ");
+
+  const log = document.createElement("ul");
+  log.className = "shelf-log";
+  book.log.forEach((e) => log.appendChild(renderLogEvent(e, today)));
+  card.appendChild(log);
+  return card;
+}
+
+// One history line: an emoji, what happened, and when. A vote event links
+// to that vote: the ballot while it is open, otherwise its Arquivo entry.
+// Built with DOM nodes, so no text is parsed as HTML.
+function renderLogEvent(e, today) {
+  const li = document.createElement("li");
+  const voteLink = (text) => {
+    const a = document.createElement("a");
+    const open = ACTIVE_VOTE && ACTIVE_VOTE.number === e.vote;
+    a.href = open ? "#votacao" : `#arquivo/${e.vote}`;
+    a.textContent = `${text} #${e.vote} →`;
+    return a;
+  };
+  // Each kind of event reads as its own sentence.
+  switch (e.type) {
+    case "suggested": {
+      const names = Object.values(PEOPLE).map((p) => p.name);
+      li.append(`💡 Sugerido por ${shortestName(PEOPLE[e.by].name, names)}`);
+      break;
+    }
+    case "voting":
+      li.append("🗳️ ", voteLink("Na votação"));
+      break;
+    case "won":
+      li.append("🏆 ", voteLink("Venceu a votação"));
+      break;
+    case "lost":
+      li.append("🥀 ", voteLink("Perdeu a votação"));
+      break;
+    case "session":
+      li.append(e.date < today ? "📖 Sessão" : "📅 Sessão marcada");
+      break;
+  }
+  const date = document.createElement("span");
+  date.className = "shelf-log-date";
+  date.textContent = ` · ${formatAgendaDate(e.date)}`;
+  li.appendChild(date);
+  return li;
+}
+
 // ---- Router ----
-const TABS = ['inicio', 'votacao', 'arquivo'];
+const TABS = ['inicio', 'votacao', 'estante', 'arquivo'];
 
 // Splits a location hash into its parts: "#arquivo/4" is tab "arquivo" with
 // sub-path "4", and "#estante?por=fabio" is tab "estante" with query
@@ -2108,6 +2224,7 @@ function applyRoute() {
   // A sub-path points at one item in the view: "#arquivo/4" is vote #4.
   const { sub } = parseHash(window.location.hash);
   if (tab === 'arquivo' && sub) openArchiveEntry(Number(sub));
+  if (tab === 'estante') ensureEstante();
 }
 
 function initRouter() {
