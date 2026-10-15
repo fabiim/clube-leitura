@@ -12,14 +12,22 @@
      CONFIGURAÇÃO: Cola o teu URL do Google Apps Script aqui
      ============================================================ */
 
+  /* The palette: every colour on the page is one of these. Roles and
+     contrast rules are in CLAUDE.md under "Colour palette". */
   :root {
-    --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-600: #d97706;
-    --amber-700: #b45309; --amber-800: #92400e;
+    /* Neutral: page, cards, text, rules. Most of the page. */
+    --white: #fff;
     --stone-50: #fafaf9; --stone-100: #f5f5f4; --stone-200: #e7e5e4;
     --stone-300: #d6d3d1; --stone-400: #a8a29e; --stone-500: #78716c;
     --stone-600: #57534e; --stone-700: #44403c; --stone-800: #292524;
     --stone-900: #1c1917;
-    --green-50: #ecfdf5; --slate-400: #94a3b8; --slate-500: #64748b;
+    /* Accent: what is tappable, selected, or current. Used sparingly. */
+    --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-600: #d97706;
+    --amber-700: #b45309; --amber-800: #92400e;
+    /* Status: vote outcomes and errors only. */
+    --green-50: #ecfdf5;
+    --teal-50: #f0fdfa; --teal-700: #0f766e;
+    --red-50: #fef2f2; --red-800: #991b1b;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,7 +36,7 @@
     font-family: 'Crimson Text', Georgia, serif;
     color: var(--stone-900);
     min-height: 100vh;
-    background: #fff;
+    background: var(--white);
   }
 
   .page { max-width: 680px; margin: 0 auto; padding: 32px 20px 60px; }
@@ -72,7 +80,7 @@
   .name-input:focus { border-color: var(--amber-700); }
   .name-btn {
     padding: 12px 20px; font-size: 15px; font-weight: 600; background: var(--stone-800);
-    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    color: var(--white); border: none; border-radius: 10px; cursor: pointer;
     font-family: system-ui, sans-serif; white-space: nowrap;
   }
   .name-btn:disabled { opacity: 0.4; cursor: default; }
@@ -101,7 +109,7 @@
 
   .check {
     width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--stone-300);
-    display: flex; align-items: center; justify-content: center; background: #fff;
+    display: flex; align-items: center; justify-content: center; background: var(--white);
     flex-shrink: 0; margin-top: 2px;
   }
   .card.selected .check { border-color: var(--amber-700); background: var(--amber-50); }
@@ -136,7 +144,7 @@
   .sel-info { color: var(--stone-300); font-size: 14px; font-family: system-ui, sans-serif; font-weight: 600; }
   .submit-btn {
     padding: 12px 32px; font-size: 16px; font-weight: 700; background: var(--amber-600);
-    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    color: var(--white); border: none; border-radius: 10px; cursor: pointer;
     font-family: system-ui, sans-serif; transition: opacity 0.2s;
   }
   .submit-btn:disabled { opacity: 0.4; cursor: default; }
@@ -167,7 +175,7 @@
     cursor: pointer; flex-wrap: wrap;
   }
   .result-card.leader { border-color: var(--amber-600); background: var(--amber-50); }
-  .result-card.tie { border-color: #0f766e; background: #f0fdfa; }
+  .result-card.tie { border-color: var(--teal-700); background: var(--teal-50); }
   .result-rank {
     font-size: 22px; flex-shrink: 0; width: 32px; text-align: center;
     font-family: system-ui, sans-serif;
@@ -229,8 +237,8 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .error-banner {
-    text-align: center; padding: 20px; background: #fef2f2; border-radius: 14px;
-    margin-bottom: 24px; color: #991b1b; font-family: system-ui, sans-serif; font-size: 14px;
+    text-align: center; padding: 20px; background: var(--red-50); border-radius: 14px;
+    margin-bottom: 24px; color: var(--red-800); font-family: system-ui, sans-serif; font-size: 14px;
   }
 
   /* Tabs (sit on the right of the banner) */

@@ -38,6 +38,15 @@
 
   // ---- Content ----
 
+  test("colours outside :root come from the palette, not raw hex", () => {
+    // CLAUDE.md "Colour palette": the :root block is the only place a hex
+    // value may appear, so the palette stays the single source of colour.
+    const css = [...document.querySelectorAll("style")].map((el) => el.textContent).join("\n");
+    const outside = css.replace(/:root\s*\{[^}]*\}/g, "");
+    const stray = outside.match(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/g);
+    eq(stray, null, "raw colours outside :root");
+  });
+
   test("page loads without script errors", () => {
     eq(window.__testErrors.length, 0, `errors: ${window.__testErrors.join(" | ")}`);
   });

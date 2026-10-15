@@ -26,6 +26,27 @@ A high-level map of behaviour, not a detailed spec. Read the code for details. U
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
 - **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
 
+## Colour palette
+
+Every colour is a custom property in the `:root` block at the top of `index.html`'s `<style>`. There are no raw hex, `rgb()`, or `hsl()` values anywhere else; a test enforces this. To add a colour, add it to `:root` and to the table below.
+
+The scale steps are Tailwind's (50 lightest, 900 darkest), so a missing step can be taken from Tailwind's palette without inventing a value.
+
+| Family | Role | Where |
+|---|---|---|
+| `stone` (+ `white`) | Neutral. The page, cards, text, and rules. Most of the page. | Everything not listed below. |
+| `amber` | Accent. Something tappable, selected, or current. | Tabs, links, the selected ballot card, the next session, the vote pill, gift chips and drawer, the Claude pitch on upcoming sessions. |
+| `green`, `teal`, `red` | Status only. | Vote confirmation, tied vote, error box. |
+
+Rules:
+
+- **Amber means "interactive or now".** Don't use it for decoration, or it stops signalling anything. Content that should stand out but isn't tappable gets a different hue.
+- **Text contrast is at least 4.5:1 (WCAG AA).** On the light backgrounds (`white`, `stone-50`, `amber-50`), `stone-500` and darker pass; `stone-400` (about 2.4:1) does not, so use it only for decoration and rules, never for text. `amber-700` passes for links (about 4.8:1).
+- **Tints carry areas, darks carry text.** Backgrounds use the 50 and 100 steps; borders use 100 to 300; text uses 500 and darker.
+- **Check new pairs.** Before adding a text/background pair, compute its contrast ratio.
+
+Known gaps, not yet fixed: `stone-400` is still used for some readable text (result authors, the piece's "who" line, numeric ranks, empty-state messages), and the white-on-`amber-600` vote button is about 3.2:1, below AA for its 16px text.
+
 ## Book content rules (`BOOKS` entries in `index.html`)
 
 Every book has two prose fields. Each has a strict author and length contract.
