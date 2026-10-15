@@ -1386,24 +1386,7 @@ function renderCandidateBooks() {
   // comment on bookIds). The order is frozen for the whole vote, so cards keep the
   // same position across every visit and re-render.
   ACTIVE_VOTE.bookIds.map(getBook).filter(Boolean).forEach((book) => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.dataset.id = book.id;
-    card.innerHTML = `
-      <div class="card-top">
-        <div class="title-row">
-          <span class="emoji">${book.emoji}</span>
-          <div>
-            <span class="book-title">${book.title}</span>
-            <span class="author"> — ${book.author} · ${book.pages} pág.</span>
-          </div>
-        </div>
-        <div class="check"><span class="check-mark">✓</span></div>
-      </div>
-      <p class="sinopse">${book.sinopse}</p>
-      <p class="punchline"><span class="punchline-icon" aria-hidden="true">👊</span> ${book.punchline}</p>
-      <div class="links">${renderShopLinks(book)}</div>
-    `;
+    const card = renderBookCard(book, '<div class="check"><span class="check-mark">✓</span></div>');
 
     card.addEventListener("click", (e) => {
       if (e.target.closest(".shop-link")) return;
@@ -1417,6 +1400,32 @@ function renderCandidateBooks() {
   // the static "0/N" placeholder in the markup lingers until the first click and
   // misreports maxVotes (e.g. shows "/2" for a head-to-head where maxVotes is 1).
   updateSelectionUI();
+}
+
+// A book's card: title, author, page count, sinopse, punchline, and shop
+// links. `corner` is HTML for the top-right slot (the ballot's check mark,
+// say), empty by default. The card holds nothing about who suggested the
+// book or its history, so it is safe to show on the ballot.
+function renderBookCard(book, corner = "") {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.dataset.id = book.id;
+  card.innerHTML = `
+      <div class="card-top">
+        <div class="title-row">
+          <span class="emoji">${book.emoji}</span>
+          <div>
+            <span class="book-title">${book.title}</span>
+            <span class="author"> — ${book.author} · ${book.pages} pág.</span>
+          </div>
+        </div>
+        ${corner}
+      </div>
+      <p class="sinopse">${book.sinopse}</p>
+      <p class="punchline"><span class="punchline-icon" aria-hidden="true">👊</span> ${book.punchline}</p>
+      <div class="links">${renderShopLinks(book)}</div>
+    `;
+  return card;
 }
 
 function renderShopLinks(book) {
@@ -1439,7 +1448,8 @@ function toggleBook(id) {
 }
 
 function updateSelectionUI() {
-  document.querySelectorAll(".card").forEach((card) => {
+  // Scoped to the ballot, because other views render the same card.
+  $("book-grid").querySelectorAll(".card").forEach((card) => {
     const id = card.dataset.id;
     const isSel = selected.includes(id);
     const isDis = !isSel && selected.length >= ACTIVE_VOTE.maxVotes;

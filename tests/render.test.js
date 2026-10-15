@@ -220,6 +220,32 @@
     Object.values(BOOKS).forEach((b) => assert(ids.includes(bookStatus(b.log, todayISO())), "unknown status"));
   });
 
+  test("a book card shows the book, its corner slot, and shop links", () => {
+    // The shared card used by the ballot and the Estante.
+    const id = Object.keys(BOOKS)[0];
+    const book = getBook(id);
+    const card = renderBookCard(book, '<span class="corner-x">x</span>');
+    eq(card.dataset.id, id, "data-id");
+    eq(card.querySelector(".book-title").textContent, book.title, "title");
+    assert(card.querySelector(".sinopse") && card.querySelector(".punchline"), "sinopse and punchline");
+    assert(card.querySelector(".card-top .corner-x"), "corner slot in the top row");
+    eq(card.querySelectorAll(".shop-link").length, 2, "shop links");
+    eq(renderBookCard(book).querySelector(".check"), null, "no check mark by default");
+  });
+
+  test("ballot cards never show who suggested a book or its history", () => {
+    // Suggesters stay off the ballot so they can't sway the vote.
+    if (!ACTIVE_VOTE) return;
+    const cards = [...document.querySelectorAll("#book-grid .card")];
+    eq(cards.length, ACTIVE_VOTE.bookIds.length, "one card per candidate");
+    const names = Object.values(PEOPLE).map((p) => p.name);
+    cards.forEach((c) => {
+      const named = names.find((n) => c.textContent.includes(n));
+      assert(named === undefined, `${c.dataset.id} card names ${named}`);
+      eq(c.querySelector(".shelf-log, .shelf-status"), null, `${c.dataset.id} has no log or status`);
+    });
+  });
+
   test("every book has a sinopse and a punchline, and ballot sinopses fit 150 words", () => {
     // CLAUDE.md "Book content rules": both prose fields are required, and
     // sinopses written under the current rule have a hard 150-word ceiling.
