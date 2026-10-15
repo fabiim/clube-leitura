@@ -54,22 +54,44 @@ Every book has two prose fields, `sinopse` and `punchline`, both written by Clau
 
 | | `sinopse` | `punchline` |
 |---|---|---|
-| Job | **Informative.** What the book is: premise, setting, people, themes, context. | **Appealing.** Why you'd want to read it: one hook. |
+| Job | **Informative.** What the book is, led by what readers remember and talk about. | **Appealing.** Why you'd want to read it: one hook. |
 | Length | Aim for 120 words or fewer; **150 is a hard ceiling**. | 1–2 sentences, about 12–30 words. Strictly shorter than the sinopse. |
 
 Both must not be boring, and both share these rules:
 
 - **Ground them in research.** Read the publisher's copy (see [Source-fetch reality](#source-fetch-reality-as-of-2026-10-15)) and at least one other source: reader reviews (Wook, Goodreads), blogs, press. Don't invent facts the sources don't support.
+- **Order by what people remember.** The research has a second job: find what readers and critics remember and discuss most about the book. That ranking, not a checklist, decides what both fields talk about (see [the dimensions](#sinopse--informative-and-not-boring)).
 - **No spoilers.** Never reveal major scenes, twists, or the ending.
 - **No awards** (Nobel, Pulitzer, and the like): they tell the reader nothing about why the book is worth their evening.
 - **Plain words** everyone in the group understands: no insider terms only readers of the book would know, no clever wordplay about the book rather than the experience of reading it.
+- **Say early what kind of book it is**: a family saga, a diary, a short fable, a slow and funny book. Readers decide on that before the plot.
+- **Answer the likely hesitation.** Guess what would stop someone in the group from picking it (it's long, it's old, it sounds sad, it's science fiction) and give the reason to read it anyway. *Middlemarch*'s "É longo, mas…" does this.
+- **A question can be the hook**, if it's the real question the book asks and the reader can't answer it straight away ("Estamos condenados a ser o que herdamos?"). Don't use rhetorical questions that only pad the text.
+- **No stock phrases**: "uma viagem inesquecível", "obra-prima", "impossível de pousar", "uma leitura obrigatória". They fit any book, so they say nothing about this one.
 - **Different angles.** The punchline may use story details and may sum up the sinopse, but in other words or from another angle. They render one under the other, so the same sentence twice reads as filler.
 
 Until 2026-10-15 the sinopse was verbatim publisher copy and the punchline was the "claude" pitch. The user found the publisher copy dull (often a list of characters) and too long on a phone. Older books still carry that copy until someone asks for a rewrite.
 
 ### `sinopse` — informative, and not boring
 
-Describe the book so a reader understands what it is and wants to open it: who, where, what pulls them in, what kind of experience it is. Size it to the book: cover the dimensions that sources across the web usually mention (setting, characters, themes, form, context), no more. Active verbs, concrete details. A test enforces the 150-word ceiling for books on the open ballot.
+Describe the book so a reader understands what it is and wants to open it. Active verbs, concrete details. A test enforces the 150-word ceiling for books on the open ballot.
+
+**Dimensions to draw from.** These are options, not slots to fill. No book needs all of them:
+
+- the people: characters, or the author in non-fiction;
+- the central conflict or premise;
+- the literary themes: the main ideas the book is about;
+- setting and period;
+- form and voice: diary, letters, alternating chapters, the kind of prose;
+- context: when and why it was written, and how it was received.
+
+**Write in order of importance.** From the research, rank the dimensions by how much readers and critics remember and discuss them. Give most of the words to the top ones, and drop a dimension nobody talks about, even if it's easy to state. For *A Leste do Paraíso*, readers talk about the two pairs of brothers, Cathy, Lee and Samuel, good and evil, and the freedom to choose; the three generations and the span from the Civil War to the First World War are scaffolding. For *As Vinhas da Ira*, the Dust Bowl and Route 66 are the story, so setting ranks first.
+
+**Specific names must earn their place.** A place, date, or minor name stays only if the reader gains something from it. Most readers don't know where the Salinas Valley is, so "muda-se para a Califórnia" says enough, and "para construir o seu paraíso" already carries the meaning of the land. If a place matters for what it is (barren, fertile, frozen, a favela), describe it instead of naming it. Keep the characters readers remember, and keep a place when it is the story (Route 66, the Chelsea Hotel).
+
+**Themes.** A theme is a dimension like any other: weigh it by what people say about the book. When readers and critics treat a theme as central, name it plainly instead of gesturing at it ("vai muito mais longe"), and name the strongest one, not a safe generic one. Skip it when the story already carries it or nobody discusses the book in those terms. Name three at most; five only in the rare book that justifies it. Don't hold the central idea back for the punchline to avoid repetition: the sinopse names it, the punchline sells it from another angle.
+
+**Then reread for coherence.** Read the draft as one piece. Does it flow, is the chronology clear, does each sentence earn its place, and would someone who has never heard of the book want to open it? Reorder, cut, or rewrite until it does.
 
 ### Source-fetch reality (as of 2026-10-15)
 
@@ -85,7 +107,13 @@ Close the Chrome tabs you opened. If the extension isn't connected (`tabs_contex
 
 ### `punchline` — appealing, marked with 👊
 
-One reason to read this book, said so it lands. Use whatever material reviewers and readers find most gripping: a critic quote with attribution ("Bryan Appleyard", "New York Times"), an image, a paradox, the premise, characters, or a story detail. It must be:
+One reason to read this book, said so it lands. Pick from the same ranked dimensions as the sinopse, using whatever readers find most gripping: an image, a paradox, the premise, a character, a story detail, or a theme told through the story. Then reread it next to the sinopse: it should add something and not repeat it.
+
+**Short and punchy wins.** When a longer line and a shorter one say the same thing, use the shorter one. This beats completeness, attribution, and nuance.
+
+**Quotes when they're good.** A critic's or the author's line is welcome if it's sharp and says something about the book itself (Appleyard on *Stoner*). Skip it when it only borrows authority ("um clássico incontornável"). If the quote is long, sum it up in a few words and drop the attribution: Steinbeck's "everything else I have written has been, in a sense, practice for this" becomes "O livro da vida de Steinbeck". Keep it verbatim only when the exact wording is what makes it good. The summary must stay true: *A Leste do Paraíso* wasn't his last book, so "o derradeiro livro" would mislead.
+
+It must be:
 
 - **Sharp** — declarative, no hedging ("talvez", "considerado por alguns", "tem-se considerado").
 - **Incisive** — cut every word that isn't pulling weight. Two-word punchlines work.
@@ -94,9 +122,9 @@ One reason to read this book, said so it lands. Use whatever material reviewers 
 
 Patterns that already work in this registry:
 
-- **Quote + punchline** — `stoner`: *«O melhor romance que ninguém leu» — Bryan Appleyard. Vida apagada, prosa devastadora.*
 - **Adjective cluster + recommendation** — `saramago`: *Curto, divertido, filosófico, português. A escolha mais segura para começar.*
-- **Quote + story** — `dostoievski`: *«O romance mais magistral que alguma vez se escreveu» — Freud. Três irmãos — paixão, razão e fé — e um pai assassinado. A alma humana inteira numa família.*
+- **Quote + story + the book's question** — `steinbeck-eden`: *O livro da vida de Steinbeck. Caim e Abel na Califórnia. Estamos condenados a ser o que herdamos?*
+- **Quote + punchline** — `stoner`: *«O melhor romance que ninguém leu» — Bryan Appleyard. Vida apagada, prosa devastadora.*
 
 The two fields render one under the other on the ballot card, the session cards, and the archive details. Both are set in Literata, upright. The punchline sits in an amber box on upcoming sessions and the ballot, and loses the box on past sessions.
 
