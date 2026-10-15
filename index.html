@@ -435,10 +435,12 @@
   .agenda-book-card .sinopse { margin-bottom: 8px; }
   .agenda-book-card .claude { margin-bottom: 10px; }
   /* On past sessions the pitch has done its job, so it drops its box and
-     reads as a plain line of grey text, marked only by the Claude icon. */
+     takes the sinopse's type (serif italic, same size, colour, and leading),
+     marked only by the Claude icon. */
   .agenda-row.past .agenda-book-card .claude {
     margin-bottom: 0; background: transparent; padding: 0;
-    color: var(--stone-600);
+    font-family: inherit; font-size: 14px; font-weight: normal;
+    font-style: italic; line-height: 1.55; color: var(--stone-600);
   }
   /* Quotes: centred italics on a pale teal band with hairline rules above
      and below, with no quotation marks because the Citações title already
