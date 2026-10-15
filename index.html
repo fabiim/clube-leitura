@@ -598,6 +598,30 @@ const API_URL = atob(_E);
 // ============================================================
 
 /**
+ * The club's people, one entry per person. The key is the person's id; book
+ * data refers to people by id, so a name is spelled in exactly one place.
+ *
+ * Invariants:
+ *  - No two people share a name once case and accents are folded
+ *    (`nameKey`), so a name identifies one person.
+ *  - Every AGENDA participant name and quote `by` equals some `name` here.
+ *  - Once an id is referenced, do NOT rename it.
+ *
+ * Votes are out of this registry's scope: ARCHIVE voters are recorded as
+ * typed on the ballot form and are not checked against it.
+ *
+ * @typedef {{ name: string }} Person
+ */
+
+/** @type {Record<string, Person>} */
+const PEOPLE = {
+  fabio:   { name: "Fábio Botelho" },
+  filipa:  { name: "Filipa Costa" },
+  mariana: { name: "Mariana Teixeira" },
+  miguel:  { name: "Miguel Mota" },
+};
+
+/**
  * Canonical book registry. Single source of truth for all book metadata.
  *
  * Everything else — ACTIVE_VOTE.bookIds, ARCHIVE[].bookIds, ARCHIVE[].winnerId,

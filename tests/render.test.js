@@ -122,6 +122,30 @@
     });
   });
 
+  test("PEOPLE names are non-empty and unique once case and accents are folded", () => {
+    // A name must identify one person, or a reference by name is ambiguous.
+    const keys = Object.values(PEOPLE).map((p) => {
+      assert(typeof p.name === "string" && p.name.trim() !== "", `empty name in ${JSON.stringify(p)}`);
+      return nameKey(p.name.trim());
+    });
+    const dup = keys.find((k, i) => keys.indexOf(k) !== i);
+    assert(dup === undefined, `two people share the name "${dup}"`);
+  });
+
+  test("every AGENDA participant and quote picker is in PEOPLE", () => {
+    // PEOPLE is the global reference for who came to a session.
+    const names = new Set(Object.values(PEOPLE).map((p) => p.name));
+    AGENDA.forEach((entry) => {
+      (entry.participants || []).forEach((p) => {
+        const name = typeof p === "string" ? p : p.name;
+        assert(names.has(name), `participant "${name}" on ${entry.date} is not in PEOPLE`);
+      });
+      (entry.quotes || []).forEach((q, i) => {
+        assert(q.by === undefined || names.has(q.by), `quote ${i} on ${entry.date}: "${q.by}" is not in PEOPLE`);
+      });
+    });
+  });
+
   test("every book has a sinopse and a punchline, and ballot sinopses fit 150 words", () => {
     // CLAUDE.md "Book content rules": both prose fields are required, and
     // sinopses written under the current rule have a hard 150-word ceiling.
