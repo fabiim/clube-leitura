@@ -14,6 +14,18 @@ This section replaces a separate `CHEAT.md`. Keep it current when tooling change
 | Commit without running the hook | `git commit --no-verify` |
 | Deploy | `git push origin main` (GitHub Pages publishes automatically; see [Deploy](#deploy)). |
 
+## Spec
+
+A high-level map of behaviour, not a spec. Read the code for details. Update this list when a feature is added or changes shape.
+
+- **Single static page.** All data (`BOOKS`, `AGENDA`, `ARCHIVE`, `ACTIVE_VOTE`) lives as constants in `index.html`. The only network call is the live vote tally (Google Apps Script).
+- **Three tabs**, hash-routed: Início, Votação, Arquivo.
+- **Início** lists sessions: upcoming soonest-first (the next one pinned and expanded), past most-recent-first. A pill links to Votação while a vote is open.
+- **Each session** shows a date, a book, and a location. Tapping it expands the book card: sinopse, Claude pitch, and shop links.
+- **Past sessions** add a written account of the discussion and a list of participants. A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
+- **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
+- **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
+
 ## Book content rules (`BOOKS` entries in `index.html`)
 
 Every book has two prose fields. Each has a strict author and length contract.
