@@ -136,11 +136,12 @@
     ], ["Filipa Costa", "Filipa Ramos", "Rui"]);
     const quotes = [...el.querySelectorAll("blockquote.agenda-quote")];
     eq(quotes.length, 3, "three quotes");
-    eq(quotes[0].querySelector(".agenda-quote-text").textContent, "linha 1\n  linha 2”\u00a0(Costa)", "first quote");
+    eq(quotes[0].querySelector(".agenda-quote-text").textContent, "“linha 1\n  linha 2”\u00a0(Costa)", "first quote");
     eq(quotes[1].querySelector(".agenda-quote-by"), null, "no picker label");
     eq(quotes[1].querySelector("b"), null, "no parsed <b>");
-    eq(quotes[1].textContent, "<b>não é html</b>”", "literal text");
+    eq(quotes[1].textContent, "“<b>não é html</b>”", "literal text");
     eq(quotes[2].querySelector(".agenda-quote-by").textContent, "\u00a0(Ramos)", "third picker");
+    eq(quotes[0].querySelectorAll(".agenda-quote-mark").length, 2, "matching opening and closing marks");
   });
 
   // ---- Names ----
