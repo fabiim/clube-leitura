@@ -1755,12 +1755,17 @@ function paintArchiveDetails(container, entry) {
 }
 
 // Expands vote `number` in the Arquivo and scrolls it to the middle of the
-// screen, for links that point at one vote. An unknown number does nothing.
+// screen, for links that point at one vote. An expanded vote is often taller
+// than a phone screen; centring it would push its header off the top, so a
+// row that doesn't fit is aligned to the top instead. An unknown number
+// does nothing.
 function openArchiveEntry(number) {
   if (!ARCHIVE.some((e) => e.number === number)) return;
   expandedEntries.add(number);
   renderArquivo();
-  $("archive-list").querySelector(`[data-number="${number}"]`).scrollIntoView({ block: "center" });
+  const row = $("archive-list").querySelector(`[data-number="${number}"]`);
+  const fits = row.getBoundingClientRect().height <= window.innerHeight;
+  row.scrollIntoView({ block: fits ? "center" : "start" });
 }
 
 // `DD/MM – DD/MM` (same year) or `DD/MM/YY – DD/MM/YY` (cross-year). Inputs are ISO.
