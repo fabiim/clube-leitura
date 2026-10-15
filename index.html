@@ -439,10 +439,12 @@
   .agenda-quote-text {
     margin: 0; font-size: 15.5px; line-height: 1.5; font-style: italic;
     color: var(--stone-600); white-space: pre-wrap;
+    display: flow-root; /* Contain the floated picker label. */
   }
   .agenda-quote-by {
     font-family: system-ui, sans-serif; font-size: 11px; font-style: normal;
-    color: var(--stone-400); white-space: nowrap;
+    color: var(--stone-400); float: right; margin-left: 12px;
+    line-height: 23px; /* One text line (15.5px × 1.5), so it sits on the baseline row. */
   }
   /* Section title centred on a hairline: the two pseudo-elements are flexible
      rules that fill the space either side of the label. */
@@ -1629,10 +1631,10 @@ function renderAgendaRow(entry, isPast, isNext) {
 // A session's quotes, always visible: they're the most memorable lines of
 // the discussion, so they shouldn't hide behind a tap. Each quote is shown
 // without quotation marks and, when someone picked it, followed by their
-// shortest unique name among `participantNames` in small grey parentheses. The
-// non-breaking space and the label's `nowrap` keep "(Filipa)" attached to the
-// last word, so it never sits alone on a line. Built with `textContent` so the
-// verbatim text can't be parsed as HTML.
+// shortest unique name among `participantNames` in small grey parentheses,
+// floated right so it sits on the quote's last line when there is room, and
+// drops to the line below when there isn't. Built with
+// `textContent` so the verbatim text can't be parsed as HTML.
 function renderQuotes(quotes, participantNames) {
   const wrap = document.createElement('div');
   wrap.className = 'agenda-quotes';
@@ -1645,7 +1647,7 @@ function renderQuotes(quotes, participantNames) {
     if (q.by) {
       const by = document.createElement('span');
       by.className = 'agenda-quote-by';
-      by.textContent = `\u00a0(${shortestName(q.by, participantNames)})`;
+      by.textContent = `(${shortestName(q.by, participantNames)})`;
       text.appendChild(by);
     }
     quote.appendChild(text);
