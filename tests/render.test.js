@@ -580,6 +580,27 @@
     });
   });
 
+  test("a past row's header is one line: book, author, date and target, then place and time", () => {
+    // Skips the optional parts it isn't given, and keeps the place last.
+    const book = getBook(anyBookId);
+    const date = formatAgendaDate("2020-03-04");
+    const full = renderAgendaRow({ date: "2020-03-04", time: "20:30", location: "Royal", upToPage: 95, bookId: anyBookId }, true, false);
+    const chunks = (row) => [...row.querySelectorAll(".agenda-head > span")].map((c) => c.textContent.trim().replace(/\s+/g, " "));
+    eq(chunks(full).join(" | "), `${book.emoji} ${book.title} | — ${book.author} · ${book.pages} pág. · ${date} · até pág. 95 | 📍 Royal · 20:30`, "full header");
+    const bare = renderAgendaRow({ date: "2020-03-04", location: "Royal", bookId: anyBookId }, true, false);
+    eq(chunks(bare).join(" | "), `${book.emoji} ${book.title} | — ${book.author} · ${book.pages} pág. · ${date} | 📍 Royal`, "header without target or time");
+    eq(bare.querySelector(".agenda-pin"), null, "past rows have no pin");
+  });
+
+  test("an upcoming row's header is the book, with date, target, place, and time below", () => {
+    // The pinned next row carries the 📌 on the details line.
+    const date = formatAgendaDate("2999-01-01");
+    const next = renderAgendaRow({ date: "2999-01-01", location: "Royal", upToPage: 95, bookId: anyBookId }, false, true);
+    eq(next.querySelector(".title-row .book-title").textContent, getBook(anyBookId).title, "title in the card header");
+    const meta = next.querySelector(".agenda-meta").textContent;
+    assert(meta.startsWith(`📌 ${date}`) && meta.endsWith("· até pág. 95 · Royal"), `meta line: ${meta}`);
+  });
+
   test("quotes get their own Citações section between Discussão and Sinopse", () => {
     const row = renderAgendaRow({
       date: "2020-01-01", location: "x", bookId: anyBookId, findings: "relato",

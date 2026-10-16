@@ -341,46 +341,57 @@
 
   /* Início — agenda lists (future + past sub-sections). */
   #agenda-future-list,
-  #agenda-past-list { display: flex; flex-direction: column; gap: 10px; }
+  #agenda-past-list { display: flex; flex-direction: column; gap: 24px; }
   /* Breathing room between the two sub-sections, but only when the future
      list is actually rendered — otherwise the past heading sits at the top
      of the section and shouldn't carry stray top margin. */
-  #agenda-future-list:not(.hidden) + .section-heading { margin-top: 28px; }
+  #agenda-future-list:not(.hidden) + .agenda-past { margin-top: 48px; }
+  /* Past sessions sit on a stone-100 band that runs the full width of the
+     window, so the change from upcoming to past stays visible while
+     scrolling through a long card. The band is drawn as a spread box-shadow
+     clipped to the band's own height: unlike a 100vw width, it can't cause
+     a horizontal scroll. The negative bottom margin carries the band through
+     the page's bottom padding, so it doesn't stop short above white. Cards
+     inside turn white to keep their edge against the band. */
+  .agenda-past {
+    background: var(--stone-100);
+    box-shadow: 0 0 0 100vmax var(--stone-100);
+    clip-path: inset(0 -100vmax);
+    padding: 32px 0 60px; margin-bottom: -60px;
+  }
+  .agenda-past .agenda-row { background: var(--white); }
+  /* The two Início sub-section titles: centred and larger than the other
+     views' titles. No rule beside them, because centred-on-a-hairline is how
+     the sections inside a card are marked, and the two levels must not look
+     alike. */
+  .agenda-heading { font-size: 24px; text-align: center; margin-bottom: 20px; }
+  /* A session card: the ballot card's padding and radius, with a stone-300
+     border so each session reads as its own box on the white page. */
   .agenda-row {
-    border: 2px solid var(--stone-200); border-radius: 12px;
-    padding: 12px 16px; background: var(--stone-50);
-    display: flex; flex-direction: column; gap: 4px;
+    border: 2px solid var(--stone-300); border-radius: 14px;
+    padding: 16px 18px; background: var(--stone-50);
+    display: flex; flex-direction: column;
     transition: border-color 0.15s;
     position: relative;
   }
   .agenda-row.next { border-color: var(--amber-700); background: var(--amber-50); }
-  .agenda-line-main {
-    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+  /* Session details under the card header: the author's type, in a darker
+     stone so the date and place read as information, not decoration. */
+  .agenda-meta {
+    margin-top: 6px; padding-left: 30px;
+    font-family: system-ui, sans-serif; font-size: 13px; color: var(--stone-600);
   }
-  .agenda-pin { font-size: 16px; flex-shrink: 0; line-height: 1; }
-  .agenda-date {
-    font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600;
-    color: var(--stone-500); flex-shrink: 0;
+  .agenda-pin { font-size: 14px; line-height: 1; }
+  /* Past rows' one-line header. The place is an inline block, so it wraps
+     as a whole and only breaks inside itself when it alone is wider than
+     the card. */
+  .agenda-head { line-height: 1.5; }
+  .agenda-head-title .book-title { font-size: 15px; }
+  .agenda-head-emoji { font-size: 16px; }
+  .agenda-head-chunk { display: inline-block; margin-left: 4px; }
+  .agenda-head-where {
+    font-family: system-ui, sans-serif; font-size: 13px; color: var(--stone-600);
   }
-  .agenda-dot { color: var(--stone-300); font-size: 13px; }
-  .agenda-book-emoji { font-size: 17px; }
-  .agenda-book-title { font-size: 16px; font-weight: 700; color: var(--stone-800); }
-  .agenda-range,
-  .agenda-countdown {
-    font-size: 13px; color: var(--stone-500); font-style: italic;
-    font-family: system-ui, sans-serif; margin-left: 2px;
-  }
-  .agenda-author {
-    font-family: system-ui, sans-serif; font-size: 13px; color: var(--stone-500);
-    font-style: italic;
-  }
-  .agenda-loc {
-    font-family: system-ui, sans-serif; font-size: 13px; color: var(--stone-500);
-  }
-  .agenda-row.past .agenda-book-title {
-    color: var(--stone-500);
-  }
-  .agenda-row.past .agenda-book-emoji { opacity: 0.55; }
   /* The written account is reading text, so it takes the sinopse's type. */
   .agenda-findings {
     font-family: 'Literata', Georgia, serif;
@@ -555,10 +566,12 @@
     <!-- View: Início -->
     <section id="view-inicio" data-view="inicio" class="hidden">
       <div id="inicio-callout"></div>
-      <h2 id="agenda-future-heading" class="section-heading">Próximas sessões</h2>
+      <h2 id="agenda-future-heading" class="section-heading agenda-heading">Próximas sessões</h2>
       <div id="agenda-future-list"></div>
-      <h2 id="agenda-past-heading" class="section-heading">Sessões anteriores</h2>
-      <div id="agenda-past-list"></div>
+      <div id="agenda-past" class="agenda-past">
+        <h2 id="agenda-past-heading" class="section-heading agenda-heading">Sessões anteriores</h2>
+        <div id="agenda-past-list"></div>
+      </div>
       <p id="agenda-empty" class="muted hidden">Ainda não há sessões.</p>
     </section>
 
@@ -1899,6 +1912,7 @@ function renderAgenda() {
   const futureList = $("agenda-future-list");
   const pastHeading = $("agenda-past-heading");
   const pastList = $("agenda-past-list");
+  const pastSection = $("agenda-past");
   const empty = $("agenda-empty");
 
   futureList.innerHTML = "";
@@ -1909,6 +1923,7 @@ function renderAgenda() {
     futureList.classList.add("hidden");
     pastHeading.classList.add("hidden");
     pastList.classList.add("hidden");
+    pastSection.classList.add("hidden");
     empty.classList.remove("hidden");
     return;
   }
@@ -1925,13 +1940,15 @@ function renderAgenda() {
     .filter((e) => e.date < today)
     .sort((a, b) => b.date.localeCompare(a.date));
 
-  // Toggle each sub-section's heading + list together. The CSS adjacency rule
-  // for the past heading's top margin keys off `#agenda-future-list:not(.hidden)`
-  // so spacing stays correct in either edge case (no future, no past).
+  // Toggle each sub-section's heading + list together, and the past band
+  // with them so an empty band never shows. The CSS adjacency rule for the
+  // band's top margin keys off `#agenda-future-list:not(.hidden)` so spacing
+  // stays correct in either edge case (no future, no past).
   futureHeading.classList.toggle("hidden", future.length === 0);
   futureList.classList.toggle("hidden", future.length === 0);
   pastHeading.classList.toggle("hidden", past.length === 0);
   pastList.classList.toggle("hidden", past.length === 0);
+  pastSection.classList.toggle("hidden", past.length === 0);
 
   const nextDate = future.length > 0 ? future[0].date : null;
   future.forEach((entry) => {
@@ -1942,7 +1959,7 @@ function renderAgenda() {
   });
 }
 
-// Each row is its own meeting card. The header (date · book · location · pin)
+// Each row is its own meeting card. The header (book, then date · place · time)
 // plus, for past meetings, the findings text and participant chips are always
 // visible, and every row shows its book card (sinopse and punchline). Past
 // meetings split into titled sections: "Discussão" (what the group said and
@@ -1955,30 +1972,52 @@ function renderAgendaRow(entry, isPast, isNext) {
   row.dataset.date = entry.date;
 
   const book = getBook(entry.bookId);
-  const pin = isNext ? '<span class="agenda-pin">📌</span>' : '';
-  const range = entry.upToPage
-    ? `<span class="agenda-range">(até pág. ${entry.upToPage})</span>`
-    : '';
-
   const bookEmoji = book ? book.emoji : '❓';
   const bookTitle = book ? book.title : `[${entry.bookId}]`;
-  const bookByline = book ? `${book.author} · ${book.pages} pág.` : '';
+  const byline = book ? ` — ${book.author} · ${book.pages} pág.` : '';
 
   const countdown = isPast ? null : countdownLabel(entry.date);
+  const when = [
+    formatAgendaDate(entry.date) + (countdown ? ` (${countdown})` : ''),
+    entry.upToPage ? `até pág. ${entry.upToPage}` : '',
+  ].filter(Boolean).join(' · ');
+  const where = [entry.location, entry.time || ''].filter(Boolean).join(' · ');
 
-  row.innerHTML = `
-    <div class="agenda-line-main">
-      ${pin}
-      <span class="agenda-date">${formatAgendaDate(entry.date)}</span>
-      ${countdown ? `<span class="agenda-countdown">(${countdown})</span>` : ''}
-      <span class="agenda-dot">·</span>
-      <span class="agenda-book-emoji">${bookEmoji}</span>
-      <span class="agenda-book-title">${bookTitle}</span>
-      ${range}
-    </div>
-    ${bookByline ? `<div class="agenda-author">${bookByline}</div>` : ''}
-    <div class="agenda-loc">${entry.location}${entry.time ? ` · ${entry.time}` : ''}</div>
-  `;
+  if (isPast) {
+    // Past rows fit the book and the session on one compact line, in a
+    // smaller title: they're history, so the discussion below matters more
+    // than the header. The book and the date run as plain text, and the place
+    // is one unbreakable chunk at the end, so on a narrow screen it's the
+    // first to drop to the next line. It carries a 📍 instead of a "·", which
+    // would dangle at a line start.
+    // A no-break space before each "·" ties it to the word before it, so a
+    // wrapped line never starts with a dangling separator.
+    const byline = [book ? `${book.author} · ${book.pages} pág.` : '', when]
+      .filter(Boolean).join(' · ').replaceAll(' · ', '\u00a0· ');
+    row.innerHTML = `
+      <div class="agenda-head">
+        <span class="agenda-head-title"><span class="agenda-head-emoji">${bookEmoji}</span> <span class="book-title agenda-book-title">${bookTitle}</span></span>
+        <span class="author">— ${byline}</span>
+        <span class="agenda-head-chunk agenda-head-where">📍 ${where}</span>
+      </div>
+    `;
+  } else {
+    // Upcoming rows take the ballot card's header (emoji, title, author on
+    // one line), so the book looks like a book everywhere on the page, with
+    // the session's details on one line below it.
+    const byline = book ? ` — ${book.author} · ${book.pages} pág.` : '';
+    const pin = isNext ? '<span class="agenda-pin">📌</span> ' : '';
+    row.innerHTML = `
+      <div class="title-row">
+        <span class="emoji">${bookEmoji}</span>
+        <div>
+          <span class="book-title agenda-book-title">${bookTitle}</span>
+          <span class="author">${byline}</span>
+        </div>
+      </div>
+      <div class="agenda-meta">${pin}${[when, where].join(' · ')}</div>
+    `;
+  }
 
   const hasParticipants = !!entry.participants && entry.participants.length > 0;
   const hasQuotes = !!entry.quotes && entry.quotes.length > 0;
