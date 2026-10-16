@@ -1027,6 +1027,8 @@ const BOOKS = {
     log: [
       { type: "suggested", date: "2026-10-15", by: "fabio" },
       { type: "voting",    date: "2026-10-15", vote: 5 },
+      { type: "lost",      date: "2026-10-16", vote: 5 },
+      { type: "session",   date: "2027-01-06" },
     ],
   },
   "steinbeck-vinhas": {
@@ -1072,6 +1074,7 @@ const BOOKS = {
     log: [
       { type: "suggested", date: "2026-10-15", by: "mariana" },
       { type: "voting",    date: "2026-10-15", vote: 5 },
+      { type: "lost",      date: "2026-10-16", vote: 5 },
     ],
   },
   "patti-smith": {
@@ -1084,6 +1087,8 @@ const BOOKS = {
     log: [
       { type: "suggested", date: "2026-10-15", by: "miguel" },
       { type: "voting",    date: "2026-10-15", vote: 5 },
+      { type: "won",       date: "2026-10-16", vote: 5 },
+      { type: "session",   date: "2026-12-09" },
     ],
   },
   carolina: {
@@ -1096,6 +1101,7 @@ const BOOKS = {
     log: [
       { type: "suggested", date: "2026-10-15", by: "filipa" },
       { type: "voting",    date: "2026-10-15", vote: 5 },
+      { type: "lost",      date: "2026-10-16", vote: 5 },
     ],
   },
 };
@@ -1157,15 +1163,8 @@ function bookStatus(log, today) {
  *    vote may open before its session date is fixed.
  */
 
-/** @type {ActiveVote} */
-const ACTIVE_VOTE = {
-  number: 5,
-  startedAt: "2026-10-15",
-  minVotes: 2,
-  maxVotes: 2,
-  bookIds: ["leguin", "carolina", "steinbeck-eden", "patti-smith"],
-  readingDate: "2026-12-09",
-};
+/** @type {ActiveVote | null} */
+const ACTIVE_VOTE = null;
 
 /**
  * Closed-vote snapshots, ordered newest-first.
@@ -1207,6 +1206,22 @@ const ACTIVE_VOTE = {
 
 /** @type {ArchiveEntry[]} */
 const ARCHIVE = [
+  {
+    number: 5,
+    startedAt: "2026-10-15",
+    closedAt: "2026-10-16",
+    winnerId: "patti-smith",
+    winnerNote: "Empate a 3 votos com A Leste do Paraíso. Vamos ler ambos: Apenas Miúdos primeiro, A Leste do Paraíso a seguir.",
+    maxVotes: 2,
+    bookIds: ["leguin", "carolina", "steinbeck-eden", "patti-smith"],
+    votes: { "steinbeck-eden": 3, "patti-smith": 3, carolina: 2 },
+    voters: {
+      "fbotelho":    { name: "fbotelho",    person: "fabio",   books: ["steinbeck-eden", "patti-smith"] },
+      "miguel mota": { name: "Miguel Mota", person: "miguel",  books: ["steinbeck-eden", "patti-smith"] },
+      "mariana":     { name: "Mariana",     person: "mariana", books: ["steinbeck-eden", "carolina"] },
+      "filipa":      { name: "Filipa",      person: "filipa",  books: ["carolina", "patti-smith"] },
+    },
+  },
   {
     number: 4,
     startedAt: "2026-09-07",
@@ -1320,6 +1335,16 @@ const ARCHIVE = [
 
 /** @type {AgendaEntry[]} */
 const AGENDA = [
+  {
+    date: "2027-01-06",
+    location: "A definir",
+    bookId: "steinbeck-eden",
+  },
+  {
+    date: "2026-12-09",
+    location: "A definir",
+    bookId: "patti-smith",
+  },
   {
     date: "2026-11-11",
     location: "A definir",
