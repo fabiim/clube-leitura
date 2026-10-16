@@ -668,8 +668,9 @@ const API_URL = atob(_E);
  *  - Every AGENDA participant name and quote `by` equals some `name` here.
  *  - Once an id is referenced, do NOT rename it.
  *
- * Votes are out of this registry's scope: ARCHIVE voters are recorded as
- * typed on the ballot form and are not checked against it.
+ * Not everyone here has suggested a book or come to a session: anyone who
+ * voted is here too, because ARCHIVE voters link to people by id (`person`)
+ * while keeping their name as typed on the ballot form.
  *
  * @typedef {{ name: string }} Person
  */
@@ -680,6 +681,11 @@ const PEOPLE = {
   filipa:  { name: "Filipa Costa" },
   mariana: { name: "Mariana Teixeira" },
   miguel:  { name: "Miguel Mota" },
+  "filipa-magalhaes": { name: "Filipa Magalhães" },
+  carolina:           { name: "Carolina Brito" },
+  "mariana-oliveira": { name: "Mariana Oliveira" },
+  andre:              { name: "André Esteves" },
+  melissa:            { name: "Melissa" },
 };
 
 /**
@@ -1170,6 +1176,9 @@ const ACTIVE_VOTE = {
  *  - `winnerNote` is omitted unless explicitly set.
  *  - `votes` keys are a subset of `bookIds`.
  *  - `voters[nameKey].books` are a subset of `bookIds`.
+ *  - `voters[nameKey].name` is the name as typed on the ballot form;
+ *    `person`, when set, is the PEOPLE id of who typed it. No two voters in
+ *    one entry share a `person`.
  *  - Every id in `bookIds` resolves in BOOKS.
  *
  * Which books were on each vote, and which won, is also in the books' logs,
@@ -1188,7 +1197,7 @@ const ACTIVE_VOTE = {
  *   maxVotes:    number,
  *   bookIds:     string[],
  *   votes:       Record<string, number>,
- *   voters:      Record<string, { name: string, books: string[] }>,
+ *   voters:      Record<string, { name: string, person?: string, books: string[] }>,
  * }} ArchiveEntry
  */
 
@@ -1203,10 +1212,10 @@ const ARCHIVE = [
     bookIds: ["steinbeck", "gilman", "agualusa", "wilde"],
     votes: { wilde: 4, steinbeck: 2, gilman: 1, agualusa: 1 },
     voters: {
-      "miguel mota": { name: "Miguel Mota", books: ["wilde", "gilman"] },
-      "fbotelho":    { name: "fbotelho",    books: ["steinbeck", "wilde"] },
-      "filipa":      { name: "Filipa",      books: ["agualusa", "wilde"] },
-      "mariana":     { name: "Mariana",     books: ["steinbeck", "wilde"] },
+      "miguel mota": { name: "Miguel Mota", person: "miguel",           books: ["wilde", "gilman"] },
+      "fbotelho":    { name: "fbotelho",    person: "fabio",            books: ["steinbeck", "wilde"] },
+      "filipa":      { name: "Filipa",      person: "filipa",           books: ["agualusa", "wilde"] },
+      "mariana":     { name: "Mariana",     person: "mariana",          books: ["steinbeck", "wilde"] },
     },
   },
   {
@@ -1218,10 +1227,10 @@ const ARCHIVE = [
     bookIds: ["sola", "kazantzakis", "morel", "ripley", "bukowski"],
     votes: { morel: 3, bukowski: 2, sola: 1, kazantzakis: 1, ripley: 1 },
     voters: {
-      "filipa":      { name: "Filipa",      books: ["morel", "bukowski"] },
-      "mariana":     { name: "Mariana",     books: ["sola", "morel"] },
-      "fbotelho":    { name: "fbotelho",    books: ["kazantzakis", "bukowski"] },
-      "miguel mota": { name: "Miguel Mota", books: ["morel", "ripley"] },
+      "filipa":      { name: "Filipa",      person: "filipa",           books: ["morel", "bukowski"] },
+      "mariana":     { name: "Mariana",     person: "mariana",          books: ["sola", "morel"] },
+      "fbotelho":    { name: "fbotelho",    person: "fabio",            books: ["kazantzakis", "bukowski"] },
+      "miguel mota": { name: "Miguel Mota", person: "miguel",           books: ["morel", "ripley"] },
     },
   },
   {
@@ -1234,14 +1243,14 @@ const ARCHIVE = [
     bookIds: ["ncs-ceu", "voltaire", "ernaux", "rhys", "stoner"],
     votes: { "ncs-ceu": 5, rhys: 5, ernaux: 3, stoner: 3 },
     voters: {
-      "miguel mota":      { name: "Miguel Mota",      books: ["ncs-ceu", "rhys"] },
-      "mariana":          { name: "Mariana",          books: ["ncs-ceu", "rhys"] },
-      "fábio":            { name: "Fábio",            books: ["ernaux", "rhys"] },
-      "filipa m":         { name: "Filipa M",         books: ["ncs-ceu", "ernaux"] },
-      "filipa":           { name: "Filipa",           books: ["stoner", "ernaux"] },
-      "carolina":         { name: "Carolina",         books: ["ncs-ceu", "rhys"] },
-      "mariana oliveira": { name: "Mariana Oliveira", books: ["ncs-ceu", "stoner"] },
-      "andre":            { name: "Andre",            books: ["rhys", "stoner"] },
+      "miguel mota":      { name: "Miguel Mota",      person: "miguel",           books: ["ncs-ceu", "rhys"] },
+      "mariana":          { name: "Mariana",          person: "mariana",          books: ["ncs-ceu", "rhys"] },
+      "fábio":            { name: "Fábio",            person: "fabio",            books: ["ernaux", "rhys"] },
+      "filipa m":         { name: "Filipa M",         person: "filipa-magalhaes", books: ["ncs-ceu", "ernaux"] },
+      "filipa":           { name: "Filipa",           person: "filipa",           books: ["stoner", "ernaux"] },
+      "carolina":         { name: "Carolina",         person: "carolina",         books: ["ncs-ceu", "rhys"] },
+      "mariana oliveira": { name: "Mariana Oliveira", person: "mariana-oliveira", books: ["ncs-ceu", "stoner"] },
+      "andre":            { name: "Andre",            person: "andre",            books: ["rhys", "stoner"] },
     },
   },
   {
@@ -1253,11 +1262,11 @@ const ARCHIVE = [
     bookIds: ["saramago", "kang", "camus", "vhm", "ncs", "amado"],
     votes: { saramago: 3, ncs: 2, vhm: 2, kang: 1, camus: 1, amado: 1 },
     voters: {
-      "antónia":     { name: "Antónia",     books: ["kang", "saramago"] },
-      "filipa":      { name: "Filipa",      books: ["ncs", "saramago"] },
-      "miguel mota": { name: "Miguel Mota", books: ["ncs", "vhm"] },
-      "melissa":     { name: "Melissa",     books: ["vhm", "saramago"] },
-      "filipa m":    { name: "Filipa M",    books: ["camus", "amado"] },
+      "antónia":     { name: "Antónia",     person: "mariana",          books: ["kang", "saramago"] },
+      "filipa":      { name: "Filipa",      person: "filipa",           books: ["ncs", "saramago"] },
+      "miguel mota": { name: "Miguel Mota", person: "miguel",           books: ["ncs", "vhm"] },
+      "melissa":     { name: "Melissa",     person: "melissa",          books: ["vhm", "saramago"] },
+      "filipa m":    { name: "Filipa M",    person: "filipa-magalhaes", books: ["camus", "amado"] },
     },
   },
 ];

@@ -146,6 +146,16 @@
     });
   });
 
+  test("every ARCHIVE voter's person is in PEOPLE, at most once per vote", () => {
+    // `person` links a typed ballot name to PEOPLE; one person, one ballot.
+    ARCHIVE.forEach((entry) => {
+      const ids = Object.values(entry.voters).map((v) => v.person).filter((p) => p !== undefined);
+      ids.forEach((id) => assert(id in PEOPLE, `vote #${entry.number}: "${id}" is not in PEOPLE`));
+      const dup = ids.find((id, i) => ids.indexOf(id) !== i);
+      assert(dup === undefined, `vote #${entry.number}: "${dup}" voted twice`);
+    });
+  });
+
   test("every book log is well formed, sorted, and has a suggester in PEOPLE", () => {
     // The log's shape rules from the BOOKS doc comment.
     const fields = { suggested: ["by"], voting: ["vote"], won: ["vote"], lost: ["vote"], session: [] };
