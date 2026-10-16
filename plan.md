@@ -291,7 +291,7 @@ Each step leaves the site usable. Smoke-test in a browser after every step.
   - **Note**: this step may briefly disrupt a live vote during validation. Do on a branch and merge during a quiet window, or accept short outage.
   - **Partial (interim guard landed, 8558f6f)**: `init()` now wraps `renderCandidateBooks()` in `if (ACTIVE_VOTE)` so the page survives a null-vote window (between a close and the next open). Votação tab is still half-broken in that state — badge shows stale loadData fetch, name-section is clickable but submitting crashes on `ACTIVE_VOTE.maxVotes`. The full chosen-book card / no-vote placeholder is still pending.
 
-- [ ] **Step 8 — `CLAUDE.md` at repo root.**
+- [x] **Step 8 — `CLAUDE.md` at repo root.** Done in 84aebf7: the close and open workflows are the "Closing a vote" and "Opening a vote" sections. The data model is covered by "Spec", "People", and "Book log"; the invariants stay in the JSDoc beside each constant in `index.html`, so they live in one place.
   - `## Data model` — pointers to `ACTIVE_VOTE`, `ARCHIVE`, `AGENDA` in `index.html`, with the invariants from this plan.
   - `## Close-vote workflow` — full procedure from behaviour group 6: curl the base64-decoded API URL, validate winner (auto-detect or user-specified, abort on tie without override), build snapshot in the documented field order, prepend to `ARCHIVE`, set `ACTIVE_VOTE = null`, remind user to clear the sheet.
   - `## Open-vote workflow` — increment `number` from `ARCHIVE[0].number + 1`, set `startedAt` to today, choose `books` + `maxVotes`, require sheet to already be empty.
