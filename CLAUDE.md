@@ -37,12 +37,13 @@ The scale steps are Tailwind's (50 lightest, 900 darkest), so a missing step can
 |---|---|---|
 | `stone` (+ `white`) | Neutral. The page, cards, text, and rules. Most of the page. | Everything not listed below, including the Estante's status badges and history text. |
 | `amber` | Accent. Something tappable, selected, or current. | Tabs, links, the selected ballot card, the next session, the vote pill, gift chips and drawer, the punchline on upcoming sessions, the Estante's selected filter chips and vote links. |
-| `teal` | The group's own words, kept apart from amber. | Session quotes (`teal-50` band, `teal-200` rules). Also a tied vote. |
+| `rose` | The group's own words, kept apart from amber. | Session quotes (`rose-100` band, `rose-200` rules). |
+| `teal` | A tie. | A tied vote in the results. |
 | `green`, `red` | Status only. | Vote confirmation, error box. |
 
 Rules:
 
-- **Amber means "interactive or now".** Don't use it for decoration, or it stops signalling anything. Content that should stand out but isn't tappable gets a different hue, like the quotes' teal.
+- **Amber means "interactive or now".** Don't use it for decoration, or it stops signalling anything. Content that should stand out but isn't tappable gets a different hue, like the quotes' rose.
 - **Text contrast is at least 4.5:1 (WCAG AA).** On the light backgrounds (`white`, `stone-50`, `amber-50`), `stone-500` and darker pass; `stone-400` (about 2.4:1) does not, so use it only for decoration and rules, never for text. `amber-700` passes for links (about 4.8:1).
 - **Tints carry areas, darks carry text.** Backgrounds use the 50 and 100 steps; borders use 100 to 300; text uses 500 and darker.
 - **Check new pairs.** Before adding a text/background pair, compute its contrast ratio.

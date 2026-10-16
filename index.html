@@ -24,8 +24,10 @@
     /* Accent: what is tappable, selected, or current. Used sparingly. */
     --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-600: #d97706;
     --amber-700: #b45309; --amber-800: #92400e;
-    /* Teal: the group's own words (session quotes), and a tied vote. */
-    --teal-50: #f0fdfa; --teal-200: #99f6e4; --teal-700: #0f766e;
+    /* Teal: a tied vote. */
+    --teal-50: #f0fdfa; --teal-700: #0f766e;
+    /* Rose: the group's own words (session quotes). */
+    --rose-100: #ffe4e6; --rose-200: #fecdd3;
     /* Status: vote outcomes and errors only. */
     --green-50: #ecfdf5;
     --red-50: #fef2f2; --red-800: #991b1b;
@@ -462,19 +464,20 @@
     margin-bottom: 0; background: transparent; padding: 0;
     font-size: 16px; line-height: 1.6; color: var(--stone-700);
   }
-  /* Quotes: centred italics on a pale teal band with hairline rules above
+  /* Quotes: centred italics on a pale rose band with hairline rules above
      and below, with no quotation marks because the Citações title already
-     says what they are. Teal keeps them apart from the amber of the
-     punchline and the gifts. Text stays mid-grey so they don't out-shout the
-     rest of the card. */
+     says what they are. Rose keeps them apart from the amber of the
+     punchline and the gifts. The band is the 100 step, because a 50 tint
+     vanished on some screens and phones. Text stays mid-grey so they don't
+     out-shout the rest of the card. */
   .agenda-quotes {
     display: flex; flex-direction: column; gap: 16px;
     margin: 8px 0 4px;
   }
   .agenda-quote {
     margin: 0; padding: 12px 16px; text-align: center;
-    background: var(--teal-50);
-    border-top: 1px solid var(--teal-200); border-bottom: 1px solid var(--teal-200);
+    background: var(--rose-100);
+    border-top: 1px solid var(--rose-200); border-bottom: 1px solid var(--rose-200);
   }
   .agenda-quote-text {
     margin: 0; font-size: 15.5px; line-height: 1.5; font-style: italic;
