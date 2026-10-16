@@ -187,7 +187,7 @@
     }
     ARCHIVE.forEach((v) => v.bookIds.forEach((id) => {
       add(id, `voting ${v.startedAt} #${v.number}`);
-      add(id, `${id === v.winnerId ? "won" : "lost"} ${v.closedAt} #${v.number}`);
+      add(id, `${v.winnerIds.includes(id) ? "won" : "lost"} ${v.closedAt} #${v.number}`);
     }));
     AGENDA.forEach((s) => add(s.bookId, `session ${s.date}`));
 
@@ -345,6 +345,38 @@
       "📖 Sessão → · 1 Fev 2020",
       "📅 Sessão marcada → · 1 Mar 2020",
     ].join(" | "), "log lines");
+  });
+
+  test("ARCHIVE winnerIds are non-empty, unique, and on the ballot", () => {
+    // Several winners mean a tie the group read in full.
+    ARCHIVE.forEach((v) => {
+      assert(Array.isArray(v.winnerIds) && v.winnerIds.length > 0, `vote #${v.number}: no winner`);
+      eq(new Set(v.winnerIds).size, v.winnerIds.length, `vote #${v.number}: unique winners`);
+      v.winnerIds.forEach((id) => assert(v.bookIds.includes(id), `vote #${v.number}: winner "${id}" not on the ballot`));
+    });
+  });
+
+  test("an archive header lists every winner, tagging a tie", () => {
+    // One line per winner in reading order; the tag only on a shared win.
+    const [a, b, c] = Object.keys(BOOKS);
+    const base = { number: 99, startedAt: "2020-01-01", closedAt: "2020-01-02", maxVotes: 2, bookIds: [a, b, c], votes: {}, voters: {} };
+    const header = (winnerIds) => renderArchiveRow({ ...base, winnerIds }).querySelector(".archive-header");
+    const titles = (h) => [...h.querySelectorAll(".archive-winner-line .archive-title-author")].map((x) => x.textContent);
+    const tied = header([b, a]);
+    eq(titles(tied).join(" | "), [b, a].map((id) => `${getBook(id).title} — ${getBook(id).author}`).join(" | "), "both, in order");
+    eq(tied.querySelector(".archive-tie-tag").textContent, "Empate", "tie tag");
+    const solo = header([c]);
+    eq(titles(solo).length, 1, "one winner");
+    eq(solo.querySelector(".archive-tie-tag"), null, "no tag");
+  });
+
+  test("a won log line says (empate) only when the vote was a tie", () => {
+    // Reads ARCHIVE, so it picks a tied and a single-winner vote from it.
+    const line = (vote) => renderLogEvent({ type: "won", date: "2020-01-01", vote: vote.number }, "2020-01-01").querySelector("a").textContent;
+    const tie = ARCHIVE.find((v) => v.winnerIds.length > 1);
+    const solo = ARCHIVE.find((v) => v.winnerIds.length === 1);
+    if (tie) eq(line(tie), `Venceu a votação #${tie.number} (empate) →`, "tie");
+    if (solo) eq(line(solo), `Venceu a votação #${solo.number} →`, "single winner");
   });
 
   test("vote links point at the open ballot or the vote's Arquivo entry", () => {

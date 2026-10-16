@@ -25,7 +25,7 @@ A high-level map of behaviour, not a detailed spec. Read the code for details. U
 - **Past sessions** split into titled sections: "Discussão" (the written account and the participants), "Citações" (passages from the book the group liked, always visible; who picked each one is recorded but not shown), and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
 - **Estante** lists every book in `BOOKS` on the ballot's card, with a status (Lido, A ler, A votos, Perdeu, Ideia) and its history from the book log, with each vote and session linked. Chips filter by suggester (only people who suggested a book get one) and status; the filters live in the URL (`#estante?por=fabio&estado=ideia`). Built on first visit. The only view that shows who suggested a book: the ballot never does.
-- **Arquivo** lists closed votes with the winner and expandable per-book tallies, each naming who voted for it (by `PEOPLE` name when the voter is linked).
+- **Arquivo** lists closed votes with the winner (or the tied winners, tagged "Empate") and expandable per-book tallies, each naming who voted for it (by `PEOPLE` name when the voter is linked).
 
 ## Colour palette
 
@@ -176,9 +176,9 @@ log: [
 - **To add an idea**, add a `BOOKS` entry whose log holds only its `suggested` event(s). It shows as 💡 Ideia.
 - **The log and the other constants must agree, both ways.** `ACTIVE_VOTE`, `ARCHIVE`, and `AGENDA` keep their own copies as render data, and a test fails on any mismatch. So:
   - **Opening a vote:** add `voting` (dated `startedAt`) to each candidate.
-  - **Closing a vote:** add `won` to the winner and `lost` to the others (dated `closedAt`).
+  - **Closing a vote:** add `won` to each book in `winnerIds` and `lost` to the others (dated `closedAt`).
   - **Adding a session:** add `session` (dated the session's date) to its book.
-- **Status precedence:** a past session means Lido; an upcoming session or a won vote, A ler; a vote with no won/lost yet, A votos; a lost vote, Perdeu; otherwise Ideia. A book can lose a vote and still be read (vote #2's tie).
+- **Status precedence:** a past session means Lido; an upcoming session or a won vote, A ler; a vote with no won/lost yet, A votos; a lost vote, Perdeu; otherwise Ideia. A book can lose a vote and still be read later.
 
 ## Session quotes (`AGENDA[].quotes`)
 
@@ -209,9 +209,9 @@ Render sanity tests live in `tests/render.test.js` and run in headless Chrome vi
 Triggered by "fecha a votação" (or "close the vote"), optionally with "o vencedor é X" or a note.
 
 1. **Fetch the live tally.** Decode `_E` in `index.html` (base64) to get the Apps Script URL, `curl` it, and parse `{ votes, voters }`. On any failure, stop and edit nothing. The auto-mode classifier may block this request; if it does, ask the user to allow it or to paste the JSON.
-2. **Pick the winner.** If the user named one, check that it is in `ACTIVE_VOTE.bookIds`. Otherwise take the top count; on a tie at the top, stop and ask.
-3. **Snapshot the vote.** Prepend to `ARCHIVE`, in this field order: `number`, `startedAt`, `closedAt` (today), `winnerId`, `winnerNote` (only if given), `maxVotes`, `bookIds` (copied from `ACTIVE_VOTE`), `votes` (only keys in `bookIds`), and `voters` (drop the sheet's `time`; give each voter a `person` id, ask the user when a typed name is ambiguous, and add new people to `PEOPLE`). Don't touch the `BOOKS` entries.
-4. **Update the logs.** Add `won` to the winner and `lost` to every other candidate, dated `closedAt`. If the session is fixed (often `ACTIVE_VOTE.readingDate`), add the `AGENDA` entry and a `session` event to the winner.
+2. **Pick the winner.** If the user named one, check that it is in `ACTIVE_VOTE.bookIds`. Otherwise take the top count; on a tie at the top, stop and ask. A tie counts as a shared win only when the group reads every tied book: then all of them are winners, in reading order (votes #2 and #5). If the group picks one, the others lost.
+3. **Snapshot the vote.** Prepend to `ARCHIVE`, in this field order: `number`, `startedAt`, `closedAt` (today), `winnerIds`, `winnerNote` (only if given), `maxVotes`, `bookIds` (copied from `ACTIVE_VOTE`), `votes` (only keys in `bookIds`), and `voters` (drop the sheet's `time`; give each voter a `person` id, ask the user when a typed name is ambiguous, and add new people to `PEOPLE`). Don't touch the `BOOKS` entries.
+4. **Update the logs.** Add `won` to each winner and `lost` to every other candidate, dated `closedAt`. For each session that is fixed (often `ACTIVE_VOTE.readingDate` for the first winner), add the `AGENDA` entry and a `session` event to that book.
 5. **Close it.** Set `ACTIVE_VOTE = null`, run `tests/run.sh`, and report: "Closed vote #N. Winner: <emoji> <title>." Remind the user to clear the Google Sheet by hand.
 
 While `ACTIVE_VOTE` is null, the Votação tab shows only "Não há votação activa" with a link to the Arquivo; `init()` hides the name form. The chosen-book card planned for that state (`plan.md` step 6) isn't built.

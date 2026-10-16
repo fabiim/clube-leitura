@@ -297,6 +297,17 @@
     flex: 1; min-width: 0;
     display: flex; align-items: center; gap: 8px;
   }
+  .archive-winner-lines {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .archive-winner-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .archive-tie-tag {
+    flex-shrink: 0; padding: 2px 8px; border-radius: 10px;
+    background: var(--teal-50); color: var(--teal-700);
+    border: 1px solid var(--teal-700);
+    font-family: system-ui, sans-serif; font-size: 11px; font-weight: 600;
+  }
   .archive-emoji { font-size: 20px; flex-shrink: 0; }
   .archive-title-author {
     font-size: 15px; color: var(--stone-800); font-weight: 600;
@@ -695,7 +706,7 @@ const PEOPLE = {
 /**
  * Canonical book registry. Single source of truth for all book metadata.
  *
- * Everything else — ACTIVE_VOTE.bookIds, ARCHIVE[].bookIds, ARCHIVE[].winnerId,
+ * Everything else — ACTIVE_VOTE.bookIds, ARCHIVE[].bookIds, ARCHIVE[].winnerIds,
  * AGENDA[].bookId — references entries here by their object key.
  *
  * Invariants:
@@ -881,7 +892,7 @@ const BOOKS = {
     log: [
       { type: "suggested", date: "2026-05-15", by: "mariana" },
       { type: "voting",    date: "2026-05-15", vote: 2 },
-      { type: "lost",      date: "2026-05-18", vote: 2 },
+      { type: "won",       date: "2026-05-18", vote: 2 },
       { type: "session",   date: "2026-08-05" },
     ],
   },
@@ -1027,7 +1038,7 @@ const BOOKS = {
     log: [
       { type: "suggested", date: "2026-10-15", by: "fabio" },
       { type: "voting",    date: "2026-10-15", vote: 5 },
-      { type: "lost",      date: "2026-10-16", vote: 5 },
+      { type: "won",       date: "2026-10-16", vote: 5 },
       { type: "session",   date: "2027-01-06" },
     ],
   },
@@ -1175,7 +1186,9 @@ const ACTIVE_VOTE = null;
  *
  * Invariants (per entry):
  *  - `closedAt >= startedAt`.
- *  - `winnerId` ∈ `bookIds`.
+ *  - `winnerIds` is non-empty, has no repeats, and is a subset of `bookIds`.
+ *    More than one id means a tie the group chose to read in full: every
+ *    tied book won, listed in reading order.
  *  - `winnerNote` is omitted unless explicitly set.
  *  - `votes` keys are a subset of `bookIds`.
  *  - `voters[nameKey].books` are a subset of `bookIds`.
@@ -1195,7 +1208,7 @@ const ACTIVE_VOTE = null;
  *   number:      number,
  *   startedAt:   string,
  *   closedAt:    string,
- *   winnerId:    string,
+ *   winnerIds:   string[],
  *   winnerNote?: string,
  *   maxVotes:    number,
  *   bookIds:     string[],
@@ -1210,7 +1223,7 @@ const ARCHIVE = [
     number: 5,
     startedAt: "2026-10-15",
     closedAt: "2026-10-16",
-    winnerId: "patti-smith",
+    winnerIds: ["patti-smith", "steinbeck-eden"],
     winnerNote: "Empate a 3 votos com A Leste do Paraíso. Vamos ler ambos: Apenas Miúdos primeiro, A Leste do Paraíso a seguir.",
     maxVotes: 2,
     bookIds: ["leguin", "carolina", "steinbeck-eden", "patti-smith"],
@@ -1226,7 +1239,7 @@ const ARCHIVE = [
     number: 4,
     startedAt: "2026-09-07",
     closedAt: "2026-09-17",
-    winnerId: "wilde",
+    winnerIds: ["wilde"],
     maxVotes: 2,
     bookIds: ["steinbeck", "gilman", "agualusa", "wilde"],
     votes: { wilde: 4, steinbeck: 2, gilman: 1, agualusa: 1 },
@@ -1241,7 +1254,7 @@ const ARCHIVE = [
     number: 3,
     startedAt: "2026-07-06",
     closedAt: "2026-07-13",
-    winnerId: "morel",
+    winnerIds: ["morel"],
     maxVotes: 2,
     bookIds: ["sola", "kazantzakis", "morel", "ripley", "bukowski"],
     votes: { morel: 3, bukowski: 2, sola: 1, kazantzakis: 1, ripley: 1 },
@@ -1256,7 +1269,7 @@ const ARCHIVE = [
     number: 2,
     startedAt: "2026-05-15",
     closedAt: "2026-05-18",
-    winnerId: "ncs-ceu",
+    winnerIds: ["ncs-ceu", "rhys"],
     winnerNote: "Empate a 5 votos com Vasto Mar de Sargaços. Vamos ler ambos: Céu Nublado primeiro, Vasto Mar de Sargaços a seguir.",
     maxVotes: 2,
     bookIds: ["ncs-ceu", "voltaire", "ernaux", "rhys", "stoner"],
@@ -1276,7 +1289,7 @@ const ARCHIVE = [
     number: 1,
     startedAt: "2026-04-01",
     closedAt: "2026-04-03",
-    winnerId: "saramago",
+    winnerIds: ["saramago"],
     maxVotes: 2,
     bookIds: ["saramago", "kang", "camus", "vhm", "ncs", "amado"],
     votes: { saramago: 3, ncs: 2, vhm: 2, kang: 1, camus: 1, amado: 1 },
@@ -1769,10 +1782,14 @@ function renderArchiveRow(entry) {
   const startsExpanded = expandedEntries.has(entry.number);
   if (startsExpanded) row.classList.add("expanded");
 
-  const winner = getBook(entry.winnerId);
-  const winnerLabel = winner
-    ? `<span class="archive-emoji">${winner.emoji}</span><span class="archive-title-author">${winner.title} — ${winner.author}</span>`
-    : `<span class="archive-title-author">Vencedor desconhecido</span>`;
+  // One line per winner, in reading order. A tie the group read in full has
+  // several, all with the same weight, plus a tag that says so in words.
+  const winners = entry.winnerIds.map(getBook).filter(Boolean);
+  const winnerLines = winners.length > 0
+    ? winners.map((w) => `<div class="archive-winner-line"><span class="archive-emoji">${w.emoji}</span><span class="archive-title-author">${w.title} — ${w.author}</span></div>`).join("")
+    : `<div class="archive-winner-line"><span class="archive-title-author">Vencedor desconhecido</span></div>`;
+  const tieTag = winners.length > 1 ? `<span class="archive-tie-tag">Empate</span>` : "";
+  const winnerLabel = `<div class="archive-winner-lines">${winnerLines}</div>${tieTag}`;
 
   row.innerHTML = `
     <div class="archive-header">
@@ -2413,11 +2430,11 @@ function renderShelfCard(book, today) {
 // Built with DOM nodes, so no text is parsed as HTML.
 function renderLogEvent(e, today) {
   const li = document.createElement("li");
-  const voteLink = (text) => {
+  const voteLink = (text, suffix = "") => {
     const a = document.createElement("a");
     const open = ACTIVE_VOTE && ACTIVE_VOTE.number === e.vote;
     a.href = open ? "#votacao" : `#arquivo/${e.vote}`;
-    a.textContent = `${text} #${e.vote} →`;
+    a.textContent = `${text} #${e.vote}${suffix} →`;
     return a;
   };
   // Each kind of event reads as its own sentence.
@@ -2430,9 +2447,13 @@ function renderLogEvent(e, today) {
     case "voting":
       li.append("🗳️ ", voteLink("Na votação"));
       break;
-    case "won":
-      li.append("🏆 ", voteLink("Venceu a votação"));
+    case "won": {
+      // A shared win reads as one, so the reader knows another book won too.
+      const vote = ARCHIVE.find((v) => v.number === e.vote);
+      const tied = vote !== undefined && vote.winnerIds.length > 1;
+      li.append("🏆 ", voteLink("Venceu a votação", tied ? " (empate)" : ""));
       break;
+    }
     case "lost":
       li.append("🥀 ", voteLink("Perdeu a votação"));
       break;
