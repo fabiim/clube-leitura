@@ -24,8 +24,8 @@ A high-level map of behaviour, not a detailed spec. Read the code for details. U
 - **Each session** shows a date, a book, a location, and a book card (sinopse, punchline, and shop links). Nothing is collapsed.
 - **Past sessions** split into titled sections: "Discussão" (the written account and the participants), "Citações" (passages from the book the group liked, always visible; who picked each one is recorded but not shown), and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
-- **Estante** lists every book in `BOOKS` on the ballot's card, with a status (Lido, A ler, A votos, Perdeu, Ideia) and its history from the book log, with each vote and session linked. Chips filter by suggester and status; the filters live in the URL (`#estante?por=fabio&estado=ideia`). Built on first visit. The only view that shows who suggested a book: the ballot never does.
-- **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
+- **Estante** lists every book in `BOOKS` on the ballot's card, with a status (Lido, A ler, A votos, Perdeu, Ideia) and its history from the book log, with each vote and session linked. Chips filter by suggester (only people who suggested a book get one) and status; the filters live in the URL (`#estante?por=fabio&estado=ideia`). Built on first visit. The only view that shows who suggested a book: the ballot never does.
+- **Arquivo** lists closed votes with the winner and expandable per-book tallies, each naming who voted for it (by `PEOPLE` name when the voter is linked).
 
 ## Colour palette
 
@@ -156,7 +156,7 @@ On the page, a participant with a piece gets a "+ 🎁" chip under the findings.
 
 ## People (`PEOPLE`)
 
-One entry per club member: `id → { name }`. Book logs refer to people by id; session participants and quote pickers use the full `name`, which must match exactly. Names must stay unique once case and accents are ignored. Ballot voters are not people entries: `ARCHIVE` keeps names as typed on the form. Add a person here before using them anywhere else, and never rename an id once used.
+One entry per person who suggested a book, came to a session, or voted: `id → { name }`. Book logs refer to people by id; session participants and quote pickers use the full `name`, which must match exactly. Names must stay unique once case and accents are ignored. `ARCHIVE` voters keep `name` as typed on the form and link to a person with `person: "<id>"`. Add a person here before using them anywhere else, and never rename an id once used (a `name` can change).
 
 ## Book log (`BOOKS[].log`)
 
@@ -210,7 +210,7 @@ Triggered by "fecha a votação" (or "close the vote"), optionally with "o vence
 
 1. **Fetch the live tally.** Decode `_E` in `index.html` (base64) to get the Apps Script URL, `curl` it, and parse `{ votes, voters }`. On any failure, stop and edit nothing. The auto-mode classifier may block this request; if it does, ask the user to allow it or to paste the JSON.
 2. **Pick the winner.** If the user named one, check that it is in `ACTIVE_VOTE.bookIds`. Otherwise take the top count; on a tie at the top, stop and ask.
-3. **Snapshot the vote.** Prepend to `ARCHIVE`, in this field order: `number`, `startedAt`, `closedAt` (today), `winnerId`, `winnerNote` (only if given), `maxVotes`, `bookIds` (copied from `ACTIVE_VOTE`), `votes` (only keys in `bookIds`), and `voters`. Don't touch the `BOOKS` entries.
+3. **Snapshot the vote.** Prepend to `ARCHIVE`, in this field order: `number`, `startedAt`, `closedAt` (today), `winnerId`, `winnerNote` (only if given), `maxVotes`, `bookIds` (copied from `ACTIVE_VOTE`), `votes` (only keys in `bookIds`), and `voters` (drop the sheet's `time`; give each voter a `person` id, ask the user when a typed name is ambiguous, and add new people to `PEOPLE`). Don't touch the `BOOKS` entries.
 4. **Update the logs.** Add `won` to the winner and `lost` to every other candidate, dated `closedAt`. If the session is fixed (often `ACTIVE_VOTE.readingDate`), add the `AGENDA` entry and a `session` event to the winner.
 5. **Close it.** Set `ACTIVE_VOTE = null`, run `tests/run.sh`, and report: "Closed vote #N. Winner: <emoji> <title>." Remind the user to clear the Google Sheet by hand.
 
