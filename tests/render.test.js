@@ -281,6 +281,39 @@
     renderArquivo();
   });
 
+  // Fixture results: one linked and one unlinked voter, and a book nobody
+  // picked. Book ids come from BOOKS so the cards have real metadata.
+  function resultsFixture(options) {
+    const [a, b, c] = Object.keys(BOOKS);
+    const el = document.createElement("div");
+    renderResultsInto(el, [a, b, c].map(getBook), { [a]: 2, [b]: 1 }, {
+      "fbotelho": { name: "fbotelho", person: "fabio", books: [a, b] },
+      "zé":       { name: "Zé", books: [a] },
+    }, options);
+    const line = (id) => {
+      const card = [...el.querySelectorAll(".result-card")].find((x) => x.textContent.includes(getBook(id).title));
+      const v = card.querySelector(".result-voters");
+      return v && v.textContent;
+    };
+    return { el, line, a, b, c };
+  }
+
+  test("archive results name each book's voters, full names for linked voters", () => {
+    // The Arquivo shows who voted for what; a linked voter shows as PEOPLE says.
+    const { el, line, a, b, c } = resultsFixture({ perBookVoters: true });
+    eq(line(a), `Votaram: ${PEOPLE.fabio.name}, Zé`, "linked and unlinked voters");
+    eq(line(b), `Votaram: ${PEOPLE.fabio.name}`, "one voter");
+    eq(line(c), null, "no line for a book nobody picked");
+    eq(el.querySelector(".voter-list"), null, "no voter chips");
+  });
+
+  test("live results keep the voter chips and no per-book voters", () => {
+    // The open ballot only says who has voted, not for what.
+    const { el } = resultsFixture();
+    eq(el.querySelectorAll(".result-voters").length, 0, "no per-book line");
+    eq([...el.querySelectorAll(".voter-list .chip")].map((x) => x.textContent).join(), "fbotelho,Zé", "chips as typed");
+  });
+
   test("the Estante is empty until its first visit, then lists every book once", () => {
     // Built lazily, so a page load that never opens it pays nothing.
     eq($("shelf-list").children.length, 0, "no cards before the first visit");

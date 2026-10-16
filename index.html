@@ -201,6 +201,10 @@
     font-size: 13px; color: var(--stone-500); font-family: system-ui, sans-serif;
     font-weight: 600; display: block; margin-top: 4px;
   }
+  .result-voters {
+    font-size: 12px; color: var(--stone-600); font-family: system-ui, sans-serif;
+    display: block; margin-top: 4px;
+  }
   .result-toggle {
     flex-shrink: 0; font-size: 18px;
   }
@@ -1593,7 +1597,10 @@ async function submitVote() {
 
 // Pure renderer: takes all data as arguments and paints into `container`.
 // Tolerates `votes` keys or `voters` selections that aren't in `books`.
-function renderResultsInto(container, books, votes, voters) {
+// With `perBookVoters`, each card names who voted for it (full names for
+// voters linked to PEOPLE), and the "Quem já votou" chips are left out,
+// because the cards already say who voted.
+function renderResultsInto(container, books, votes, voters, { perBookVoters = false } = {}) {
   container.innerHTML = "";
 
   const sorted = [...books].sort((a, b) => (votes[b.id] || 0) - (votes[a.id] || 0));
@@ -1641,12 +1648,21 @@ function renderResultsInto(container, books, votes, voters) {
       card.classList.toggle("expanded");
       card.querySelector(".result-toggle").textContent = card.classList.contains("expanded") ? "➖" : "➕";
     });
+    // Who picked this book, in ballot order. Built as text, so a typed
+    // name is never parsed as HTML.
+    const pickedBy = Object.values(voters).filter((v) => v.books.includes(book.id));
+    if (perBookVoters && pickedBy.length > 0) {
+      const line = document.createElement("span");
+      line.className = "result-voters";
+      line.textContent = "Votaram: " + pickedBy.map(voterDisplayName).join(", ");
+      card.querySelector(".result-body").appendChild(line);
+    }
     list.appendChild(card);
   });
   container.appendChild(list);
 
   const voterKeys = Object.keys(voters);
-  if (voterKeys.length > 0) {
+  if (!perBookVoters && voterKeys.length > 0) {
     const voterList = document.createElement("div");
     voterList.className = "voter-list";
     voterList.innerHTML = `
@@ -1657,6 +1673,12 @@ function renderResultsInto(container, books, votes, voters) {
     `;
     container.appendChild(voterList);
   }
+}
+
+// A voter's name for display: the PEOPLE name when the voter is linked to
+// a person, otherwise the name as typed on the ballot form.
+function voterDisplayName(voter) {
+  return voter.person && PEOPLE[voter.person] ? PEOPLE[voter.person].name : voter.name;
 }
 
 function showLiveResults(justVoted) {
@@ -1773,7 +1795,7 @@ function paintArchiveDetails(container, entry) {
   const results = document.createElement("div");
   container.appendChild(results);
   const books = entry.bookIds.map(getBook).filter(Boolean);
-  renderResultsInto(results, books, entry.votes, entry.voters);
+  renderResultsInto(results, books, entry.votes, entry.voters, { perBookVoters: true });
 }
 
 // Scrolls `row` to the middle of the screen. A row taller than the screen
