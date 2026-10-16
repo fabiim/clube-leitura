@@ -314,6 +314,22 @@
     eq([...el.querySelectorAll(".voter-list .chip")].map((x) => x.textContent).join(), "fbotelho,Zé", "chips as typed");
   });
 
+  test("voter chips and the greeting show a typed name as text, never HTML", () => {
+    // Names come from the ballot form, so markup in one must not render.
+    const el = document.createElement("div");
+    renderResultsInto(el, [], {}, { x: { name: "<b>x</b>", books: [] } });
+    eq(el.querySelector(".voter-chips b"), null, "no parsed <b> in chips");
+    eq(el.querySelector(".voter-chips .chip").textContent, "<b>x</b>", "literal chip text");
+    const g = document.createElement("p");
+    g.append(renderGreeting("<b>x</b>", 2, 2));
+    eq(g.querySelectorAll("strong").length, 2, "only our own <strong>s");
+    eq(g.querySelector("b"), null, "no parsed <b> in greeting");
+    eq(g.textContent, "Olá <b>x</b>! Selecciona 2 livros.", "same picks");
+    const r = document.createElement("p");
+    r.append(renderGreeting("Ana", 1, 3));
+    eq(r.textContent, "Olá Ana! Selecciona entre 1 e 3 livros.", "a range of picks");
+  });
+
   test("the Estante is empty until its first visit, then lists every book once", () => {
     // Built lazily, so a page load that never opens it pays nothing.
     eq($("shelf-list").children.length, 0, "no cards before the first visit");

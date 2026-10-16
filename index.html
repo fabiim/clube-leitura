@@ -1705,10 +1705,17 @@ function renderResultsInto(container, books, votes, voters, { perBookVoters = fa
     voterList.className = "voter-list";
     voterList.innerHTML = `
       <p class="voter-title">Quem já votou:</p>
-      <div class="voter-chips">
-        ${voterKeys.map((k) => '<span class="chip">' + voters[k].name + '</span>').join("")}
-      </div>
+      <div class="voter-chips"></div>
     `;
+    // Names come from the ballot form via the sheet, so they go in as
+    // text: a name is never parsed as HTML.
+    const chips = voterList.querySelector(".voter-chips");
+    voterKeys.forEach((k) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = voters[k].name;
+      chips.appendChild(chip);
+    });
     container.appendChild(voterList);
   }
 }
@@ -1717,6 +1724,25 @@ function renderResultsInto(container, books, votes, voters, { perBookVoters = fa
 // a person, otherwise the name as typed on the ballot form.
 function voterDisplayName(voter) {
   return voter.person && PEOPLE[voter.person] ? PEOPLE[voter.person].name : voter.name;
+}
+
+// "Olá <name>! Selecciona N livros." as DOM nodes. The name is typed by
+// the voter, so it goes in as text and is never parsed as HTML.
+function renderGreeting(name, minVotes, maxVotes) {
+  const strong = (text) => {
+    const b = document.createElement("strong");
+    b.textContent = text;
+    return b;
+  };
+  const frag = document.createDocumentFragment();
+  frag.append("Olá ", strong(name), "! Selecciona ");
+  if (minVotes === maxVotes) {
+    frag.append(strong(`${maxVotes} livros`));
+  } else {
+    frag.append("entre ", strong(`${minVotes} e ${maxVotes} livros`));
+  }
+  frag.append(".");
+  return frag;
 }
 
 function showLiveResults(justVoted) {
@@ -2596,11 +2622,7 @@ async function init() {
     $("name-section").classList.add("hidden");
     $("vote-section").classList.remove("hidden");
     $("peek-btn").classList.add("hidden");
-    const { minVotes, maxVotes } = ACTIVE_VOTE;
-    const pick = minVotes === maxVotes
-      ? `<strong>${maxVotes} livros</strong>`
-      : `entre <strong>${minVotes} e ${maxVotes} livros</strong>`;
-    $("greeting").innerHTML = `Olá <strong>${name}</strong>! Selecciona ${pick}.`;
+    $("greeting").replaceChildren(renderGreeting(name, ACTIVE_VOTE.minVotes, ACTIVE_VOTE.maxVotes));
   });
 
   $("submit-btn").addEventListener("click", submitVote);
