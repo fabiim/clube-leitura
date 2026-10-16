@@ -2202,10 +2202,14 @@ function renderShelfFilters() {
       chip.className = "shelf-chip";
       chip.dataset.group = group;
       chip.dataset.id = id;
-      const c = document.createElement("span");
-      c.className = "shelf-chip-count";
-      c.textContent = ` ${count}`;
-      chip.append(text, c);
+      chip.append(text);
+      // Only status chips carry a count: per-person totals read as a score.
+      if (count !== undefined) {
+        const c = document.createElement("span");
+        c.className = "shelf-chip-count";
+        c.textContent = ` ${count}`;
+        chip.appendChild(c);
+      }
       chip.addEventListener("click", () => toggleShelfFilter(group, id));
       r.appendChild(chip);
     });
@@ -2214,7 +2218,6 @@ function renderShelfFilters() {
 
   row("Sugerido por", "por", Object.entries(PEOPLE).map(([id, p]) => ({
     id, text: shortestName(p.name, names),
-    count: cards.filter((c) => c.dataset.by.split(" ").includes(id)).length,
   })));
   row("Estado", "estado", BOOK_STATUSES.map((st) => ({
     id: st.id, text: `${st.emoji} ${st.label}`,

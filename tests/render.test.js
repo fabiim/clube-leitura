@@ -311,6 +311,15 @@
     if (ACTIVE_VOTE) eq(href(ACTIVE_VOTE.number), "#votacao", "open vote");
   });
 
+  test("person chips carry no count; status chips do", () => {
+    // Per-person totals were dropped on request: they read as a score.
+    ensureEstante();
+    const chips = (group) => [...$("shelf-filters").querySelectorAll(`.shelf-chip[data-group="${group}"]`)];
+    eq(chips("por").length, Object.keys(PEOPLE).length, "one chip per person");
+    assert(chips("por").every((c) => !c.querySelector(".shelf-chip-count")), "no person counts");
+    assert(chips("estado").every((c) => c.querySelector(".shelf-chip-count")), "status counts");
+  });
+
   test("a book suggested by two people lists both, and data-by holds each once", () => {
     // One suggested event per person; data-by feeds the person filter.
     const book = { ...getBook(Object.keys(BOOKS)[0]), log: [
