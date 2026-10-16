@@ -214,7 +214,7 @@ Triggered by "fecha a votação" (or "close the vote"), optionally with "o vence
 4. **Update the logs.** Add `won` to the winner and `lost` to every other candidate, dated `closedAt`. If the session is fixed (often `ACTIVE_VOTE.readingDate`), add the `AGENDA` entry and a `session` event to the winner.
 5. **Close it.** Set `ACTIVE_VOTE = null`, run `tests/run.sh`, and report: "Closed vote #N. Winner: <emoji> <title>." Remind the user to clear the Google Sheet by hand.
 
-While `ACTIVE_VOTE` is null, the Votação tab is half broken (`plan.md` step 6): the name form still shows, and submitting crashes. Open the next vote soon, or build step 6 first.
+While `ACTIVE_VOTE` is null, the Votação tab shows only "Não há votação activa" with a link to the Arquivo; `init()` hides the name form. The chosen-book card planned for that state (`plan.md` step 6) isn't built.
 
 ## Opening a vote
 
