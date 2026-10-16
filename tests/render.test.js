@@ -343,9 +343,18 @@
     // Per-person totals were dropped on request: they read as a score.
     ensureEstante();
     const chips = (group) => [...$("shelf-filters").querySelectorAll(`.shelf-chip[data-group="${group}"]`)];
-    eq(chips("por").length, Object.keys(PEOPLE).length, "one chip per person");
+    eq(chips("por").map((c) => c.dataset.id).join(), suggesterIds().join(), "one chip per suggester");
     assert(chips("por").every((c) => !c.querySelector(".shelf-chip-count")), "no person counts");
     assert(chips("estado").every((c) => c.querySelector(".shelf-chip-count")), "status counts");
+  });
+
+  test("suggesterIds lists only people with a suggested event", () => {
+    // People who only voted get no Estante chip.
+    const ids = suggesterIds();
+    assert(ids.length > 0, "someone suggested a book");
+    ids.forEach((id) => assert(Object.values(BOOKS).some((b) => b.log.some((e) => e.type === "suggested" && e.by === id)), `${id} suggested something`));
+    assert(!ids.includes("melissa"), "a voter-only person is left out");
+    eq(readShelfFilters(new URLSearchParams("por=melissa,fabio")).por.has("melissa"), false, "URL drops a voter-only id");
   });
 
   test("a book suggested by two people lists both, and data-by holds each once", () => {

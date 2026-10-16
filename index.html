@@ -2208,6 +2208,15 @@ let shelfBuilt = false;
 // back keeps them.
 let lastShelfHash = "#estante";
 
+// The ids of the people who suggested at least one book, in PEOPLE order.
+// PEOPLE also holds people who only voted; the Estante is about who
+// suggested what, so its chips and short names consider only these.
+function suggesterIds() {
+  const by = new Set(Object.values(BOOKS).flatMap((b) =>
+    b.log.filter((e) => e.type === "suggested").map((e) => e.by)));
+  return Object.keys(PEOPLE).filter((id) => by.has(id));
+}
+
 function ensureEstante() {
   if (shelfBuilt) return;
   shelfBuilt = true;
@@ -2220,7 +2229,7 @@ function ensureEstante() {
 function readShelfFilters(query) {
   const ids = (key, known) => new Set((query.get(key) || "").split(",").filter((id) => known.includes(id)));
   return {
-    por: ids("por", Object.keys(PEOPLE)),
+    por: ids("por", suggesterIds()),
     estado: ids("estado", BOOK_STATUSES.map((st) => st.id)),
   };
 }
@@ -2242,13 +2251,14 @@ function shelfCardMatches(card, filters) {
     && (filters.estado.size === 0 || filters.estado.has(card.dataset.status));
 }
 
-// Two rows of chips, one per person and one per status, each with the
-// number of books it matches on its own.
+// Two rows of chips, one per person who suggested a book and one per
+// status. Only status chips show the number of books they match.
 function renderShelfFilters() {
   const wrap = $("shelf-filters");
   wrap.innerHTML = "";
   const cards = [...$("shelf-list").querySelectorAll(".shelf-card")];
-  const names = Object.values(PEOPLE).map((p) => p.name);
+  const suggesters = suggesterIds();
+  const names = suggesters.map((id) => PEOPLE[id].name);
 
   const row = (label, group, chips) => {
     const r = document.createElement("div");
@@ -2277,8 +2287,8 @@ function renderShelfFilters() {
     wrap.appendChild(r);
   };
 
-  row("Sugerido por", "por", Object.entries(PEOPLE).map(([id, p]) => ({
-    id, text: shortestName(p.name, names),
+  row("Sugerido por", "por", suggesters.map((id) => ({
+    id, text: shortestName(PEOPLE[id].name, names),
   })));
   row("Estado", "estado", BOOK_STATUSES.map((st) => ({
     id: st.id, text: `${st.emoji} ${st.label}`,
@@ -2366,7 +2376,7 @@ function renderLogEvent(e, today) {
   // Each kind of event reads as its own sentence.
   switch (e.type) {
     case "suggested": {
-      const names = Object.values(PEOPLE).map((p) => p.name);
+      const names = suggesterIds().map((id) => PEOPLE[id].name);
       li.append(`💡 Sugerido por ${shortestName(PEOPLE[e.by].name, names)}`);
       break;
     }
