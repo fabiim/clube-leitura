@@ -19,12 +19,12 @@ This section replaces a separate `CHEAT.md`. Keep it current when tooling change
 A high-level map of behaviour, not a detailed spec. Read the code for details. Update this list when a feature is added or changes shape.
 
 - **Single static page.** All data (`PEOPLE`, `BOOKS`, `AGENDA`, `ARCHIVE`, `ACTIVE_VOTE`) lives as constants in `index.html`. The only network call is the live vote tally (Google Apps Script).
-- **Four tabs**, hash-routed: Início, Votação, Estante, Arquivo. `#arquivo/N` opens vote N expanded and centred.
+- **Four tabs**, hash-routed: Início, Votação, Estante, Arquivo. `#arquivo/N` opens vote N expanded and centred; `#inicio/YYYY-MM-DD` scrolls to that day's session.
 - **Início** lists sessions: upcoming soonest-first (the next one pinned), past most-recent-first. A pill links to Votação while a vote is open.
 - **Each session** shows a date, a book, a location, and a book card (sinopse, punchline, and shop links). Nothing is collapsed.
 - **Past sessions** split into titled sections: "Discussão" (the written account and the participants), "Citações" (passages from the book the group liked, always visible; who picked each one is recorded but not shown), and "Sinopse" (the book card, without shop links). A participant can bring a gift (a poem, lyric, quote, or excerpt), which opens in a drawer.
 - **Votação** is active only when `ACTIVE_VOTE` is set: name, pick N books, see live results. Otherwise it points to the Arquivo.
-- **Estante** lists every book in `BOOKS` on the ballot's card, with a status (Lido, A ler, A votos, Perdeu, Ideia) and its history from the book log. Chips filter by suggester and status; the filters live in the URL (`#estante?por=fabio&estado=ideia`). Built on first visit. The only view that shows who suggested a book: the ballot never does.
+- **Estante** lists every book in `BOOKS` on the ballot's card, with a status (Lido, A ler, A votos, Perdeu, Ideia) and its history from the book log, with each vote and session linked. Chips filter by suggester and status; the filters live in the URL (`#estante?por=fabio&estado=ideia`). Built on first visit. The only view that shows who suggested a book: the ballot never does.
 - **Arquivo** lists closed votes with the winner and expandable per-book tallies and voters.
 
 ## Colour palette

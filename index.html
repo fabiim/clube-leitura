@@ -1754,18 +1754,30 @@ function paintArchiveDetails(container, entry) {
   renderResultsInto(results, books, entry.votes, entry.voters);
 }
 
-// Expands vote `number` in the Arquivo and scrolls it to the middle of the
-// screen, for links that point at one vote. An expanded vote is often taller
-// than a phone screen; centring it would push its header off the top, so a
-// row that doesn't fit is aligned to the top instead. An unknown number
-// does nothing.
+// Scrolls `row` to the middle of the screen. A row taller than the screen
+// (an expanded vote, a past session on a phone) would lose its header off
+// the top when centred, so it is aligned to the top instead.
+function revealRow(row) {
+  const fits = row.getBoundingClientRect().height <= window.innerHeight;
+  row.scrollIntoView({ block: fits ? "center" : "start" });
+}
+
+// Expands vote `number` in the Arquivo and reveals it, for links that point
+// at one vote. An unknown number does nothing.
 function openArchiveEntry(number) {
   if (!ARCHIVE.some((e) => e.number === number)) return;
   expandedEntries.add(number);
   renderArquivo();
-  const row = $("archive-list").querySelector(`[data-number="${number}"]`);
-  const fits = row.getBoundingClientRect().height <= window.innerHeight;
-  row.scrollIntoView({ block: fits ? "center" : "start" });
+  revealRow($("archive-list").querySelector(`[data-number="${number}"]`));
+}
+
+// Reveals the Início session held on `date` (YYYY-MM-DD), for links that
+// point at one session. Returns whether a session was found; an unknown
+// date does nothing.
+function openAgendaEntry(date) {
+  const row = $("view-inicio").querySelector(`.agenda-row[data-date="${date}"]`);
+  if (row) revealRow(row);
+  return !!row;
 }
 
 // `DD/MM – DD/MM` (same year) or `DD/MM/YY – DD/MM/YY` (cross-year). Inputs are ISO.
@@ -1940,6 +1952,7 @@ function renderAgenda() {
 function renderAgendaRow(entry, isPast, isNext) {
   const row = document.createElement('div');
   row.className = 'agenda-row' + (isPast ? ' past' : ' future') + (isNext ? ' next' : '');
+  row.dataset.date = entry.date;
 
   const book = getBook(entry.bookId);
   const pin = isNext ? '<span class="agenda-pin">📌</span>' : '';
@@ -2318,9 +2331,13 @@ function renderLogEvent(e, today) {
     case "lost":
       li.append("🥀 ", voteLink("Perdeu a votação"));
       break;
-    case "session":
-      li.append(e.date < today ? "📖 Sessão" : "📅 Sessão marcada");
+    case "session": {
+      const a = document.createElement("a");
+      a.href = `#inicio/${e.date}`;
+      a.textContent = `${e.date < today ? "Sessão" : "Sessão marcada"} →`;
+      li.append(e.date < today ? "📖 " : "📅 ", a);
       break;
+    }
   }
   const date = document.createElement("span");
   date.className = "shelf-log-date";
@@ -2363,10 +2380,12 @@ function applyRoute() {
     a.classList.toggle('active', a.dataset.tab === tab);
   });
 
-  // A sub-path points at one item in the view: "#arquivo/4" is vote #4.
+  // A sub-path points at one item in the view: "#arquivo/4" is vote #4,
+  // "#inicio/2026-10-14" is that day's session.
   // A query carries a view's state: the Estante's filters.
   const { sub, query } = parseHash(window.location.hash);
   if (tab === 'arquivo' && sub) openArchiveEntry(Number(sub));
+  if (tab === 'inicio' && sub) openAgendaEntry(sub);
   if (tab === 'estante') {
     ensureEstante();
     applyShelfFilters(readShelfFilters(query));

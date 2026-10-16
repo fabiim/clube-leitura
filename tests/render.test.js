@@ -299,8 +299,8 @@
       "💡 Sugerido por Fábio · 1 Jan 2020",
       `🗳️ Na votação #1 → · 2 Jan 2020`,
       `🥀 Perdeu a votação #1 → · 3 Jan 2020`,
-      "📖 Sessão · 1 Fev 2020",
-      "📅 Sessão marcada · 1 Mar 2020",
+      "📖 Sessão → · 1 Fev 2020",
+      "📅 Sessão marcada → · 1 Mar 2020",
     ].join(" | "), "log lines");
   });
 
@@ -309,6 +309,24 @@
     const href = (vote) => renderLogEvent({ type: "voting", date: "2020-01-01", vote }, "2020-01-01").querySelector("a").getAttribute("href");
     eq(href(1), "#arquivo/1", "closed vote");
     if (ACTIVE_VOTE) eq(href(ACTIVE_VOTE.number), "#votacao", "open vote");
+  });
+
+  test("session links point at that day's session in Início, past or upcoming", () => {
+    const href = (date) => renderLogEvent({ type: "session", date }, "2020-02-15").querySelector("a").getAttribute("href");
+    eq(href("2020-02-01"), "#inicio/2020-02-01", "past session");
+    eq(href("2020-03-01"), "#inicio/2020-03-01", "upcoming session");
+  });
+
+  test("AGENDA dates are unique, so a date names one session", () => {
+    // Session deep links (#inicio/<date>) rely on this.
+    const dates = AGENDA.map((e) => e.date);
+    eq(new Set(dates).size, dates.length, "unique dates");
+  });
+
+  test("openAgendaEntry finds every session by its date and ignores unknown dates", () => {
+    // Every session line in the Estante must land on a rendered row.
+    AGENDA.forEach((e) => assert(openAgendaEntry(e.date), `session ${e.date} found`));
+    assert(!openAgendaEntry("1999-01-01"), "unknown date");
   });
 
   test("person chips carry no count; status chips do", () => {
