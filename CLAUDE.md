@@ -204,9 +204,28 @@ Render sanity tests live in `tests/render.test.js` and run in headless Chrome vi
 - Prefer fixtures passed straight to the render functions over assertions on live data, so the tests don't break when a session is added.
 - Never write the literal results tag (`pre` with `id="test-results"`) in the test source, because the runner matches the first occurrence in the DOM.
 
-## Other guidance
+## Closing a vote
 
-- Close-vote / open-vote workflows are still pending — see plan.md step 8.
+Triggered by "fecha a votação" (or "close the vote"), optionally with "o vencedor é X" or a note.
+
+1. **Fetch the live tally.** Decode `_E` in `index.html` (base64) to get the Apps Script URL, `curl` it, and parse `{ votes, voters }`. On any failure, stop and edit nothing. The auto-mode classifier may block this request; if it does, ask the user to allow it or to paste the JSON.
+2. **Pick the winner.** If the user named one, check that it is in `ACTIVE_VOTE.bookIds`. Otherwise take the top count; on a tie at the top, stop and ask.
+3. **Snapshot the vote.** Prepend to `ARCHIVE`, in this field order: `number`, `startedAt`, `closedAt` (today), `winnerId`, `winnerNote` (only if given), `maxVotes`, `bookIds` (copied from `ACTIVE_VOTE`), `votes` (only keys in `bookIds`), and `voters`. Don't touch the `BOOKS` entries.
+4. **Update the logs.** Add `won` to the winner and `lost` to every other candidate, dated `closedAt`. If the session is fixed (often `ACTIVE_VOTE.readingDate`), add the `AGENDA` entry and a `session` event to the winner.
+5. **Close it.** Set `ACTIVE_VOTE = null`, run `tests/run.sh`, and report: "Closed vote #N. Winner: <emoji> <title>." Remind the user to clear the Google Sheet by hand.
+
+While `ACTIVE_VOTE` is null, the Votação tab is half broken (`plan.md` step 6): the name form still shows, and submitting crashes. Open the next vote soon, or build step 6 first.
+
+## Opening a vote
+
+Triggered by "abre a votação com X, Y, Z" (or similar).
+
+1. **Check the state.** `ACTIVE_VOTE` must be null; close the open vote first. The Google Sheet must already be empty.
+2. **Add new books.** Any candidate missing from `BOOKS` gets a full entry at the bottom (sinopse and punchline per [Book content rules](#book-content-rules-books-entries-in-indexhtml)), with its `suggested` event.
+3. **Set `ACTIVE_VOTE`.** `number` is `ARCHIVE[0].number + 1`, `startedAt` is today, `minVotes` and `maxVotes` are 2 unless the user says otherwise, `bookIds` is the candidates in a random order shuffled once (every voter sees the same list), and `readingDate` is the planned session date if known.
+4. **Update the logs.** Add `voting` (dated `startedAt`) to each candidate, then run `tests/run.sh`.
+
+To drop a candidate from an open vote, remove its id from `bookIds` and its `voting` event from its log, but keep its `BOOKS` entry. First check that nobody has voted for it, because the page ignores votes for books off the ballot.
 
 ## Deploy
 
